@@ -353,6 +353,37 @@
         return this.GetUserData("parent")
     }
 
+    /*
+     * Gets a list of all DIRECT children of this entity.
+     * This function is not recursive and will not find grandchildren.
+     *
+     * @returns {List} A List containing all direct child pcaptEntity objects.
+    */
+    function GetChildren() {
+        local childrenList = List()
+
+        local child = this.CBaseEntity.FirstMoveChild(); // todo
+        while(child) {
+            childrenList.append(entLib.FromEntity(child));
+            child = child.NextMovePeer();
+        }
+
+        return childrenList;
+    }
+
+    /*
+     * Recursively finds all descendants (children, grandchildren, etc.) of this entity.
+     * Performs a depth-first search of the entity hierarchy.
+     *
+     * @returns {List} A List containing all descendant pcaptEntity objects.
+    */    
+    function GetAllChildrenRecursivly() {
+        local descendantsList = List();
+        _findDescendantsRecursive(this.CBaseEntity, descendantsList);
+
+        return descendantsList;
+    }
+
 
     /*
      * Sets the collision of the entity.
@@ -911,6 +942,23 @@
      * @returns {string} - The type of the entity object.
     */
     function _typeof() return "pcapEntity"
+}
+
+/*
+ * Internal helper function to perform a recursive depth-first search for descendants.
+ * This should not be called directly.
+ *
+ * @param {CBaseEntity} pCurrentParent - The entity to search for children of.
+ * @param {List} resultList - The list to append found children to.
+*/
+::_findDescendantsRecursive <- function(pCurrentParent, resultList) {
+    local child = pCurrentParent.FirstMoveChild();
+
+    while (child) {
+        resultList.append(entLib.FromEntity(child));
+        _findDescendantsRecursive(child, resultList);
+        child = child.NextMovePeer();
+    }
 }
 
 function pcapEntity::ConnectOutput(output, funcName) this.CBaseEntity.ConnectOutput(output, funcName)

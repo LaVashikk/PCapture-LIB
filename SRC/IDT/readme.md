@@ -120,6 +120,8 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`SetAbsCenter(vector)`](#setabscentervector)
         *   [`SetParent(parentEnt, fireDelay, eventName)`](#setparentparentent-firedelay-eventname)
         *   [`GetParent()`](#getparent)
+        *   [`GetChildren()`](#getchildren)
+        *   [`GetAllChildrenRecursively()`](#getallchildrenrecursively)
         *   [`SetModelScale(scaleValue, fireDelay, eventName)`](#setmodelscalescalevalue-firedelay-eventname)
         *   [`GetModelScale()`](#getmodelscale)
 
@@ -1886,6 +1888,35 @@ if (parent) {
     // ... do something with the parent entity
 }
 ```
+
+### `GetChildren()`
+Gets a list of all **direct** children of this entity. This function is not recursive and will only find entities that are immediate descendants (first level of the hierarchy).
+
+**Returns:**
+
+* (List): A `List` object containing all direct child `pcaptEntity` objects.
+
+**Example:**
+```js
+local directChildren = myPcapEntity.GetAllChildren()
+foreach(child in directChildren) {
+    printl("Found direct child: " + child.GetName())
+}
+```
+
+### `GetAllChildrenRecursively()`
+Recursively finds all descendants (children, grandchildren, etc.) of this entity by performing a depth-first search of the entity hierarchy.
+
+**Returns:**
+
+* (List): A `List` object containing all descendant `pcaptEntity` objects.
+
+**Example:**
+```js
+local allDescendants = myPcapEntity.GetAllChildrenRecursively()
+foreach(descendant in allDescendants) {
+    printl("Found descendant: " + descendant.GetName())
+}
 
 ### `SetCollision(solidType, fireDelay, eventName)`
 Sets the collision type of the entity, controlling how it interacts with other entities in the game world.
