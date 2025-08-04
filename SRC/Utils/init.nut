@@ -15,4 +15,6 @@ IncludeScript("PCapture-LIB/SRC/Utils/portals")
 IncludeScript("PCapture-LIB/SRC/Utils/macros")
 IncludeScript("PCapture-LIB/SRC/Utils/const")
 IncludeScript("PCapture-LIB/SRC/Utils/player_hooks")
-ScheduleEvent.Add("global", IncludeScript, 1, ["PCapture-LIB/SRC/Utils/console_commands"])
+ScheduleEvent.Add("global", function() {
+IncludeScript("PCapture-LIB/SRC/Utils/console_commands")
+}, 1, null, this)
