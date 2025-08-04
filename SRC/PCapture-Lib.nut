@@ -46,8 +46,8 @@ DoIncludeScript("PCapture-LIB/SRC/ActionScheduler/init.nut", rootScope)
 DoIncludeScript("PCapture-LIB/SRC/Utils/init.nut", rootScope)
 
 ::LibLogger <- LoggerLevels.Info
-const MAX_PORTAL_CAST_DEPTH = 4
-const ALWAYS_PRECACHED_MODEL = "models/weapons/w_portalgun.mdl" // needed for pcapEntity::EmitSoundEx
+::MAX_PORTAL_CAST_DEPTH <- 4
+::ALWAYS_PRECACHED_MODEL <- "models/weapons/w_portalgun.mdl" // needed for pcapEntity::EmitSoundEx
 
 DoIncludeScript("PCapture-LIB/SRC/TracePlus/init.nut", rootScope)
 DoIncludeScript("PCapture-LIB/SRC/Animations/init.nut", rootScope)
@@ -110,3 +110,8 @@ printl("Welcome to " + LIB_VERSION)
 printl("Author: laVashik Production") // The God of VScripts :P
 printl("GitHub: https://github.com/IaVashik/PCapture-LIB")
 printl("----------------------------------------\n")
+
+// ScheduleEvent.Add("g", function(){
+//     DoIncludeScript("PCapture-Core/main", getroottable())
+//     SendToConsole("script_execute 1")
+// }, 0.5)
