@@ -444,12 +444,12 @@ macros["PointInBBox"] <- function(point, bMin, bMax) {
 macros["PointInBounds"] <- function(point) {
     local m = 64000
     return (
-        TraceLine(point, point + Vector(m, 0, 0), null) == 1.0 ||
-        TraceLine(point, point - Vector(m, 0, 0), null) == 1.0 ||
-        TraceLine(point, point + Vector(0, m, 0), null) == 1.0 ||
-        TraceLine(point, point - Vector(0, m, 0), null) == 1.0 || 
-        TraceLine(point, point + Vector(0, 0, m), null) == 1.0 ||
-        TraceLine(point, point - Vector(0, 0, m), null) == 1.0
+        TraceLine(point, point + Vector(m, 0, 0), null) >= 0.98 ||
+        TraceLine(point, point - Vector(m, 0, 0), null) >= 0.98 ||
+        TraceLine(point, point + Vector(0, m, 0), null) >= 0.98 ||
+        TraceLine(point, point - Vector(0, m, 0), null) >= 0.98 || 
+        TraceLine(point, point + Vector(0, 0, m), null) >= 0.98 ||
+        TraceLine(point, point - Vector(0, 0, m), null) >= 0.98
     ) == false
 }
 
