@@ -2137,7 +2137,7 @@ Sets the center of the entity's bounding box. This effectively moves the entity 
 myPcapEntity.SetCenter(Vector(10, 20, 30)) // Set the center of the entity's bounding box
 ```
 
-### `SetCenter(vector)`
+### `SetAbsCenter(vector)`
 Sets the absolute center of the entity in world space. This will override any parent-relative positioning. 
 Otherwise, it's the same as SetCenter.
 
