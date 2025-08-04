@@ -9,7 +9,7 @@
 |    GitHud repo: https://github.com/IaVashik/PCapture-LIB                          |
 +----------------------------------------------------------------------------------+ */
 
-local version = "PCapture-Lib 3.6 Stable"
+local version = "PCapture-Lib 3.7 Stable"
 local rootScope = getroottable()
 
 // `Self` must be in any case, even if the script is run directly by the interpreter
