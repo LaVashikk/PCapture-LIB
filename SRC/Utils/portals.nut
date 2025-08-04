@@ -1,10 +1,12 @@
+::InitedPortals <- {}
+
 /*
  * Creates a `func_portal_detector` entity with specified key-value pairs and settings for portal detection.
  * 
  * This function is not part of the public API.
 */
 ::_CreatePortalDetector <- function(extraKey, extraValue) {
-    local detector = entLib.CreateByClassname("func_portal_detector", {solid = 3, CollisionGroup = 10})
+    local detector = entLib.CreateByClassname("func_portal_detector", {solid = 0, CollisionGroup = 10})
     detector.SetKeyValue(extraKey, extraValue)
     detector.SetBBox(Vector(32000, 32000, 32000) * -1, Vector(32000, 32000, 32000))
     detector.SetTraceIgnore(true)
@@ -23,10 +25,18 @@
  * @param {number} id - The ID of the portal pair.
 */
 ::InitPortalPair <- function(id) {
+    // If it was previously initialized, just turn on the detector.
+    if(id in InitedPortals) return InitedPortals[id]
+
     local detector = _CreatePortalDetector("LinkageGroupID", id)
 
     // The "free variables" syntax is different in Sq2 and Sq3, which is why I try to avoid executing it
     detector.ConnectOutputEx("OnStartTouchPortal", compilestring("activator.SetHealth(" + id + ")"))
+    detector.ConnectOutputEx("OnEndTouchPortal", compilestring("activator.SetHealth(9999)"))
+    // Marking the portal as initialized
+    InitedPortals[id] <- detector
+    
+    return detector
 }
 
 /*
