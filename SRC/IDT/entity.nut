@@ -541,13 +541,24 @@
 
 
     /*
+    * Sets the absolute center of the entity in world space.
+    * This will override any parent-relative positioning.
+    *
+    * @param {Vector} vector - The desired absolute center vector in world coordinates.
+    */
+    function SetAbsCenter(vector) {
+        local offset = this.CBaseEntity.GetCenter() - this.CBaseEntity.GetOrigin()
+        this.CBaseEntity.SetAbsOrigin( vector - offset )
+    }
+
+    /*
      * Sets the center of the entity.
      *
      * @param {Vector} vector - The center vector.
     */
     function SetCenter(vector) {
         local offset = this.CBaseEntity.GetCenter() - this.CBaseEntity.GetOrigin()
-        this.CBaseEntity.SetAbsOrigin( vector - offset )
+        this.CBaseEntity.SetOrigin( vector - offset )
     }
 
     /*

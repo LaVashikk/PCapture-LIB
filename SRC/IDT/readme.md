@@ -117,6 +117,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`SetAngles(x, y, z)`](#setanglesx-y-z)
         *   [`SetAbsAngles(angles)`](#setabsanglesangles)
         *   [`SetCenter(vector)`](#setcentervector)
+        *   [`SetAbsCenter(vector)`](#setabscentervector)
         *   [`SetParent(parentEnt, fireDelay, eventName)`](#setparentparentent-firedelay-eventname)
         *   [`GetParent()`](#getparent)
         *   [`SetModelScale(scaleValue, fireDelay, eventName)`](#setmodelscalescalevalue-firedelay-eventname)
@@ -2104,6 +2105,11 @@ Sets the center of the entity's bounding box. This effectively moves the entity 
 ```js
 myPcapEntity.SetCenter(Vector(10, 20, 30)) // Set the center of the entity's bounding box
 ```
+
+### `SetCenter(vector)`
+Sets the absolute center of the entity in world space. This will override any parent-relative positioning. 
+Otherwise, it's the same as SetCenter.
+
 
 ### `SetBBox(minBounds, maxBounds)`
 Sets the bounding box of the entity using vectors or string representations of vectors.
