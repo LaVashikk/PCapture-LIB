@@ -90,17 +90,13 @@
  * @param {pcapEntity} portal - The `prop_portal` entity to find the partner for. 
  * @returns {pcapEntity|null} - The partner portal entity, or `null` if no partner is found. 
 */
-::FindPartnerForPropPortal <- function(portal) {
-    // Determine the model name of the partner portal based on the current portal's model. 
-    local mdl = "models/portals/portal1.mdl"
-    if(portal.GetModelName().find("portal2") == null)
-        mdl = "models/portals/portal2.mdl"
-    
+::FindPartnerForPropPortal <- function(portal) {    
     // Find the partner portal entity based on the determined model name.  
     local portalPairId = portal.GetHealth()
-    for(local partner; partner = entLib.FindByModel(mdl, partner);) { 
+    // for(local partner; partner = entLib.FindByModel(mdl, partner);) { 
+    for(local partner; partner = entLib.FindByClassname("prop_portal", partner);) { 
         local partnerPairId = partner.GetHealth() 
-        if(portalPairId != partnerPairId || partner.GetClassname() != "prop_portal" || partner.GetUserData("TracePlusIgnore"))
+        if(portalPairId != partnerPairId || partner.entindex() == portal.entindex() || partner.GetClassname() != "prop_portal" || partner.GetUserData("TracePlusIgnore"))
             continue
         
         return partner 
