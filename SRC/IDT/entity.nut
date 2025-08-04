@@ -663,6 +663,73 @@
     }
 
     /*
+     * Calculates the local coordinates (position and angles) of this entity relative to its move parent.
+     * If the entity has no parent, its world coordinates are returned.
+     *
+     * @returns {table} A table containing the local coordinates: { pos = <Vector>, ang = <Vector> }.
+    */    
+    function GetLocalCoords() {
+        local pParent = this.CBaseEntity.GetMoveParent();
+        if (!pParent) {
+            // If there's no parent, local coordinates are equal to world coordinates.
+            return { pos = this.GetOrigin(), ang = this.GetAngles() };
+        }
+
+        // Get the world positions and angles of both entities
+        local childWorldPos = this.GetOrigin();
+        local parentWorldPos = pParent.GetOrigin();
+
+        local childWorldAng = this.GetAngles();
+        local parentWorldAng = pParent.GetAngles();
+
+        // Calculate the offset vector in world coordinates
+        local worldOffset = childWorldPos - parentWorldPos;
+
+        // "Unrotate" the world offset vector by the parent's angles to get the local position
+        local localPos = math.vector.unrotate(worldOffset, parentWorldAng);
+        local localAng = childWorldAng - parentWorldAng;
+
+        return { pos = localPos, ang = localAng };
+    }
+
+    /*
+     * An experimental function that sets the entity's absolute origin in world space using teleportation.
+     * The key difference is that standard position-setting functions use client-side interpolation, 
+     * causing the entity to visibly slide to its new position.
+     * This function bypasses interpolation, making the position change instantaneous.
+     *
+     * @param {Vector} desiredAbsVec - The desired absolute position in world coordinates.
+    */
+    function SetAbsOrigin2(desiredAbsVec) {
+        local pParent = this.CBaseEntity.GetMoveParent();
+
+        // --- CASE 1: ENTITY HAS NO PARENT ---
+        if (!pParent) {
+            // If there is no parent, local coordinates are equivalent to absolute coordinates.
+            // Simply use the 'local' SetOrigin to set them.
+            this.SetOrigin(desiredAbsVec);
+            return;
+        }
+
+        // --- CASE 2: ENTITY HAS A PARENT ---
+        // We need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
+
+        // Get the parent's absolute coordinates and angles.
+        local parentWorldPos = pParent.GetOrigin();
+        local parentWorldAng = pParent.GetAngles();
+
+        // Calculate the offset vector from the parent to the desired point in world coordinates.
+        local worldOffsetVector = desiredAbsVec - parentWorldPos;
+
+        // Transform the world offset vector into a local one.
+        // To do this, we need to "unrotate" it by the parent's angles.
+        // The math.vector.unrotate function does exactly that.
+        local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng);
+
+        this.SetOrigin(localPos);
+    }
+
+    /*
      * Checks if the bounding box of an entity is a cube (all sides have equal length).
      *
      * @returns {boolean} - True if the bounding box is a cube, false otherwise.

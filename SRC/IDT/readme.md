@@ -2141,6 +2141,33 @@ myPcapEntity.SetCenter(Vector(10, 20, 30)) // Set the center of the entity's bou
 Sets the absolute center of the entity in world space. This will override any parent-relative positioning. 
 Otherwise, it's the same as SetCenter.
 
+### `GetLocalCoords()`
+Calculates the local coordinates (position and angles) of this entity relative to its move parent. If the entity has no parent, its world coordinates are returned.
+
+**Returns:**
+
+* (table): A table containing the local coordinates: `{ pos = <Vector>, ang = <Vector> }`.
+
+**Example:**
+```js
+local localData = myPcapEntity.GetLocalCoords()
+printl("Local Position: " + localData.pos)
+printl("Local Angles: " + localData.ang)
+```
+
+### `SetAbsOrigin2(desiredAbsVec)`
+An experimental function that sets the entity's absolute origin in world space using teleportation instead of position setting. The key difference is that standard position-setting functions use client-side interpolation, causing the entity to visibly slide to its new position. This function bypasses interpolation, making the position change instantaneous.
+
+**Parameters:**
+
+* `desiredAbsVec` (Vector): The desired absolute position in world coordinates.
+
+**Example:**
+```js
+// Place the entity precisely at the world's center, regardless of its parent's position.
+myPcapEntity.SetAbsOrigin2(Vector(0, 0, 0))
+```
+
 
 ### `SetBBox(minBounds, maxBounds)`
 Sets the bounding box of the entity using vectors or string representations of vectors.
