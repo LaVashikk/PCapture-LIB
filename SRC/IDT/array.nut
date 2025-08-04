@@ -389,8 +389,7 @@
             this.table[val] <- null
     }
 
-
-    function _cloned() {
+    function Clone() {
         return ArrayEx.FromArray(clone this.arr)
     }
 
@@ -423,6 +422,8 @@
      * @param {any} val - The new value.
     */
     function _set(idx, val) return arr[idx] = val;
+
+    function _cloned() return this.Clone()
 
 
     function _nexti(previdx) {
