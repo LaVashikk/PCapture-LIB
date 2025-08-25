@@ -110,8 +110,3 @@ printl("Welcome to " + LIB_VERSION)
 printl("Author: laVashik Production") // The God of VScripts :P
 printl("GitHub: https://github.com/IaVashik/PCapture-LIB")
 printl("----------------------------------------\n")
-
-// ScheduleEvent.Add("g", function(){
-//     DoIncludeScript("PCapture-Core/main", getroottable())
-//     SendToConsole("script_execute 1")
-// }, 0.5)

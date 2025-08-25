@@ -447,7 +447,6 @@
      * @returns {List} - The List instance for chaining.
     */
     function extend(other) {
-        //! TODO BRUH!!!
         foreach(val in other) 
             this.append(val)
         return this

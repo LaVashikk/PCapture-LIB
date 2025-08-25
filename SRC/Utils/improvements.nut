@@ -52,7 +52,7 @@ if("GetPlayerEx" in getroottable()) {
 */
 ::EntFireByHandle <- function(target, action, value = "", delay = 0, activator = null, caller = null, eventName = null) {
     // Extract the underlying entity from the pcapEntity wrapper 
-    if (typeof target == "pcapEntity") // todo create macros for this!
+    if (typeof target == "pcapEntity") 
         target = target.CBaseEntity
     if (typeof activator == "pcapEntity")
         activator = activator.CBaseEntity
@@ -62,13 +62,6 @@ if("GetPlayerEx" in getroottable()) {
     if(!eventName) 
         return _EntFireByHandle(target, action, value, delay, activator, caller)
     ScheduleEvent.Add(eventName, _EntFireByHandle, delay, [target, action, value, 0, activator, caller])
-}
-
-// todo what the fuck, lol
-::EntFireEx <- function(target, action, value = "", delay = 0, activator = null, eventName = null) {
-    if(!eventName)
-        return EntFire(target, action, value, delay, activator)
-    ScheduleEvent.Add(eventName, EntFire, delay, [target, action, value, 0, activator])
 }
 
 /*

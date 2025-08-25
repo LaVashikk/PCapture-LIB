@@ -44,8 +44,9 @@ TracePlus["Settings"] <- class {
         // Set the shouldIgnoreEntity setting from the settings table or use the default. 
         result.SetIgnoreFilter(macros.GetFromTable(settingsTable, "shouldIgnoreEntity", null))
 
-        // todo comment
+        // Set the depth accuracy for the BBox trace. Lower values are more precise for hitting thin objects but cost more performance. Default is 5.
         result.SetDepthAccuracy(macros.GetFromTable(settingsTable, "depthAccuracy", 5))
+        // Enable or disable binary refinement. This performs an extra search step to get a more accurate hit position, which is vital for calculating correct surface normals. Default is false.
         result.SetBynaryRefinement(macros.GetFromTable(settingsTable, "bynaryRefinement", false))
         
         return result

@@ -13,8 +13,7 @@
         this.CBaseEntity = entity
         EntitiesScopes[this.CBaseEntity] <- {}
         entity.ValidateScriptScope()
-        // this.uniqueId = UniqueString("pcapEntity")
-        // entity.GetScriptScope().self <- this // todo whoa!
+        entity.GetScriptScope().selfEx <- this // todo: no docs about it
     }
 
 
@@ -362,7 +361,7 @@
     function GetChildren() {
         local childrenList = List()
 
-        local child = this.CBaseEntity.FirstMoveChild(); // todo
+        local child = this.CBaseEntity.FirstMoveChild(); 
         while(child) {
             childrenList.append(entLib.FromEntity(child));
             child = child.NextMovePeer();
@@ -395,7 +394,7 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.SetCollision, fireDelay, [solidType], this)
         
-        EntFireByHandle(this.CBaseEntity, "SetSolidtype", solidType.tostring()) // todo?
+        EntFireByHandle(this.CBaseEntity, "SetSolidtype", solidType.tostring()) 
         this.SetUserData("Solidtype", solidType)
     }
 
