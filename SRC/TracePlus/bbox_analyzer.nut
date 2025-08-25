@@ -7,20 +7,20 @@ class BufferedEntity {
     bboxMax = null;
     bboxMin = null;
     ignoreChecksCalc = false;
+    skipEntity = false;
 
     constructor(entity) {
         this.entity = entLib.FromEntity(entity)
-        this.origin = entity.GetCenter() // lmao, origin == center
+        this.origin = entity.GetOrigin()
         
         // This is needed for optimization with avoiding a lot of quaternion rotations
-        local _origin = entity.GetOrigin()
         if(this.entity.IsSquareBbox()) { // bbox square
-            this.bboxMax = entity.GetBoundingMaxs() + _origin
-            this.bboxMin = entity.GetBoundingMins() + _origin
+            this.bboxMax = entity.GetBoundingMaxs() + origin
+            this.bboxMin = entity.GetBoundingMins() + origin
         }
         else { // bbox rectangular
-            this.bboxMax = this.entity.CreateAABB(7) + _origin
-            this.bboxMin = this.entity.CreateAABB(0) + _origin
+            this.bboxMax = this.entity.CreateAABB(7) + origin
+            this.bboxMin = this.entity.CreateAABB(0) + origin
         }
     }
     function IsValid() return this.entity.IsValid()
@@ -39,7 +39,7 @@ const JumpPercent = 0.25
     settings = null;
     hitpos = null;
     hitent = null;
-    eqVecFunc = math.vector.isEqually;
+    eqVecFunc = math.vector.isEqually2;
 
     /*
      * Constructor for TraceLineAnalyzer.
@@ -147,22 +147,36 @@ function TraceLineAnalyzer::Trace(startPos, endPos, ignoreEntities, note = null)
         local segmentCenter = startPos + dist * (segment + JumpPercent * 0.5)
         // dev.drawbox(segmentCenter, Vector(255,0,0), 6)
         for (local ent; ent = Entities.FindByClassnameWithin(ent, "*", segmentCenter, searchRadius);) {
-            if (ent && this.shouldHitEntity(ent, ignoreEntities, note)) {
-                local idx = ent.entindex()
-                local BEnt = null
-                // small cache system
-                if(idx in EntBufferTable && EntBufferTable[idx].IsValid() && this.eqVecFunc(EntBufferTable[idx].origin, ent.GetOrigin())) {
-                    BEnt = EntBufferTable[idx]
-                }
-                else {
-                    BEnt = BufferedEntity(ent)
-                    EntBufferTable[idx] <- BEnt
-                }
-                
-                if(BEnt.ignoreChecksCalc || RayAabbIntersect(startPos, endPos, BEnt.bboxMin, BEnt.bboxMax)) 
-                    entBuffer.append(BEnt)
-                else BEnt.ignoreChecksCalc = true
+            if (!ent || !this.shouldHitEntity(ent, ignoreEntities, note)) continue
+
+            local idx = ent.entindex()
+            local BEnt = null
+            // small cache system
+            if(idx in EntBufferTable && EntBufferTable[idx].IsValid() && this.eqVecFunc(EntBufferTable[idx].origin, ent.GetOrigin())) {
+                BEnt = EntBufferTable[idx]
             }
+            else {
+                BEnt = BufferedEntity(ent)
+                EntBufferTable[idx] <- BEnt
+            }
+
+            // This handles the specific case where the trace starts *inside* an entity's bounding box.
+            // It's crucial for allowing traces to originate from within large volumes (e.g., a trigger_multiple)
+            // without immediately hitting that volume itself. The entity is flagged and will be ignored
+            // for the entire duration of this trace, allowing the ray to 'escape' and hit what's next.
+            if(segment==0 && macros.PointInBBox(startPos, BEnt.bboxMin, BEnt.bboxMax)) {
+                BEnt.skipEntity = true
+                continue
+            }
+
+            if(BEnt.skipEntity) {
+                continue
+            }
+            
+            if(BEnt.ignoreChecksCalc || RayAabbIntersect(startPos, endPos, BEnt.bboxMin, BEnt.bboxMax)) 
+                entBuffer.append(BEnt)
+            else BEnt.ignoreChecksCalc = true
+
         }
 
         // The "dirty search" didn't turn up anything? Check the next segment
@@ -191,15 +205,6 @@ function TraceLineAnalyzer::Trace(startPos, endPos, ignoreEntities, note = null)
     // Is entiti not found? Returning hitpos
     return [hitPos, null]
 }
-
-// DEBUG for dirty search
-    // dev.drawbox(startPos, Vector(255,255,255), 6)
-    // dev.drawbox(endPos, Vector(255,255,255), 6)
-// DEBUG for "deep search"
-    // dev.drawbox(rayPart, Vector(255, 255, 0), 5)
-    // dev.drawbox(rayPart - halfSegment * 0.5, Vector(125, 255, 0), 5)
-    // dev.drawbox(rayPart + halfSegment* 0.5, Vector(125, 255, 0), 5)
-
 
 function RayAabbIntersect(start, end, min, max) {
     local dir = end - start;
