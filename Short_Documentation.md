@@ -1,4 +1,4 @@
-# PCapture-LIB v3.7 Short Documentation
+# PCapture-LIB v3.8 Short Documentation
 
 This document provides a concise overview of PCapture-Lib's modules and their key functionalities. 
 
