@@ -45,9 +45,10 @@
             return this.action.call(scope)
         }
         
-        if(typeof this.args != "array" && typeof this.args != "ArrayEx" && typeof this.args != "List") {
-            throw("Invalid arguments for ScheduleEvent! The argument must be itterable, not (" + args + ")")
-        }
+        // SAFETY: checks are now in action_scheluder
+        // if(typeof this.args != "array" && typeof this.args != "ArrayEx" && typeof this.args != "List") {
+        //     // throw("Invalid arguments for ScheduleEvent! The argument must be itterable, not (" + args + ")")
+        // }
 
         local actionArgs = [this.scope]
         actionArgs.extend(this.args)

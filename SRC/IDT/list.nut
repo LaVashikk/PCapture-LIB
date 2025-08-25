@@ -501,6 +501,7 @@
      * @returns {List} - The new list with the mapped values.
     */
     function map(func) {
+        if(typeof func != "function") throw("List.map: The 'func' argument must be a function, but got " + typeof func);
         local newList = List()
         foreach(idx, value in this.iter()) {
             newList.append(func(value, idx))

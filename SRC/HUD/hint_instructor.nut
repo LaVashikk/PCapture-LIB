@@ -15,6 +15,10 @@ HUD["HintInstructor"] <- class {
      * @param {string} targetname - The targetname of the "env_instructor_hint" entity. (optional, default="") 
     */
     constructor(message, holdtime = 5, icon = "icon_tip", showOnHud = 1, targetname = "") {
+        if (typeof message != "string")                                 throw("HUD.HintInstructor: 'message' must be a string, but got " + typeof message);
+        if (typeof holdtime != "integer" && typeof holdtime != "float")  throw("HUD.HintInstructor: 'holdtime' must be a number, but got " + typeof holdtime);
+        if (typeof icon != "string")                                    throw("HUD.HintInstructor: 'icon' must be a string, but got " + typeof message);
+
         this.CPcapEntity = entLib.CreateByClassname("env_instructor_hint", {
             // The text of your hint. 100 character limit.
             hint_caption = message,

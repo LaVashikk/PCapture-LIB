@@ -9,6 +9,11 @@
  * @returns {number} The duration of the animation in seconds. 
 */
 animate["ColorTransition"] <- function(entities, startColor, endColor, time, animSetting = {}) {
+    if (typeof startColor != "Vector" && typeof endColor != "string")   throw("ColorTransition: 'startColor' argument must be a Vector, but got " + typeof startColor);
+    if (typeof endColor != "Vector"   && typeof endColor != "string")   throw("ColorTransition: 'endColor' argument must be a Vector, but got " + typeof endColor);
+    if (typeof time != "integer" && typeof time != "float")             throw("ColorTransition: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                                  throw("ColorTransition: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("color", animSetting, entities, time)
     local vars = {
         startColor = startColor,
@@ -27,6 +32,11 @@ animate["ColorTransition"] <- function(entities, startColor, endColor, time, ani
 }
 
 animate.RT["ColorTransition"] <- function(entities, startColor, endColor, time, animSetting = {}) {
+    if (typeof startColor != "Vector" && typeof endColor != "string")   throw("ColorTransition: 'startColor' argument must be a Vector, but got " + typeof startColor);
+    if (typeof endColor != "Vector"   && typeof endColor != "string")   throw("ColorTransition: 'endColor' argument must be a Vector, but got " + typeof endColor);
+    if (typeof time != "integer" && typeof time != "float")             throw("ColorTransition: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                                  throw("ColorTransition: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("color", animSetting, entities, time)
     local vars = {
         startColor = startColor,

@@ -187,6 +187,7 @@
      * @returns {ArrayEx} - The mapped array.
     */
     function map(func) {
+        if(typeof func != "function") throw("ArrayEx.map: The 'func' argument must be a function, but got " + typeof func);
         local newArray = array(this.len())
         foreach(idx, value in arr) {
             newArray[idx] = func(value, idx)

@@ -1,13 +1,18 @@
 /*
  * Adds a single action to a scheduled event with the specified name.
  *
- * @param {string} eventName - The name of the event to add the action to. If the event does not exist, it is created.
+ * @param {string|any} eventName - The name of the event to add the action to. If the event does not exist, it is created.
  * @param {string|function} action - The action to execute when the scheduled time arrives. This can be a string containing VScripts code or a function object.
  * @param {number} timeDelay - The delay in seconds before executing the action.
  * @param {array|null} args - An optional array of arguments to pass to the action function.
  * @param {object} scope - The scope in which to execute the action (default is `this`). 
 */
 ScheduleEvent["Add"] <- function(eventName, action, timeDelay, args = null, scope = this) {
+    if (typeof action != "string" && typeof action != "function" && typeof action != "native function" && typeof action != "generator") throw("ScheduleEvent.Add: 'action' must be a function or a string, but got " + typeof action);
+    if (typeof timeDelay != "integer" && typeof timeDelay != "float") throw("ScheduleEvent.Add: 'timeDelay' must be a number, but got " + typeof timeDelay);
+    local argsType = typeof args;
+    if(args && argsType != "array" && argsType != "ArrayEx" && argsType != "List") throw("ScheduleEvent.Add: 'args' must be an array, List, or null, but got " + typeof args)
+
     if ( !(eventName in ScheduleEvent.eventsList) ) {
         ScheduleEvent.eventsList[eventName] <- List()
         dev.trace("Created new Event - \"{}\"", eventName)
@@ -48,7 +53,7 @@ ScheduleEvent["Add"] <- function(eventName, action, timeDelay, args = null, scop
 /*
  * Adds an action to a scheduled event that will be executed repeatedly at a fixed interval. 
  *
- * @param {string} eventName - The name of the event to add the interval to. If the event does not exist, it is created.
+ * @param {string|any} eventName - The name of the event to add the interval to. If the event does not exist, it is created.
  * @param {string|function} action - The action to execute at each interval.
  * @param {number} interval - The time interval in seconds between executions of the action.
  * @param {number} initialDelay - The initial delay in seconds before the first execution of the action (default is 0). 
@@ -56,6 +61,12 @@ ScheduleEvent["Add"] <- function(eventName, action, timeDelay, args = null, scop
  * @param {object} scope - The scope in which to execute the action (default is `this`). 
 */ 
 ScheduleEvent["AddInterval"] <- function(eventName, action, interval, initialDelay = 0, args = null, scope = this) {
+    if (typeof action != "string" && typeof action != "function" && typeof action != "native function" && typeof action != "generator") throw("ScheduleEvent.AddInterval: 'action' must be a function or a string, but got " + typeof action);
+    if (typeof interval != "integer" && typeof interval != "float") throw("ScheduleEvent.AddInterval: 'interval' must be a number, but got " + typeof interval);
+    if (typeof initialDelay != "integer" && typeof initialDelay != "float") throw("ScheduleEvent.AddInterval: 'initialDelay' must be a number, but got " + typeof initialDelay);
+    local argsType = typeof args;
+    if(args && argsType != "array" && argsType != "ArrayEx" && argsType != "List") throw("ScheduleEvent.AddInterval: 'args' must be an array, List, or null, but got " + typeof args)
+
     ScheduleEvent.Add(eventName, action, initialDelay, args, scope)
     ScheduleEvent.Add(eventName, ScheduleEvent.AddInterval, initialDelay + interval, [eventName, action, interval, 0, args, scope], scope)
 }
@@ -63,13 +74,21 @@ ScheduleEvent["AddInterval"] <- function(eventName, action, interval, initialDel
 /*
  * Adds multiple actions to a scheduled event, ensuring they are sorted by execution time.
  *
- * @param {string} eventName - The name of the event to add the actions to. If the event does not exist, it is created.
+ * @param {string|any} eventName - The name of the event to add the actions to. If the event does not exist, it is created.
  * @param {array|List} actions - An array or List of `ScheduleAction` objects to add to the event.
  * @param {boolean} noSort - If true, the actions will not be sorted by execution time (default is false).
  * 
  * **Caution:** Use the `noSort` parameter with care. Incorrect usage may lead to unexpected behavior or break the event scheduling logic. 
 */ 
 ScheduleEvent["AddActions"] <- function(eventName, actions, noSort = false) { 
+    local actionsType = typeof actions;
+    if (actionsType != "array" && actionsType != "List" && actionsType != "ArrayEx") throw("ScheduleEvent.AddActions: 'actions' must be an array or a List, but got " + actionsType);
+    if (actions.len() > 0) {
+        if (typeof actions[0] != "ScheduleAction") {
+            dev.warning("ScheduleEvent.AddActions: The 'actions' container does not appear to hold ScheduleAction objects. This might cause errors.");
+        }
+    }
+
     if (eventName in ScheduleEvent.eventsList ) {
         ScheduleEvent.eventsList[eventName].extend(actions)
         ScheduleEvent.eventsList[eventName].sort()
@@ -92,7 +111,7 @@ ScheduleEvent["AddActions"] <- function(eventName, actions, noSort = false) {
 /*
  * Cancels a scheduled event with the given name, optionally after a delay.
  *
- * @param {string} eventName - The name of the event to cancel.
+ * @param {string|any} eventName - The name of the event to cancel.
  * @param {number} delay - An optional delay in seconds before canceling the event.
 */  
 ScheduleEvent["Cancel"] <- function(eventName, delay = 0) {
@@ -130,7 +149,7 @@ ScheduleEvent["TryCancel"] <- function(eventName, delay = 0) {
 /*
  * Cancels all scheduled actions that match the given action, optionally after a delay.
  *
- * @param {string|function} action - The action to cancel.
+ * @param {functioan} action - The action to cancel.
  * @param {number} delay - An optional delay in seconds before canceling the actions. 
 */
 ScheduleEvent["CancelByAction"] <- function(action, delay = 0) {

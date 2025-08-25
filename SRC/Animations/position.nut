@@ -9,6 +9,11 @@
  * @returns {number} The duration of the animation in seconds. 
 */
 animate["PositionTransitionByTime"] <- function(entities, startPos, endPos, time, animSetting = {}) {
+    if (typeof startPos != "Vector")                        throw("PositionTransitionByTime: 'startPos' argument must be a Vector, but got " + typeof startPos);
+    if (typeof endPos != "Vector")                          throw("PositionTransitionByTime: 'endPos' argument must be a Vector, but got " + typeof endPos);
+    if (typeof time != "integer" && typeof time != "float")  throw("PositionTransitionByTime: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                      throw("PositionTransitionByTime: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("position", animSetting, entities, time)
     local vars = {
         startPos = startPos,
@@ -27,6 +32,11 @@ animate["PositionTransitionByTime"] <- function(entities, startPos, endPos, time
 }
 
 animate.RT["PositionTransitionByTime"] <- function(entities, startPos, endPos, time, animSetting = {}) {
+    if (typeof startPos != "Vector")                        throw("PositionTransitionByTime: 'startPos' argument must be a Vector, but got " + typeof startPos);
+    if (typeof endPos != "Vector")                          throw("PositionTransitionByTime: 'endPos' argument must be a Vector, but got " + typeof endPos);
+    if (typeof time != "integer" && typeof time != "float")  throw("PositionTransitionByTime: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                      throw("PositionTransitionByTime: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("position", animSetting, entities, time)
     local vars = {
         startPos = startPos,
@@ -59,6 +69,11 @@ animate.RT["PositionTransitionByTime"] <- function(entities, startPos, endPos, t
  * @returns {number} The duration of the animation in seconds. 
 */
 animate["PositionTransitionBySpeed"] <- function(entities, startPos, endPos, speed, animSetting = {}) {
+    if (typeof startPos != "Vector")                        throw("PositionTransitionBySpeed: 'startPos' argument must be a Vector, but got " + typeof startPos);
+    if (typeof endPos != "Vector")                          throw("PositionTransitionBySpeed: 'endPos' argument must be a Vector, but got " + typeof endPos);
+    if (typeof speed != "integer" && typeof speed != "float")  throw("PositionTransitionBySpeed: 'speed' argument must be a number, but got " + typeof speed);
+    if (typeof animSetting != "table")                      throw("PositionTransitionBySpeed: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("position", animSetting, entities)
     local vars = {
         startPos = startPos,
@@ -78,6 +93,11 @@ animate["PositionTransitionBySpeed"] <- function(entities, startPos, endPos, spe
 } 
 
 animate.RT["PositionTransitionBySpeed"] <- function(entities, startPos, endPos, speed, animSetting = {}) {
+    if (typeof startPos != "Vector")                        throw("PositionTransitionBySpeed: 'startPos' argument must be a Vector, but got " + typeof startPos);
+    if (typeof endPos != "Vector")                          throw("PositionTransitionBySpeed: 'endPos' argument must be a Vector, but got " + typeof endPos);
+    if (typeof speed != "integer" && typeof speed != "float")  throw("PositionTransitionBySpeed: 'speed' argument must be a number, but got " + typeof speed);
+    if (typeof animSetting != "table")                      throw("PositionTransitionBySpeed: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("position", animSetting, entities)
     local vars = {
         startPos = startPos,

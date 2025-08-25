@@ -9,6 +9,22 @@
  * @returns {BboxTraceResult} - The trace result object. 
 */
 TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings = TracePlus.defaultSettings, note = null) {
+    if(typeof startPos != "Vector") throw("TracePlus.Bbox: 'startPos' argument must be a Vector, but got " + typeof startPos);
+    if(typeof endPos != "Vector") throw("TracePlus.Bbox: 'endPos' argument must be a Vector, but got " + typeof endPos);
+    if(typeof settings != "TraceSettings")  throw("TracePlus.Bbox: 'settings' argument must be a TraceSettings, but got " + typeof settings);
+    if(ignoreEntities != null) {
+        local ignoreType = typeof ignoreEntities;
+        if (ignoreType == "array" || ignoreType == "ArrayEx" || ignoreType == "List") {
+            foreach(idx, ent in ignoreEntities) {
+                if (typeof ent != "pcapEntity" && !(ent instanceof CBaseEntity)) {
+                    throw(format("TracePlus.Bbox: 'ignoreEntities' array/list contains a non-entity value at index %d (got %s). It must contain only entity handles.", idx, typeof ent));
+                }
+            }
+        } else if (ignoreType != "pcapEntity" && !(ignoreEntities instanceof CBaseEntity)) {
+            throw("TracePlus.Bbox: 'ignoreEntities' argument must be an entity handle, an array/list of entities, or null, but got " + ignoreType);
+        }
+    }
+
     local SCOPE = {} // TODO potential place for improvement
     
     SCOPE.startpos <- startPos;

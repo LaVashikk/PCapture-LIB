@@ -15,6 +15,10 @@ HUD["ScreenText"] <- class {
      * @param {string} targetname - The targetname of the "game_text" entity. (optional) 
     */
     constructor(position, message, holdtime = 10, targetname = "") {
+        if (typeof position != "Vector")                                throw("HUD.ScreenText: 'position' must be a Vector, but got " + typeof position);
+        if (typeof message != "string")                                 throw("HUD.ScreenText: 'message' must be a string, but got " + typeof message);
+        if (typeof holdtime != "integer" && typeof holdtime != "float")  throw("HUD.ScreenText: 'holdtime' must be a number, but got " + typeof holdtime);
+    
         this.holdtime = holdtime
         this.CPcapEntity = entLib.CreateByClassname("game_text", {
             // Set initial properties for the text display entity

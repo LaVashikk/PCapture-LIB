@@ -36,7 +36,7 @@
     */
     constructor(name, table, ents, time = 0) {
         this.animName = name
-        this.entities = _GetEntities(ents)
+        this.entities = _GetEntities(ents, name)
         this.delay = time
         
         this.eventName = macros.GetFromTable(table, "eventName", UniqueString(name + "_anim"))
@@ -63,27 +63,37 @@
             ScheduleEvent.Add(this.eventName, this.output, this.delay + this.globalDelay, null, this.scope)
     }
 
-    function _GetEntities(entities) { // meh :>
+    function _GetEntities(entities, actionName) {
         local type_of = typeof entities;
         if (type_of == "string") {
-            if(entities.find("*") == null)
-                return [entLib.FindByName(entities)]
-            else {
-                local ents = List()
-                for(local ent; ent = entLib.FindByName(entities, ent);)
-                    ents.append(ent)
-                return ents
+            local foundEnts = List(); // todo or array?
+            if(entities.find("*") == null) {
+                local ent = entLib.FindByName(entities);
+                if (!ent) dev.warning(actionName + " AnimEvent: Could not find entity with name '" + entities + "'");
+                else foundEnts.push(ent);
             }
+            else {
+                for(local ent; ent = entLib.FindByName(entities, ent);)
+                    foundEnts.push(ent)
+                if (foundEnts.len() == 0) dev.warning(actionName + " AnimEvent: Could not find any entities matching name pattern '" + entities + "'");
+            }
+            return foundEnts;
         }
                 
         
         if (type_of == "array" || type_of == "ArrayEx" || type_of == "List") {
             foreach(idx, entity in entities) {
+                if (!entity || !entity.IsValid()) {
+                    dev.warning(actionName + " AnimEvent: An invalid or null entity was found in the 'entities' list at index " + idx);
+                    continue;
+                }
                 if(typeof entity != "pcapEntity") 
                     entities[idx] = entLib.FromEntity(entity)
             }
             return entities
         }
+
+        if (!entities || !entities.IsValid()) throw("AnimEvent: The provided 'entities' argument is not a valid entity.");
 
         if (type_of != "pcapEntity")
             return [entLib.FromEntity(entities)]

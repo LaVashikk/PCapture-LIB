@@ -234,8 +234,15 @@ macros["GetDist"] <- function(vec1, vec2) {
 */
 macros["StrToVec"] <- function(str, sep = " ") {
     local str_arr = split(str, sep)
-    local vec = Vector(str_arr[0].tofloat(), str_arr[1].tofloat(), str_arr[2].tofloat())
-    return vec
+    if (str_arr.len() != 3) throw(format("macros.StrToVec: Input string '%s' is malformed. Expected 3 components separated by '%s', but got %d.", str, sep, str_arr.len()));
+    try {
+        local vec = Vector(str_arr[0].tofloat(), str_arr[1].tofloat(), str_arr[2].tofloat())
+        return vec
+    }
+    catch(ex) {
+        throw(format("macros.StrToVec: Failed to convert components of string '%s' to numbers. Details: %s", str, ex));
+    }
+
 }
 
 /*
@@ -468,6 +475,9 @@ macros["PointInBounds"] <- function(point) {
  *   * `animSetting` {table} (optional) - A table of additional animation settings. See the `AnimEvent` constructor for details.
 */
 macros["BuildAnimateFunction"] <- function(name, propertySetterFunc, valueCalculator = null) {
+    if (typeof propertySetterFunc != "function") throw("macros.BuildAnimateFunction: 'propertySetterFunc' must be a function, but got " + typeof propertySetterFunc);
+    if (valueCalculator != null && typeof valueCalculator != "function") throw("macros.BuildAnimateFunction: 'valueCalculator' must be a function or null, but got " + typeof valueCalculator);
+
     return function(entities, startValue, endValue, time, animSetting = {}) : (name, propertySetterFunc, valueCalculator) {
         local animSetting = AnimEvent(name, animSetting, entities, time) 
         local varg = {

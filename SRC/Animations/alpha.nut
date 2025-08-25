@@ -9,6 +9,9 @@
  * @returns {number} The duration of the animation in seconds. 
 */
 animate["AlphaTransition"] <- function(entities, startOpacity, endOpacity, time, animSetting = {}) {
+    if (typeof time != "integer" && typeof time != "float")  throw("AlphaTransition: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                      throw("AlphaTransition: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("alpha", animSetting, entities, time)
     local vars = {
         startOpacity = startOpacity,
@@ -27,6 +30,9 @@ animate["AlphaTransition"] <- function(entities, startOpacity, endOpacity, time,
 }
 
 animate.RT["AlphaTransition"] <- function(entities, startOpacity, endOpacity, time, animSetting = {}) {
+    if (typeof time != "integer" && typeof time != "float")  throw("AlphaTransition: 'time' argument must be a number, but got " + typeof time);
+    if (typeof animSetting != "table")                      throw("AlphaTransition: 'animSetting' argument must be a table, but got " + typeof animSetting);
+
     local animSetting = AnimEvent("alpha", animSetting, entities, time)
     local vars = {
         startOpacity = startOpacity,
