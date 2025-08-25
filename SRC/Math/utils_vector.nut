@@ -25,8 +25,8 @@ mVector["isEqually"] <- function(vector, other) {
  * @returns {boolean} - True if the vectors are approximately equal, false otherwise.
 */
 mVector["isEqually2"] <- function(vector, other, precision = 1000) {
-    vector = round(vector, precision)
-    other = round(other, precision)
+    vector = math.vector.round(vector, precision)
+    other = math.vector.round(other, precision)
     return vector.x == other.x && 
             vector.y == other.y && 
             vector.z == other.z
