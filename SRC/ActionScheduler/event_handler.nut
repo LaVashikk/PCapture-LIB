@@ -7,6 +7,8 @@
 */
 ::ScheduledEventLoop <- function() {
     local time = Time() + 0.0001
+    local eventsToDelete = List() // Buffer for safe deletion
+
     // Iterate over each event name and its corresponding event list. 
     foreach(eventName, eventInfo in ScheduleEvent.eventsList) {
         local event 
@@ -41,6 +43,13 @@
             }
         }
         if(eventName != "global" && eventInfo.length == 0) {
+            eventsToDelete.append(eventName) 
+        }
+    }
+
+    // Safely delete events after completion of the main loop.
+    foreach (eventName in eventsToDelete.iter()) {
+        if (eventName in ScheduleEvent.eventsList) {
             ScheduleEvent.eventsList.rawdelete(eventName)
             if(developer() > 0) dev.trace("Event {} closed.", eventName)
         }
