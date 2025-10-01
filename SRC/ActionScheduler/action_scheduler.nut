@@ -147,27 +147,6 @@ ScheduleEvent["TryCancel"] <- function(eventName, delay = 0) {
     return isValid
 }
 
-
-/*
- * Cancels all scheduled actions that match the given action, optionally after a delay.
- *
- * @param {functioan} action - The action to cancel.
- * @param {number} delay - An optional delay in seconds before canceling the actions. 
-*/
-ScheduleEvent["CancelByAction"] <- function(action, delay = 0) {
-    if(delay > 0)
-        return ScheduleEvent.Add("global", format("ScheduleEvent.Cancel(\"%s\")", eventName), delay)
-    
-    foreach(name, events in ScheduleEvent.eventsList) {
-        foreach(eventAction in events) {
-            if(eventAction.action == action) {
-                events.remove(eventAction)
-                dev.trace("\"{}\" was deleted from \"{}\"", eventAction, name)
-            }
-        }
-    }
-}
-
 /*
 * Cancels all scheduled events and actions, effectively clearing the event scheduler.
 */

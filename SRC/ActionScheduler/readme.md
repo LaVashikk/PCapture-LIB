@@ -15,7 +15,6 @@ The `ActionScheduler` module provides an enhanced system for creating and managi
     * [`AddActions(eventName, actions, noSort)`](#scheduleeventaddactionseventname-actions-nosort)
     * [`Cancel(eventName, delay)`](#scheduleeventcanceleventname-delay)
     * [`TryCancel(eventName, delay)`](#scheduleeventtrycanceleventname-delay)
-    * [`CancelByAction(action, delay)`](#scheduleeventcancelbyactionaction-delay)
     * [`CancelAll()`](#scheduleeventcancelall)
     * [`GetEvent(eventName)`](#scheduleeventgeteventeventname)
     * [`IsValid(eventName)`](#scheduleeventisvalideventname)
@@ -197,27 +196,6 @@ The same as `ScheduleEvent.Cancel`, but does not cause an error if the event is 
 
 ```js
 ScheduleEvent.TryCancel("my_event") 
-```
-
-
-### `ScheduleEvent.CancelByAction(action, delay)`
-Cancels all scheduled actions that match the given action.
-
-**Parameters:**
-
-* `action` (string or function): The action to cancel.
-* `delay` (number, optional): An optional delay in seconds before canceling the actions.
-
-**Example:**
-
-```js
-function test() {
-    // do something
-}
-
-ScheduleEvent.Add("my_test_event", test, 1)
-
-ScheduleEvent.CancelByAction(test)
 ```
 
 ### `ScheduleEvent.CancelAll()`

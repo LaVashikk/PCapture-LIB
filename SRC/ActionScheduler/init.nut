@@ -18,7 +18,6 @@
     AddInterval = null,
 
     Cancel = null,
-    CancelByAction = null,
     CancelAll = null,
     
     GetEvent = null,
