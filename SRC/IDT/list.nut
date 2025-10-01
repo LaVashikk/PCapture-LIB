@@ -338,42 +338,11 @@
     }
 
     function SwapNode(node1, node2) {
-        if (node1 == node2) return
-    
-        //  Update references of previous nodes
-        if (node1.prev_ref) {
-            node1.prev_ref.next_ref = node2
-        } else {
-            this.first_node = node2
-        }
-    
-        if (node2.prev_ref) {
-            node2.prev_ref.next_ref = node1
-        } else {
-            this.first_node = node1
-        }
-    
-        //  Update links for the following nodes
-        if (node1.next_ref) {
-            node1.next_ref.prev_ref = node2
-        } else {
-            this.last_node = node2
-        }
-    
-        if (node2.next_ref) {
-            node2.next_ref.prev_ref = node1
-        } else {
-            this.last_node = node1
-        }
-    
-        //  Exchange the `prev_ref` and `next_ref` references of the nodes themselves
-        local temp = node1.prev_ref
-        node1.prev_ref = node2.prev_ref
-        node2.prev_ref = temp
-    
-        temp = node1.next_ref
-        node1.next_ref = node2.next_ref
-        node2.next_ref = temp
+        if (node1 == node2) return;
+        
+        local t = node1.value
+        node1.value = node2.value
+        node2.value = t;
     }
 
 
