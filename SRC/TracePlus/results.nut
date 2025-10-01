@@ -104,7 +104,7 @@ results["Cheap"] <- class {
         if(this.surfaceNormal)
             return this.surfaceNormal
         
-        this.surfaceNormal = CalculateImpactNormal(this.GetStartPos(), this.hitpos)
+        this.surfaceNormal = CalculateImpactNormal(this.traceHandler.startpos, this.hitpos)
         return this.surfaceNormal 
     } 
 

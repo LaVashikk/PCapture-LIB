@@ -35,9 +35,12 @@
      * @returns {ArrayEx} - The newly created or the input ArrayEx object.
     */
     function FromArray(array) {
-        if(typeof array == "ArrayEx") // dumb-ass protection :P
+        // if it's already an ArrayEx, just return it.
+        if(typeof array == "ArrayEx")
             return array
         
+        if(typeof array != "array") throw("ArrayEx.FromArray: Invalid argument. This function only accepts a standard 'array' for conversion. Got type '" + typeof array + "' instead.")
+
         local arrayEx = ArrayEx()
         arrayEx.arr = array
         return arrayEx
@@ -143,13 +146,13 @@
     */
     function search(match) {
         if(typeof match == "function") {
-            foreach(idx, val in arr) {
+            foreach(idx, val in this.arr) {
                 if(match(val))
                     return idx
             }
         }
         else {
-            foreach(idx, val in arr) {
+            foreach(idx, val in this.arr) {
                 if(val == match)
                     return idx
             }

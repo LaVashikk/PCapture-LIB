@@ -79,5 +79,6 @@ lerp["SmoothStep"] <- function(edge0, edge1, value) {
  * @returns {number} - The interpolated value.
 */
 lerp["FLerp"] <- function( f1, f2, i1, i2, value ) {
+    if(i1 == i2) return f2
     return f1 + (f2 - f1) * (value - i1) / (i2 - i1);
 }

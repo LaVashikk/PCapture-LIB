@@ -5,6 +5,7 @@
  * @returns {number} - The minimum value.
 */
 math["min"] <- function(...) {
+    if (vargc == 0) throw("math.min: no arguments");
     local min = vargv[0]
     for(local i = 0; i< vargc; i++) {
         if(min > vargv[i])
@@ -22,6 +23,7 @@ math["min"] <- function(...) {
  * @returns {number} - The maximum value.
 */
 math["max"] <- function(...) {
+    if (vargc == 0) throw("math.max: no arguments");
     local max = vargv[0]
     for(local i = 0; i< vargc; i++) {
         if(vargv[i] > max)
@@ -84,10 +86,8 @@ math["Sign"] <- function(x) {
  * @returns {number} - The value with the copied sign.
 */
 math["copysign"] <- function(value, sign) {
-    if (sign < 0 || value < 0) {
-        return -value;
-    }
-    return value
+    local mag = value < 0 ? -value : value;
+    return (sign < 0) ? -mag : mag;
 }
 
 

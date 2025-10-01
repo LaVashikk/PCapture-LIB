@@ -59,6 +59,8 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} ignoreClassesArray - An array or ArrayEx containing entity classnames to ignore. 
     */
     function SetIgnoredClasses(ignoreClassesArray) {
+        if(typeof ignoreClassesArray != "array" && typeof ignoreClassesArray != "ArrayEx") throw("TracePlus.Settings.SetIgnoredClasses: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof ignoreClassesArray)
+
         this.ignoreClasses = ArrayEx.FromArray(ignoreClassesArray)
         return this
     }
@@ -69,6 +71,8 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} priorityClassesArray - An array or ArrayEx containing entity classnames to prioritize. 
     */
     function SetPriorityClasses(priorityClassesArray) {
+        if(typeof priorityClassesArray != "array" && typeof priorityClassesArray != "ArrayEx") throw("TracePlus.Settings.SetPriorityClasses: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof priorityClassesArray)
+
         this.priorityClasses = ArrayEx.FromArray(priorityClassesArray)
         return this
     }
@@ -79,6 +83,8 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} ignoredModelsArray - An array or ArrayEx containing entity model names to ignore. 
     */
     function SetIgnoredModels(ignoredModelsArray) {
+        if(typeof ignoredModelsArray != "array" && typeof ignoredModelsArray != "ArrayEx") throw("TracePlus.Settings.SetIgnoredModels: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof ignoredModelsArray)
+
         this.ignoredModels = ArrayEx.FromArray(ignoredModelsArray)
         return this
     }
@@ -101,7 +107,7 @@ TracePlus["Settings"] <- class {
     function AppendIgnoredClass(className) {
         // CoW Mechanism
         if(this.ignoreClasses == TracePlus.Settings.ignoreClasses)
-            this.ignoreClasses = clone this.ignoreClasses
+            this.ignoreClasses = this.ignoreClasses.Clone()
         
         this.ignoreClasses.append(className)
         return this
@@ -115,7 +121,7 @@ TracePlus["Settings"] <- class {
     function AppendPriorityClasses(className) {
         // CoW Mechanism
         if(this.priorityClasses == TracePlus.Settings.priorityClasses)
-            this.priorityClasses = clone this.priorityClasses
+            this.priorityClasses = this.priorityClasses.Clone()
         
         this.priorityClasses.append(className)
         return this
@@ -129,13 +135,11 @@ TracePlus["Settings"] <- class {
     function AppendIgnoredModel(modelName) {
         // CoW Mechanism
         if(this.ignoredModels == TracePlus.Settings.ignoredModels)
-            this.ignoredModels = clone this.ignoredModels
+            this.ignoredModels = this.ignoredModels.Clone()
 
         this.ignoredModels.append(modelName)
         return this
     }
-
-
 
     /* 
      * Gets the list of entity classnames to ignore during traces. 

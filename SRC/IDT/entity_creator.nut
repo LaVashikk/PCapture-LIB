@@ -29,7 +29,7 @@
      * @returns {pcapEntity} - The created prop entity object.
     */
     function CreateProp(classname, origin, modelname, activity = 1, keyvalues = {}) {
-        local new_entity = entLib.FromEntity(CreateProp(classname, origin, modelname, activity))
+        local new_entity = entLib.FromEntity(::CreateProp(classname, origin, modelname, activity))
         foreach(key, value in keyvalues) {
             new_entity.SetKeyValue(key, value)
         }

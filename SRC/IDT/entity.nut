@@ -6,7 +6,8 @@
      *
      * @param {CBaseEntity} entity - The entity object.
     */
-    constructor(entity = null) { 
+    constructor(entity) { 
+        if (!entity || !entity.IsValid()) throw("pcapEntity: invalid entity");
         if(typeof entity == "pcapEntity")
             entity = entity.CBaseEntity
 
@@ -54,7 +55,7 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.Kill, fireDelay, null, this)
 
-        EntFireByHandle(CBaseEntity, "kill")
+        EntFireByHandle(this.CBaseEntity, "kill")
         this.CBaseEntity = null
     }
 
@@ -556,7 +557,7 @@
         EntFireByHandle(this.CBaseEntity, "AddOutput", "ModelScale " + scaleValue)
         this.SetUserData("ModelScale", scaleValue)
         // hack for entity update
-        EntFireByHandle(this, "SetBodyGroup", "1"); EntFireByHandle(this, "SetBodyGroup", "0", 0.02)
+        EntFireByHandle(this.CBaseEntity, "SetBodyGroup", "1"); EntFireByHandle(this.CBaseEntity, "SetBodyGroup", "0", 0.02)
     }
 
     /*
@@ -599,10 +600,10 @@
     */
     function SetBBox(minBounds, maxBounds) {
         // Please specify the data type of `min` and `max` to improve the documentation accuracy.
-        if (type(minBounds) == "string") {
+        if (typeof minBounds == "string") {
             minBounds = macros.StrToVec(minBounds)
         }
-        if (type(maxBounds) == "string") {
+        if (typeof maxBounds == "string") {
             maxBounds = macros.StrToVec(maxBounds)
         }
 
@@ -944,7 +945,7 @@
             getVertex(max, min, min, angles), // 0 - Right-Bottom-Front
             getVertex(max, max, min, angles), // 1 - Right-Top-Front
             getVertex(min, max, min, angles), // 2 - Left-Top-Front
-            getVertex(min, min, min, angles)  // 3 - Left-Bottom-Front 
+            getVertex(min, min, min, angles), // 3 - Left-Bottom-Front 
             getVertex(min, min, max, angles), // 4 - Left-Bottom-Back
             getVertex(min, max, max, angles), // 5 - Left-Top-Back
             getVertex(max, max, max, angles), // 6 - Right-Top-Back

@@ -23,7 +23,7 @@ macros["Precache"] <- function(soundPath) {
  * @returns {any} - The value associated with the key, or the default value if the key is not found. 
 */ 
 macros["GetFromTable"] <- function(table, key, defaultValue = null) {
-    if(key in table && table[key]) 
+    if(key in table && table[key] != null) 
         return table[key]
     return defaultValue
 }
@@ -90,6 +90,8 @@ macros["PrintIter"] <- function(iterable) {
  * @returns {List} - A list of numbers within the specified range.
 */ 
 macros["Range"] <- function(start, end, step = 1) {
+    if(step == 0) throw("macros.Range: step must be non-zero");
+    
     local result = List()
     for (local i = start; i <= end; i += step) {
         result.append(i)
@@ -106,6 +108,8 @@ macros["Range"] <- function(start, end, step = 1) {
  * @yields {number} - The next number in the range.
 */ 
 macros["RangeIter"] <- function(start, end, step = 1) {
+    if(step == 0) throw("macros.RangeIter: step must be non-zero");
+
     for (local i = start; i <= end; i += step) {
         yield i
     }
@@ -138,8 +142,6 @@ macros["MaskSearch"] <- function(iter, match) {
  * @param {any} vargs... - Additional arguments to substitute into the placeholders.
 */
 macros["format"] <- function(msg, ...) {
-    if(msg.len() == 1) return msg
-    
     // If you are sure of what you are doing, you don't have to use it
     local subst_count = 0;
     for (local i = 0; i < msg.len() - 1; i++) {
@@ -168,7 +170,7 @@ macros["format"] <- function(msg, ...) {
         result += parts[i];
         if (i < args.len()) {
             local txt = args[i]
-            result += txt;
+            result += ("" + txt);
         }
     }
 
