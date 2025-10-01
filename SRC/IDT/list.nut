@@ -440,7 +440,8 @@
      * @returns {List} - The List instance for chaining.
     */
     function extend(other) {
-        foreach(val in other) 
+        local iter = typeof other == "List" ? other.iter() : other
+        foreach(val in iter) 
             this.append(val)
         return this
     }
@@ -567,23 +568,27 @@
 
     //* OUTDATED! The standard iterator, it's terrible! Use `.iter()` method
     function _nexti(previdx) {
-        if(this.len() == 0) return null
-        if (previdx == null) return 0;
-        return previdx < this.len() - 1 ? previdx + 1 : null;
-    }
-
-    function _cmp(other) { // lmao, why? :O
-        local thisSum = 0;
-        local otherSum = 0;
-        foreach (val in this.iter()) { thisSum += val.value; }
-        foreach (val in other) { otherSum += val.value; }
-
-        if (thisSum > otherSum) {
-            return 1;
-        } else if (thisSum < otherSum) {
-            return -1;
-        } else {
-            return 0; 
+        local callstack = "\nCallstack:\n"
+        // Start at level 2 to skip this _nexti function and the internal VM call.
+        for (local level = 2; ; level++) {
+            local info = getstackinfos(level)
+            // Stop when we've gone through the entire stack.
+            if (info == null) break
+            
+            // Format the information for readability.
+            local source = ("src" in info) ? info.src : "unknown_source"
+            local line = ("line" in info) ? info.line : "?"
+            local func = ("func" in info) ? info.func : "global_scope"
+            
+            callstack += "  at " + source + ":" + line + " in function '" + func + "'\n"
         }
+
+        local errorMessage = "DEPRECATED ITERATION: Standard 'foreach' is not supported for List. " +
+                             "Please use the high-performance '.iter()' method instead.\n\n" +
+                             "Example: foreach (item in yourList.iter()) { ... }" +
+                             callstack
+
+        printl(errorMessage)
+        throw(errorMessage)
     }
 }

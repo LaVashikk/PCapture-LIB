@@ -3,12 +3,13 @@
 /* 
  * Precaches a sound script or a list of sound scripts for later use.
  * 
- * @param {string|array|ArrayEx} sound_path - The path to the sound script or a list of paths.
+ * @param {string|array|ArrayEx|List} sound_path - The path to the sound script or a list of paths.
 */
 macros["Precache"] <- function(soundPath) {
     if(typeof soundPath == "string")
         return self.PrecacheSoundScript(soundPath)
-    foreach(path in soundPath)
+    local iter = typeof soundPath == "List" ? soundPath.iter() : soundPath
+    foreach(path in iter)
         self.PrecacheSoundScript(path)
 }
 
@@ -75,6 +76,7 @@ macros["InvertTable"] <- function(table) {
  * @param {iterable} iterable - The iterable object to print.
 */
 macros["PrintIter"] <- function(iterable) {
+    iterable = typeof iterable == "List" ? iterable.iter() : iterable
     foreach(k, i in iterable) 
         macros.fprint("{}: {}", k, i)
 }

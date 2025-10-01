@@ -139,6 +139,7 @@ animate["applyAnimation"] <- function(animInfo, valueCalculator, propertySetter,
 
         local newValue = valueCalculator(step, transitionFrames, vars)
         
+        local iter = typeof animInfo.entities == "List" ? animInfo.entities.iter() : animInfo.entities
         foreach(ent in animInfo.entities) {
             local action = ScheduleAction(this, propertySetter, elapsed, [ent, newValue])
             actionsList.append(action)

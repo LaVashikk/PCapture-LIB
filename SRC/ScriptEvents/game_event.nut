@@ -117,7 +117,7 @@ function VGameEvent::Trigger(args) {
 */
 function VGameEvent::ForceTrigger(args) {
     args.insert(0, this)
-    foreach(action in this.actions) {
+    foreach(action in this.actions.iter()) {
         action.acall(args)
     }
     dev.trace("VScript Event Fired - " + this.eventName)
