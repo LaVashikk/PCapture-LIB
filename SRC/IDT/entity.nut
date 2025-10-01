@@ -333,7 +333,6 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.SetParent, fireDelay, [parentEnt], this)
         
-        this.SetUserData("parent", parentEnt)
         if(typeof parentEnt != "string") {
             local Pent = entLib.FromEntity(parentEnt)
             if(Pent.GetName() == "") 

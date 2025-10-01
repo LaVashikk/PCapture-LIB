@@ -119,7 +119,6 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`SetCenter(vector)`](#setcentervector)
         *   [`SetAbsCenter(vector)`](#setabscentervector)
         *   [`SetParent(parentEnt, fireDelay, eventName)`](#setparentparentent-firedelay-eventname)
-        *   [`GetParent()`](#getparent)
         *   [`GetChildren()`](#getchildren)
         *   [`GetAllChildrenRecursively()`](#getallchildrenrecursively)
         *   [`SetModelScale(scaleValue, fireDelay, eventName)`](#setmodelscalescalevalue-firedelay-eventname)
@@ -1871,22 +1870,6 @@ Sets the parent entity for the entity, establishing a parent-child relationship.
 ```js
 local parentEntity = entLib.FindByClassname("prop_static")
 myPcapEntity.SetParent(parentEntity) // Set the parent entity
-```
-
-### `GetParent()`
-Gets the parent entity of the entity, if set.
-
-**Returns:**
-
-* (pcapEntity or null): The parent entity as a `pcapEntity` object, or `null` if no parent is set.
-
-**Example:**
-
-```js
-local parent = myPcapEntity.GetParent()
-if (parent) {
-    // ... do something with the parent entity
-}
 ```
 
 ### `GetChildren()`
