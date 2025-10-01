@@ -83,7 +83,7 @@
         // endregion
 
         local msg = macros.format.acall(args)
-        printl("~ " + msg)
+        printl("[VScripts Debug (" + Time().tostring() + ")]: " + msg)
     },
 
 
