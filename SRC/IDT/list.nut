@@ -200,23 +200,31 @@
      * @returns {List} - The List instance for chaining.
     */
     function reverse() {
-        local prev_node = null;
-        local current_node = this.first_node.next_ref;
+        if (this.length <= 1) return this;
 
-        while (current_node) {
-            local next_node = current_node.next_ref;
+        local new_tail = this.first_node.next_ref;
+        local new_head = this.last_node;
 
-            current_node.next_ref = prev_node;
-            current_node.prev_ref = next_node;
+        local current = this.first_node.next_ref;
+        local prev = this.first_node; 
 
-            prev_node = current_node;
-            current_node = next_node;
+        while (current) {
+            local next = current.next_ref; 
+            
+            current.next_ref = prev;
+            current.prev_ref = next;
+
+            prev = current;
+            current = next;
         }
 
-        local temp = this.first_node.next_ref;
-        this.first_node.next_ref = prev_node;
-        this.last_node = temp;
-        return this
+        this.first_node.next_ref = new_head;
+        new_head.prev_ref = this.first_node;
+
+        this.last_node = new_tail;
+        this.last_node.next_ref = null; 
+
+        return this;
     }
 
     /*
@@ -270,7 +278,7 @@
         
         // Update prev_ref and next_ref links after sorting
         local current = this.first_node.next_ref;
-        local previous = null;
+        local previous = this.first_node;
         while (current) {
             current.prev_ref = previous;
             if (previous) {
