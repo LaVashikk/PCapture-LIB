@@ -56,11 +56,16 @@ DoIncludeScript("PCapture-LIB/SRC/Animations/init.nut", rootScope)
 DoIncludeScript("PCapture-LIB/SRC/ScriptEvents/init.nut", rootScope)
 DoIncludeScript("PCapture-LIB/SRC/HUD/init.nut", rootScope)
 
-// Garbage collector for `PCapEntity::EntitiesScopes` 
+// Garbage collector for `PCapEntity::EntitiesScopes` and `PcapEntityCache` 
 ScheduleEvent.AddInterval("global", function() {
     foreach(ent, _ in EntitiesScopes) {
         if(!ent || !ent.IsValid()) {
             delete EntitiesScopes[ent]
+        }
+    }
+    foreach(ent, _ in pcapEntityCache) {
+        if(!ent || !ent.IsValid()) {
+            delete pcapEntityCache[ent]
         }
     }
 }, 5, 0)
