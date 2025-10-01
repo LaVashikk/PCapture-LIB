@@ -6,10 +6,10 @@
  +---------------------------------------------------------------------------------+
 | pcapture-lib.nut                                                                  |
 |       The main file in the library. initializes required parts of the library     |
-|    GitHud repo: https://github.com/IaVashik/PCapture-LIB                          |
+|    GitHud repo: https://github.com/LaVashikk/PCapture-LIB                          |
 +----------------------------------------------------------------------------------+ */
 
-local version = "PCapture-Lib 3.8 Stable"
+local version = "PCapture-Lib 4.0 Testing"
 local rootScope = getroottable()
 
 // `Self` must be in any case, even if the script is run directly by the interpreter
@@ -23,8 +23,10 @@ if("LIB_VERSION" in getroottable() && version.find("Debug") == null) {
     printl("\n")
     dev.warning("PCapture-Lib already initialized.")
     if(LIB_VERSION != version) {
-        dev.error("Attempting to initialize different versions of the PCapture-Lib library!")
-        dev.fprint("Version \"{}\" != \"{}\"", LIB_VERSION, version)
+        printl("\n======================== WARNING ========================")
+        printl("Attempting to initialize different versions of the PCapture-Lib library!")
+        macros.fprint("Inited version \"{}\" != \"{}\"", LIB_VERSION, version)
+        printl("==========================================================\n")
     }
     return
 }
@@ -108,5 +110,5 @@ globalDetector.ConnectOutputEx("OnEndTouchPortal", function() {entLib.FromEntity
 printl("\n----------------------------------------")
 printl("Welcome to " + LIB_VERSION)
 printl("Author: laVashik Production") // The God of VScripts :P
-printl("GitHub: https://github.com/IaVashik/PCapture-LIB")
+printl("GitHub: https://github.com/LaVashikk/PCapture-LIB")
 printl("----------------------------------------\n")
