@@ -1,14 +1,12 @@
+::__listnodetostring <- function () {return this.value.tostring()}
 ::ListNode <- function(value) return {
     value = value,
     prev_ref = null,
     next_ref = null,
 
-    tostring = function () {
-        return this.value.tostring();
-    }
+    tostring = __listnodetostring
 } 
 
-//! Deleting nodes should cause a leak!
 ::List <- class {
     length = 0;
     first_node = null;
