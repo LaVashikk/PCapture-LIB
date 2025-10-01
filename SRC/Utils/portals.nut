@@ -66,7 +66,7 @@
             continue
     
         portal.SetInputHook("Open", function():(portalStateHandler) {return portalStateHandler(false)})
-        portal.SetInputHook("Close", function():(portalStateHandler) {return portalStateHandler(false)})
+        portal.SetInputHook("Close", function():(portalStateHandler) {return portalStateHandler(true)})
 
         local partner = portal.GetPartnerInstance()
     
