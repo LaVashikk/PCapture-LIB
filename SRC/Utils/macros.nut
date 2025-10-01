@@ -65,7 +65,7 @@ macros["GetValues"] <- function(table) {
 macros["InvertTable"] <- function(table) {
     local result = {}
     foreach(key, value in table) {
-        result[value] = key
+        result[value] <- key
     }
     return result
 }
@@ -215,7 +215,7 @@ macros["CompileFromStr"] <- function(funcBody, ...) {
         args[i + 2] = vargv[i]
     }
 
-    return compilefromstr(macros.format.acall(args))
+    return compilestring(macros.format.acall(args))
 }
 
 /* 
@@ -331,10 +331,16 @@ macros["DeepCopy"] <- function(container, _ = null) {
             local result = clone container; 
             foreach( k,v in container) result[k] = macros.DeepCopy(v); 
             return result; 
+        
         case "array": 
+            local a = array(container.len());
+            for (local i=0; i<container.len(); i++) a[i] = macros.DeepCopy(container[i]);
+            return a;
+
         case "ArrayEx": 
         case "List":
             return container.map(macros.DeepCopy); 
+        
         default: return container; 
     }
 }
@@ -493,7 +499,7 @@ macros["BuildAnimateFunction"] <- function(name, propertySetterFunc, valueCalcul
         animate.applyAnimation(
             animSetting,
             valueCalculator ? valueCalculator : function(step, steps, v) {return v.start + v.delta * v.easeFunc(step / steps)},
-            propertySetterFunc
+            propertySetterFunc,
             varg
         ) 
 
@@ -516,7 +522,7 @@ macros["BuildRTAnimateFunction"] <- function(name, propertySetterFunc, valueCalc
         animate.applyRTAnimation(
             animSetting,
             valueCalculator ? valueCalculator : function(step, steps, v) {return v.start + v.delta * v.easeFunc(step / steps)},
-            propertySetterFunc
+            propertySetterFunc,
             varg
         ) 
 
