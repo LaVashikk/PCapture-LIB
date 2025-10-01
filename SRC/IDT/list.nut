@@ -172,6 +172,8 @@
      * @returns {any} - The value of the removed element.
     */
     function pop() {
+        if(this.length == 0) throw("pop() on a empty list")
+
         local current = this.last_node;
         this.last_node = current.prev_ref;
         this.last_node.next_ref = null;
