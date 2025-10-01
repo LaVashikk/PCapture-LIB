@@ -98,13 +98,25 @@
      * @throws {Error} - If the index is out of bounds.
     */
     function getNode(idx) {
-        if (idx >= this.length) {
+        if (idx >= this.length || idx < 0) {
             throw("the index '" + idx + "' does not exist!");
         }
 
-        local node = this.first_node.next_ref;
-        for (local i = 0; i < idx; i++) {
-            node = node.next_ref;
+        // If the index is in the first half, we search from the beginning
+        if (idx < this.length / 2) {
+            local node = this.first_node.next_ref;
+            for (local i = 0; i < idx; i++) {
+                node = node.next_ref;
+            }
+            return node;
+        } 
+        // Otherwise, we search from the end
+        else {
+            local node = this.last_node;
+            for (local i = this.length - 1; i > idx; i--) {
+                node = node.prev_ref;
+            }
+            return node;
         }
         return node;
     }
