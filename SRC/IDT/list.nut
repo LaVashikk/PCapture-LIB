@@ -146,7 +146,9 @@
         local value = node.value
         local next = node.next_ref;
         local prev = node.prev_ref;
-        // node.drop();
+        
+        node.next_ref = null;
+        node.prev_ref = null;
 
         if (prev) {
             prev.next_ref = next; 
@@ -225,7 +227,7 @@
      * @returns {List} - The sliced list.
     */
     function slice(startIndex, endIndex = null) {
-        if(!endIndex) endIndex = this.len()
+        if(endIndex == null) endIndex = this.len()
 
         local result = List()
         foreach(idx, value in this.iter()) {
@@ -249,7 +251,7 @@
             // Add elements
             for(local i = 0; i < diff; i++)
                 this.append(fill)
-            return
+            return this
         }
 
         // Remove elements
@@ -385,7 +387,9 @@
         local current = this.first_node.next_ref;
         while (current) {
             local next_node = current.next_ref;
-            // current.drop()
+            current.prev_ref = null;
+            current.next_ref = null;
+
             current = next_node;
         }
 
@@ -557,7 +561,8 @@
     function totable() {
         local table = {}
         foreach(element in this.iter()) {
-            if(element) table[element] <- null
+            if(element != null) // null can't be the key 
+                table[element] <- null
         }
         return table
     }
