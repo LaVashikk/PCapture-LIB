@@ -43,19 +43,26 @@ const PLAYER_DEATH_MARKER = -999
  * for dead players and schedules their respawn logic.
 */
 ::HandlePlayerEventsMP <- function() {
-    foreach(player in AllPlayers){
+    local playersToRemove = []
+    foreach(idx, player in AllPlayers){
         if(!player.IsValid()) {
             OnPlayerLeft(player)
-            AllPlayers.remove(AllPlayers.search(player))
+            playersToRemove.append(idx)
             continue
         }
-
-        if(player.GetHealth() > 0 || player.GetHealth() == -999) continue
+        
+        if(player.GetHealth() > 0 || player.GetHealth() == PLAYER_DEATH_MARKER) continue
 
         OnPlayerDeath(player)
         ScheduleEvent.AddInterval("global", _monitorRespawn, 0.3, 0, null, player)
-        player.SetHealth(-999)
+        player.SetHealth(PLAYER_DEATH_MARKER)
     }
+
+    if(playersToRemove.len() > 0) {
+        for(local i = playersToRemove.len() - 1; i >= 0; i--) {
+            AllPlayers.remove(playersToRemove[i])
+        }        
+    } 
 }
 
 ::HandlePlayerEventsSP <- function() {
