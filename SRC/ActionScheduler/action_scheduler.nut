@@ -151,6 +151,15 @@ ScheduleEvent["TryCancel"] <- function(eventName, delay = 0) {
 * Cancels all scheduled events and actions, effectively clearing the event scheduler.
 */
 ScheduleEvent["CancelAll"] <- function() {
+    ScheduleEvent.eventsList = {global = ScheduleEvent.eventsList["global"]}
+    dev.trace("Scheduled events have been canceled!")
+}
+
+/* 
+* Cancels all scheduled events and actions, EVEN GLOBAL!! effectively clearing the event scheduler.
+* Undocumented unsafe function. You must understand what you are doing!
+*/
+ScheduleEvent["UNSAFE_ClearWithGlobal"] <- function() {
     ScheduleEvent.eventsList = {global = List()}
     dev.trace("All scheduled events have been canceled!")
 }
