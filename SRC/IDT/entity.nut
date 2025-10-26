@@ -30,7 +30,7 @@
      *
      * @param {Vector} angles - The angle vector.
     */
-    function SetAbsAngles(angles) {
+    function SetAngles2(angles) {
         this.CBaseEntity.SetAngles(angles.x, angles.y, angles.z)
     }
 

@@ -115,7 +115,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
 
     *   **Transformations:**
         *   [`SetAngles(x, y, z)`](#setanglesx-y-z)
-        *   [`SetAbsAngles(angles)`](#setabsanglesangles)
+        *   [`SetAngles2(angles)`](#SetAngles2angles)
         *   [`SetCenter(vector)`](#setcentervector)
         *   [`SetAbsCenter(vector)`](#setabscentervector)
         *   [`SetParent(parentEnt, fireDelay, eventName)`](#setparentparentent-firedelay-eventname)
@@ -1552,7 +1552,7 @@ Sets the angles (pitch, yaw, roll) of the entity, ensuring that the angles are w
 myPcapEntity.SetAngles(45, 90, 0) // Set the entity's angles
 ```
 
-### `SetAbsAngles(angles)`
+### `SetAngles2(angles)`
 Sets the absolute rotation angles of the entity using a Vector.
 
 **Parameters:**
@@ -1562,7 +1562,7 @@ Sets the absolute rotation angles of the entity using a Vector.
 **Example:**
 
 ```js
-myPcapEntity.SetAbsAngles(Vector(0, 180, 0)) // Set the entity to face the opposite direction
+myPcapEntity.SetAngles2(Vector(0, 180, 0)) // Set the entity to face the opposite direction
 ```
 
 ### `Destroy(fireDelay, eventName)`

@@ -29,7 +29,7 @@ animate["AnglesTransitionByTime"] <- function(entities, startAngles, endAngles, 
     animate.applyAnimation(
         animSetting, 
         function(step, steps, v){return v.startAngles + v.angleDelta * v.easeFunc(step / steps)},
-        function(ent, newAngle) {ent.SetAbsAngles(newAngle)},
+        function(ent, newAngle) {ent.SetAngles2(newAngle)},
         vars
     )
     
@@ -57,7 +57,7 @@ animate.RT["AnglesTransitionByTime"] <- function(entities, startAngles, endAngle
     animate.applyRTAnimation(
         animSetting, 
         function(step, steps, v){return v.startAngles + v.angleDelta * v.easeFunc(step / steps)},
-        function(ent, newAngle) {ent.SetAbsAngles(newAngle)},
+        function(ent, newAngle) {ent.SetAngles2(newAngle)},
         vars
     )
     
