@@ -1155,7 +1155,7 @@ local endPos = macros.GetEyeEndpos(player, 100) // Calculate the end position of
 
 ### `macros.GetVertex(x, y, z, ang)`
 
-This macro calculates the position of a vertex of a bounding box based on the provided x, y, z bounds and the rotation angles of the bounding box. It is used internally by the `pcapEntity.getBBoxPoints()` method to retrieve the eight vertices of an entity's axis-aligned bounding box (AABB) in world coordinates.
+This macro calculates the position of a vertex of a bounding box based on the provided x, y, z bounds and the rotation angles of the bounding box. It is used internally by the `pcapEntity.GetBBoxPoints()` method to retrieve the eight vertices of an entity's axis-aligned bounding box (AABB) in world coordinates.
 
 **Parameters:**
 

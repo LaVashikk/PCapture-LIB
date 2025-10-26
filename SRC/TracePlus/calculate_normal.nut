@@ -123,7 +123,7 @@ function _getFaceVertices(allVertices, hitPoint, origin) {
 
 ::CalculateImpactNormalFromBbox <- function(startPos, hitPos, hitEntity) {
     // The algorithm proposed by Enderek
-    local closestVertices = _getFaceVertices(hitEntity.getBBoxPoints(), hitPos, hitEntity.GetOrigin())
+    local closestVertices = _getFaceVertices(hitEntity.GetBBoxPoints(), hitPos, hitEntity.GetOrigin())
     if(!closestVertices)
         return CalculateImpactNormalFromBbox2(startPos, hitPos, hitEntity)
     
@@ -147,7 +147,7 @@ function _getFaceVertices(allVertices, hitPoint, origin) {
 */
 ::CalculateImpactNormalFromBbox2 <- function(startPos, hitPos, hitEntity) {
     // Get the entity bounding box vertices.
-    local bboxVertices = hitEntity.getBBoxPoints()
+    local bboxVertices = hitEntity.GetBBoxPoints()
 
     // Find the three closest vertices to the hit position.
     local closestVertices = _findClosestVertices(hitPos - hitEntity.GetOrigin(), bboxVertices)

@@ -900,11 +900,7 @@
         if(stat == 4) 
             angles = Vector(45, 45, 45)
 
-        local cache = GetUserData("aabbCache")
-        if(cache && (angles - cache[0]).Length() <= 10)
-            return Vector(cache[1][stat], cache[2][stat], cache[3][stat]) // todo what about state 4?
-
-        local all_vertex = this.getBBoxPoints()
+        local all_vertex = this.GetBBoxPoints()
         local x = array(8)
         local y = array(8)
         local z = array(8)
@@ -934,13 +930,13 @@
      *
      * @returns {Array<Vector>} - The 8 vertices of the bounding box.  
     */
-    function getBBoxPoints() {
+    function GetBBoxPoints() {
         local max = this.GetBoundingMaxs();
         local min = this.GetBoundingMins();
         local angles = this.GetAngles()
     
         local getVertex = macros.GetVertex
-        return [ // todo cache it?
+        return [
             getVertex(max, min, min, angles), // 0 - Right-Bottom-Front
             getVertex(max, max, min, angles), // 1 - Right-Top-Front
             getVertex(min, max, min, angles), // 2 - Left-Top-Front
@@ -957,10 +953,10 @@
      *
      * @returns {array} - An array of 12 Vector triplets, where each triplet represents the three vertices of a triangle face.
     */
-    function getBBoxFaces() {
-        local vertices = this.getBBoxPoints()
+    function GetBBoxFaces() {
+        local vertices = this.GetBBoxPoints()
         local getTriangle = macros.GetTriangle
-        return [ // todo cache it?
+        return [
             /* Bottom face triangles */ 
             getTriangle(vertices[0], vertices[3], vertices[4]), // Face 0: Right-Bottom-Front, Left-Bottom-Front, Left-Bottom-Back
             getTriangle(vertices[0], vertices[4], vertices[7]), // Face 1: Right-Bottom-Front, Left-Bottom-Back, Right-Bottom-Back

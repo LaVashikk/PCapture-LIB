@@ -165,8 +165,8 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`IsSquareBbox()`](#issquarebbox)
         *   [`GetAABB()`](#getaabb)
         *   [`CreateAABB(stat)`](#createaabbstat)
-        *   [`getBBoxPoints()`](#getbboxpoints)
-        *   [`getBBoxFaces()`](#getbboxfaces)
+        *   [`GetBBoxPoints()`](#getbboxpoints)
+        *   [`GetBBoxFaces()`](#getbboxfaces)
 
 ## [IDT/array.nut](array.nut)
 
@@ -2405,7 +2405,7 @@ Returns a specific face of the entity's oriented bounding box (AABB) as a vector
 local minBounds = myPcapEntity.CreateAABB(0) // Get the minimum bounds of the AABB
 ```
 
-### `getBBoxPoints()`
+### `GetBBoxPoints()`
 Returns an array of vectors representing the 8 vertices of the entity's axis-aligned bounding box (AABB). **This is required for `CreateAABB`**
 
 **Returns:**
@@ -2415,10 +2415,10 @@ Returns an array of vectors representing the 8 vertices of the entity's axis-ali
 **Example:**
 
 ```js
-local vertices = myPcapEntity.getBBoxPoints() // Get the vertices of the AABB
+local vertices = myPcapEntity.GetBBoxPoints() // Get the vertices of the AABB
 ```
 
-### `getBBoxFaces()`
+### `GetBBoxFaces()`
 This method retrieves the faces of an entity's bounding box as an array of triangle vertices. It is used to access and work with the individual triangular faces that make up the bounding box.
 
 **Returns:**
@@ -2429,7 +2429,7 @@ This method retrieves the faces of an entity's bounding box as an array of trian
 
 ```js
 local myEntity = entLib.FindByClassname("prop_physics")
-local faces = myEntity.getBBoxFaces()
+local faces = myEntity.GetBBoxFaces()
 
 // Iterate over the faces and print the vertices of each triangle
 foreach(i, face in faces ) {
