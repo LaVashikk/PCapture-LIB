@@ -4,7 +4,6 @@
 ::ArrayEx <- class {
     // The internal array. 
     arr = null
-    length = 0;
     
     // The internal table representation. 
     table = null;
@@ -432,9 +431,9 @@
 
 
     function _nexti(previdx) {
-        if(this.len() == 0) return null
+        if(this.arr.len() == 0) return null
         if (previdx == null) return 0;
-		return previdx < this.len() - 1 ? previdx + 1 : null;
+		return previdx < this.arr.len() - 1 ? previdx + 1 : null;
 	}
 
     function cmp(other) { // lmao, why? :O
