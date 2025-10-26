@@ -68,6 +68,11 @@ ScheduleEvent.AddInterval("global", function() {
             delete pcapEntityCache[ent]
         }
     }
+    foreach(ent, _ in TracePlusIgnoreEnts) {
+        if(!ent || !ent.IsValid()) {
+            delete TracePlusIgnoreEnts[ent]
+        }
+    }
 }, 5, 0)
 
 

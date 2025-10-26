@@ -489,6 +489,9 @@ macros["BuildAnimateFunction"] <- function(name, propertySetterFunc, valueCalcul
     if (valueCalculator != null && typeof valueCalculator != "function") throw("macros.BuildAnimateFunction: 'valueCalculator' must be a function or null, but got " + typeof valueCalculator);
 
     return function(entities, startValue, endValue, time, animSetting = {}) : (name, propertySetterFunc, valueCalculator) {
+        if(!entities) throw(name+" Anim: entities cannot be null")
+        if(time <= 0) throw(name+" Anim: time must be positive")
+    
         local animSetting = AnimEvent(name, animSetting, entities, time) 
         local varg = {
             start = startValue,

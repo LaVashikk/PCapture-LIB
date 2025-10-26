@@ -1,6 +1,7 @@
 if("AllPlayers" in getroottable()) return
 
 ::AllPlayers <- ArrayEx()
+const PLAYER_DEATH_MARKER = -999
 
 /* 
  * Gets an array of all players in the game. 
@@ -59,9 +60,9 @@ if("AllPlayers" in getroottable()) return
 
 ::HandlePlayerEventsSP <- function() {
     local h = AllPlayers[0].GetHealth()
-    if(h > 0 || h == -999) return
+    if(h > 0 || h == PLAYER_DEATH_MARKER) return
     OnPlayerDeath(AllPlayers[0])
-    AllPlayers[0].SetHealth(-999)
+    AllPlayers[0].SetHealth(PLAYER_DEATH_MARKER)
 }
 
 /* 

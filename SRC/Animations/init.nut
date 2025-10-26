@@ -199,35 +199,35 @@ animate["_applyRTAnimation"] <- function(animInfo, valueCalculator, propertySett
 
     // Helper function to process each animation step
     function processStep(step, animInfo, valueCalculator, propertySetter, vars, transitionFrames) {
-    // Stop if all frames are processed
-    if (step > transitionFrames) {
-        animInfo.delay = 0;
-        animInfo.globalDelay = 0;
-        animInfo.CallOutput();
-        return;
+        // Stop if all frames are processed
+        if (step > transitionFrames) {
+            animInfo.delay = 0;
+            animInfo.globalDelay = 0;
+            animInfo.CallOutput();
+            return;
+        }
+
+        // Calculate the new property value
+        local newValue = valueCalculator(step, transitionFrames, vars);
+
+        // Stop if the filter callback signals to cancel the animation
+        if (animInfo.filterCallback(animInfo, newValue, transitionFrames, step, vars)) {
+            return;
+        }
+
+        // Apply the new value to all entities
+        foreach(ent in animInfo.entities)
+            propertySetter(ent, newValue)
+
+        // Move to the next step
+        ScheduleEvent.Add(
+            animInfo.eventName,
+            processStep,
+            animInfo.frameInterval,
+            [++step, animInfo, valueCalculator, propertySetter, vars, transitionFrames],
+            this  
+        );
     }
-
-    // Calculate the new property value
-    local newValue = valueCalculator(step, transitionFrames, vars);
-
-    // Stop if the filter callback signals to cancel the animation
-    if (animInfo.filterCallback(animInfo, newValue, transitionFrames, step, vars)) {
-        return;
-    }
-
-    // Apply the new value to all entities
-    foreach(ent in animInfo.entities)
-        propertySetter(ent, newValue)
-
-    // Move to the next step
-    ScheduleEvent.Add(
-        animInfo.eventName,
-        processStep,
-        animInfo.frameInterval,
-        [++step, animInfo, valueCalculator, propertySetter, vars, transitionFrames],
-        this  
-    );
-}
 
     // Start the animation
     processStep(0, animInfo, valueCalculator, propertySetter, vars, transitionFrames);

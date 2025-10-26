@@ -91,7 +91,7 @@ ScheduleEvent["AddActions"] <- function(eventName, actions, noSort = false) {
         }
     }
 
-    if (eventName in ScheduleEvent.eventsList ) {
+    if(eventName in ScheduleEvent.eventsList) {
         ScheduleEvent.eventsList[eventName].extend(actions)
         ScheduleEvent.eventsList[eventName].sort()
         if(developer() > 0) dev.trace("Added {} actions to Event \"{}\".", actions.len(), eventName)
@@ -183,5 +183,5 @@ ScheduleEvent["GetEvent"] <- function(eventName) {
  * @returns {bool} - Object exists or not.
 */
 ScheduleEvent["IsValid"] <- function(eventName) {
-    return eventName in ScheduleEvent.eventsList && ScheduleEvent.eventsList[eventName].len() != 0
+    return eventName in ScheduleEvent.eventsList
 }

@@ -66,7 +66,6 @@
         catch(err) {throw "Invalid value for sleep. " + err}
         if (delay <= 0.0) delay = FrameTime()
         
-        // todo Optimization: can edit this, change its time, and move in queue
         if(eventName in ScheduleEvent.eventsList) {
             ScheduleEvent.Add(eventName, generator, delay, null, this.scope)
         } else {
