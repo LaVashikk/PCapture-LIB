@@ -17,14 +17,6 @@
         entity.GetScriptScope().selfEx <- this // todo: no docs about it
     }
 
-
-    function SetAngles(x, y, z) {
-        x = x >= 360 ? 0 : x
-        y = y >= 360 ? 0 : y
-        z = z >= 360 ? 0 : z
-        this.CBaseEntity.SetAngles(x, y, z)
-    }
-
     /*
      * Sets the angles of the entity.
      *
@@ -344,15 +336,6 @@
     }
 
     /*
-     * Gets the parent of the entity.
-     *
-     * @returns {pcapEntity|null} - The parent entity object or null if no parent is set.
-    */
-    function GetParent() {
-        return this.GetUserData("parent")
-    }
-
-    /*
      * Gets a list of all DIRECT children of this entity.
      * This function is not recursive and will not find grandchildren.
      *
@@ -592,25 +575,6 @@
     }
 
     /*
-     * Sets the bounding box of the entity.
-     *
-     * @param {Vector|string} min - The minimum bounds vector or a string representation of the vector.
-     * @param {Vector|string} max - The maximum bounds vector or a string representation of the vector.
-    */
-    function SetBBox(minBounds, maxBounds) {
-        // Please specify the data type of `min` and `max` to improve the documentation accuracy.
-        if (typeof minBounds == "string") {
-            minBounds = macros.StrToVec(minBounds)
-        }
-        if (typeof maxBounds == "string") {
-            maxBounds = macros.StrToVec(maxBounds)
-        }
-
-        this.CBaseEntity.SetSize(minBounds, maxBounds)
-    }
-
-
-    /*
      * Sets a context value for the entity.
      *
      * @param {string} name - The name of the context value.
@@ -635,7 +599,6 @@
         EntitiesScopes[this.CBaseEntity][name.tolower()] <- value
     }
 
-
     /*
      * Gets a stored user data value.
      *
@@ -647,18 +610,6 @@
         if(name in EntitiesScopes[this.CBaseEntity])
             return EntitiesScopes[this.CBaseEntity][name]
         return null
-    }
-
-
-    /*
-     * Gets the bounding box of the entity.
-     *
-     * @returns {table} - The minimum bounds and maximum bounds of the entity.
-    */
-    function GetBBox() {
-        local max = GetBoundingMaxs()
-        local min = GetBoundingMins()
-        return {min = min, max = max}
     }
 
     /*
@@ -749,12 +700,7 @@
 
     //! TODO ADD TO DOCS
     function GetBoundingCenter() {
-        local cachedResult = GetUserData("BoundingCenter")
-        if(cachedResult) return cachedResult
-
-        local result = (this.GetBoundingMaxs() - this.GetBoundingMins()) * 0.5
-        this.SetUserData("BoundingCenter", result)
-        return result
+        return (this.CBaseEntity.GetBoundingMaxs() - this.CBaseEntity.GetBoundingMins()) * 0.5
     }
 
     /* 
@@ -763,12 +709,12 @@
      * @returns {table} - The minimum bounds, maximum bounds, and center of the entity.
     */ 
     function GetAABB() {
-        local max = CreateAABB(7)
-        local min = CreateAABB(0)
-        local center = CreateAABB(4)
-        return {min = min, center = center, max = max}
+        return {
+            min = this.CreateAABB(0),
+            center = this.CreateAABB(4),
+            max = this.CreateAABB(7)
+        }
     }
-
 
     /* 
      * Gets the index of the entity.
@@ -914,14 +860,13 @@
         x.sort(); y.sort(); z.sort()
  
         local result
-        if(stat == 4) {// centered
+        if(stat == 4) { // centered
             result = ( Vector(x[7], y[7], z[7]) - Vector(x[0], y[0], z[0]) ) * 0.5
         } 
         else {
             result = Vector(x[stat], y[stat], z[stat])
         }
         
-        this.SetUserData("aabbCache", [angles, x, y, z])
         return result
     }
 
@@ -1056,4 +1001,7 @@ function pcapEntity::SetHealth(health) this.CBaseEntity.SetHealth(health)
 function pcapEntity::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
 function pcapEntity::SetModel(model_name) this.CBaseEntity.SetModel(model_name)
 function pcapEntity::SetOrigin(vector) this.CBaseEntity.SetOrigin(vector)
+function pcapEntity::SetAngles(x, y, z) this.CBaseEntity.SetAngles(x, y, z)
 function pcapEntity::SetVelocity(vector) this.CBaseEntity.SetVelocity(vector)
+function pcapEntity::SetBBox(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)
+function pcapEntity::SetSize(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)

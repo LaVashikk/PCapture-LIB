@@ -161,7 +161,6 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
 
     *   **Bounding Box and Position:**
         *   [`SetBBox(minBounds, maxBounds)`](#setbboxminbounds-maxbounds)
-        *   [`GetBBox()`](#getbbox)
         *   [`IsSquareBbox()`](#issquarebbox)
         *   [`GetAABB()`](#getaabb)
         *   [`CreateAABB(stat)`](#createaabbstat)
@@ -743,7 +742,7 @@ Similar to `iter`, but returns the node instead of the node's value.
 
 ```js
 foreach(node in myList.rawIter()) {
-    printl(node.next_ref.value)
+    printl(node._nextRef.value)
 }
 // Output: 2
 //         3
@@ -1868,7 +1867,7 @@ Sets the parent entity for the entity, establishing a parent-child relationship.
 **Example:**
 
 ```js
-local parentEntity = entLib.FindByClassname("prop_static")
+local parentEntity = entLib.FindByClassname("prop_dynamic")
 myPcapEntity.SetParent(parentEntity) // Set the parent entity
 ```
 
@@ -2138,27 +2137,13 @@ printl("Local Position: " + localData.pos)
 printl("Local Angles: " + localData.ang)
 ```
 
-### `SetAbsOrigin2(desiredAbsVec)`
-An experimental function that sets the entity's absolute origin in world space using teleportation instead of position setting. The key difference is that standard position-setting functions use client-side interpolation, causing the entity to visibly slide to its new position. This function bypasses interpolation, making the position change instantaneous.
-
-**Parameters:**
-
-* `desiredAbsVec` (Vector): The desired absolute position in world coordinates.
-
-**Example:**
-```js
-// Place the entity precisely at the world's center, regardless of its parent's position.
-myPcapEntity.SetAbsOrigin2(Vector(0, 0, 0))
-```
-
-
 ### `SetBBox(minBounds, maxBounds)`
 Sets the bounding box of the entity using vectors or string representations of vectors.
 
 **Parameters:**
 
-* `minBounds` (Vector or string): The minimum bounds of the bounding box as a Vector or a string representation (e.g., "-5 -5 -5").
-* `maxBounds` (Vector or string): The maximum bounds of the bounding box as a Vector or a string representation (e.g., "5 5 5").
+* `minBounds` (Vector): The minimum bounds of the bounding box.
+* `maxBounds` (Vector): The maximum bounds of the bounding box.
 
 **Example:**
 
@@ -2212,21 +2197,6 @@ Retrieves a stored user data value by name.
 ```js
 local myData = myPcapEntity.GetUserData("myData")
 macros.PrintIter(myData)
-```
-
-### `GetBBox()`
-Returns the bounding box of the entity as a table with two Vector properties: `min` and `max`, representing the minimum and maximum extents of the box.
-
-**Returns:**
-
-* (table): A table with `min` and `max` Vector properties representing the bounding box.
-
-**Example:**
-
-```js
-local bbox = myPcapEntity.GetBBox()
-printl("Bounding box min:", bbox.min)
-printl("Bounding box max:", bbox.max)
 ```
 
 ### `IsSquareBbox()`
