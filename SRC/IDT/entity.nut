@@ -650,40 +650,31 @@
     }
 
     /*
-     * An experimental function that sets the entity's absolute origin in world space using teleportation.
-     * The key difference is that standard position-setting functions use client-side interpolation, 
-     * causing the entity to visibly slide to its new position.
+     * A function that sets the entity's absolute origin in world space using teleportation.
      * This function bypasses interpolation, making the position change instantaneous.
      *
      * @param {Vector} desiredAbsVec - The desired absolute position in world coordinates.
     */
-    function SetAbsOrigin2(desiredAbsVec) {
-        local pParent = this.CBaseEntity.GetMoveParent();
+    function SetAbsOrigin(desiredAbsVec) {
+        local pParent = this.CBaseEntity.GetMoveParent()
 
-        // --- CASE 1: ENTITY HAS NO PARENT ---
+        // If there is no parent, local coordinates are equivalent to absolute coordinates.
         if (!pParent) {
-            // If there is no parent, local coordinates are equivalent to absolute coordinates.
-            // Simply use the 'local' SetOrigin to set them.
-            this.SetOrigin(desiredAbsVec);
-            return;
+            this.CBaseEntity.SetOrigin(desiredAbsVec)
+            return
         }
 
-        // --- CASE 2: ENTITY HAS A PARENT ---
-        // We need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
-
-        // Get the parent's absolute coordinates and angles.
-        local parentWorldPos = pParent.GetOrigin();
-        local parentWorldAng = pParent.GetAngles();
+        // We have parent, so we need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
+        local parentWorldPos = pParent.GetOrigin()
+        local parentWorldAng = pParent.GetAngles()
 
         // Calculate the offset vector from the parent to the desired point in world coordinates.
-        local worldOffsetVector = desiredAbsVec - parentWorldPos;
+        local worldOffsetVector = desiredAbsVec - parentWorldPos
 
         // Transform the world offset vector into a local one.
-        // To do this, we need to "unrotate" it by the parent's angles.
-        // The math.vector.unrotate function does exactly that.
-        local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng);
+        local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng)
 
-        this.SetOrigin(localPos);
+        this.SetOrigin(localPos)
     }
 
     /*
@@ -1002,7 +993,6 @@ function pcapEntity::ValidateScriptScope() return this.CBaseEntity.ValidateScrip
 function pcapEntity::GetScriptScope() return this.CBaseEntity.GetScriptScope()
 function pcapEntity::entindex() return this.CBaseEntity.entindex()
 
-function pcapEntity::SetAbsOrigin(vector) this.CBaseEntity.SetAbsOrigin(vector)
 function pcapEntity::SetForwardVector(vector) this.CBaseEntity.SetForwardVector(vector)
 function pcapEntity::SetHealth(health) this.CBaseEntity.SetHealth(health)
 function pcapEntity::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
