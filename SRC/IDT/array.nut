@@ -135,7 +135,7 @@
     */
     function contains(match) { 
         if(!this.tableIsValid) this.totable()
-        return match in this.table
+        return match.tostring() in this.table
     }
 
     /*
@@ -223,6 +223,7 @@
         local result = ArrayEx()
         
         foreach(value in this.arr) {
+            value = value.tostring()
             if(value in seen) continue
             seen[value] <- true    
             result.append(value)
@@ -360,7 +361,7 @@
         tableIsValid = true
         this.table.clear()
         foreach(element in arr) {
-            if(element) this.table[element] <- null
+            if(element != null) this.table[element.tostring()] <- null
         }
         return this.table
     }
@@ -390,7 +391,7 @@
     */
     function _pushToTable(val) {
         if(this.table.len() != 0)
-            this.table[val] <- null
+            this.table[val.tostring()] <- null
     }
 
     function Clone() {
