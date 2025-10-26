@@ -435,20 +435,4 @@
         if (previdx == null) return 0;
 		return previdx < this.arr.len() - 1 ? previdx + 1 : null;
 	}
-
-    function cmp(other) { // lmao, why? :O
-        local thisSum = 0;
-        local otherSum = 0;
-        foreach (val in this) { thisSum += val; }
-        foreach (val in other) { otherSum += val; }
-
-    
-        if (thisSum > otherSum) {
-            return 1;
-        } else if (thisSum < otherSum) {
-            return -1;
-        } else {
-            return 0; 
-        }
-    }
 }
