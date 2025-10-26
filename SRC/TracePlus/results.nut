@@ -41,7 +41,7 @@ results["Cheap"] <- class {
      *
      * @returns {Vector} - The hit position. 
     */
-    function GetHitpos() {
+    function GetHitPos() {
         return this.hitpos
     }
 
@@ -110,7 +110,7 @@ results["Cheap"] <- class {
 
     function _typeof() return "TraceResult"
     function _tostring() {
-        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", fraction: " + GetFraction() + ", hitpos: " + GetHitpos()
+        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", fraction: " + GetFraction() + ", hitpos: " + GetHitPos()
     }
 }
 
@@ -162,7 +162,7 @@ results["Bbox"] <- class {
      *
      * @returns {Vector} - The hit position. 
     */
-    function GetHitpos() {
+    function GetHitPos() {
         return this.hitpos
     }
 
@@ -236,7 +236,7 @@ results["Bbox"] <- class {
      * @returns {number} - The hit fraction. 
     */
     function GetFraction() {
-        return macros.GetDist(this.GetStartPos(), this.GetHitpos()) / macros.GetDist(this.GetStartPos(), this.GetEndPos())
+        return macros.GetDist(this.traceHandler.startpos, this.hitpos) / macros.GetDist(this.traceHandler.startpos, this.traceHandler.endpos)
     }
 
     /*
@@ -292,6 +292,6 @@ results["Bbox"] <- class {
 
     function _typeof() return "BboxTraceResult"
     function _tostring() {
-        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", hitpos: " + GetHitpos() + ", entity: " + GetEntity()
+        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", hitpos: " + GetHitPos() + ", entity: " + GetEntity()
     }
 }

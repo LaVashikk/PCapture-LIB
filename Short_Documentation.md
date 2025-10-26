@@ -102,7 +102,7 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `CheapTraceResult` | Result of a cheap trace. |
 | `GetStartPos() -> Vector` | Returns start position. |
 | `GetEndPos() -> Vector` | Returns end position. |
-| `GetHitpos() -> Vector` | Returns hit position. |
+| `GetHitPos() -> Vector` | Returns hit position. |
 | `GetFraction() -> number` | Returns hit fraction. |
 | `DidHit() -> bool` | Returns true if hit. |
 | `GetDir() -> Vector` | Returns trace direction. |

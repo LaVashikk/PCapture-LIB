@@ -119,7 +119,7 @@ This class represents the result of a cheap (fast but less accurate) trace. It s
 
 * `GetStartPos()`: Returns the start position of the trace as a Vector.
 * `GetEndPos()`: Returns the end position of the trace as a Vector.
-* `GetHitpos()`: Returns the hit position of the trace as a Vector.
+* `GetHitPos()`: Returns the hit position of the trace as a Vector.
 * `GetFraction()`: Returns the fraction of the trace distance where the hit occurred (between 0 and 1).
 * `DidHit()`: Returns `true` if the trace hit something, `false` otherwise.
 * `GetDir()`: Returns the direction vector of the trace as a Vector.
@@ -135,7 +135,7 @@ local endPos = Vector(100, 0, 0)
 local traceResult = TracePlus.Cheap(startPos, endPos)
 
 if (traceResult.DidHit()) {
-    printl("Trace hit something at:" + traceResult.GetHitpos())
+    printl("Trace hit something at:" + traceResult.GetHitPos())
     local normal = traceResult.GetImpactNormal()
     // ... do something with the normal
 }

@@ -43,7 +43,7 @@ TracePlus["PortalCheap"] <- function(startPos, endPos) {
         local traceData = TracePlus.Cheap(startPos, endPos)
         traceData.portalEntryInfo = previousTraceData
 
-        local hitPos = traceData.GetHitpos()
+        local hitPos = traceData.GetHitPos()
         length -= (hitPos - startPos).Length()
 
         // Find a nearby portal entity. 
@@ -106,7 +106,7 @@ TracePlus["PortalBbox"] <- function(startPos, endPos, ignoreEntities = null, set
         local traceData = TracePlus.Bbox(startPos, endPos, ignoreEntities, settings, note)
         traceData.portalEntryInfo = previousTraceData 
 
-        local hitPos = traceData.GetHitpos()
+        local hitPos = traceData.GetHitPos()
         local portal = traceData.GetEntity()
         length -= (hitPos - startPos).Length()
 

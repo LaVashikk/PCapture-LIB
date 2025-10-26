@@ -35,7 +35,7 @@ TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings 
 
     local result = TraceLineAnalyzer(startPos, endPos, ignoreEntities, settings, note)
     
-    return TracePlus.Result.Bbox(SCOPE, result.GetHitpos(), result.GetEntity())
+    return TracePlus.Result.Bbox(SCOPE, result.GetHitPos(), result.GetEntity())
 }
 
 /*
