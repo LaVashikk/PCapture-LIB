@@ -94,7 +94,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`GetIndex()`](#getindex)
         *   [`IsValid()`](#isvalid)
         *   [`IsPlayer()`](#isplayer)
-        *   [`isEqually(other)`](#isequallyother)
+        *   [`IsEqual(other)`](#IsEqualother)
         *   [`Destroy(fireDelay, eventName)`](#destroyfiredelay-eventname)
         *   [`Kill(fireDelay, eventName)`](#killfiredelay-eventname)
         *   [`Dissolve(fireDelay, eventName)`](#dissolvefiredelay-eventname)
@@ -1637,7 +1637,7 @@ if (myPcapEntity.IsPlayer()) {
 }
 ```
 
-### `isEqually(other)`
+### `IsEqual(other)`
 Checks if this entity is equal to another entity based on their entity indices
 
 **Parameters:**

@@ -993,7 +993,7 @@
      * @param {pcapEntity} other - The other entity to compare.
      * @returns {boolean} - True if the entities are equal, false otherwise.
     */
-    function isEqually(other) return this.entindex() == other.entindex()
+    function IsEqual(other) return this.entindex() == other.entindex()
 
     /*
      * Converts the entity object to a string.

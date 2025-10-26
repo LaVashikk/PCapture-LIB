@@ -264,7 +264,7 @@ Provides the [`pcapEntity`](SRC/IDT/readme.md#idtentitynut) class, extending `CB
 
 | Category | Methods |
 |---|---|
-| **State/Lifecycle** | [`GetIndex() -> number`](SRC/IDT/readme.md#getindex), [`IsValid() -> bool`](SRC/IDT/readme.md#isvalid), [`IsPlayer() -> bool`](SRC/IDT/readme.md#isplayer), [`isEqually(other: pcapEntity\|CBaseEntity) -> bool`](SRC/IDT/readme.md#isequallyother), [`Destroy(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#destroyfiredelay-eventname), [`Kill(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#killfiredelay-eventname), [`Dissolve(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#dissolvefiredelay-eventname), [`Disable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#disablefiredelay-eventname), [`Enable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#enablefiredelay-eventname), [`IsDrawEnabled() -> bool`](SRC/IDT/readme.md#isdrawenabled) |
+| **State/Lifecycle** | [`GetIndex() -> number`](SRC/IDT/readme.md#getindex), [`IsValid() -> bool`](SRC/IDT/readme.md#isvalid), [`IsPlayer() -> bool`](SRC/IDT/readme.md#isplayer), [`IsEqual(other: pcapEntity\|CBaseEntity) -> bool`](SRC/IDT/readme.md#IsEqualother), [`Destroy(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#destroyfiredelay-eventname), [`Kill(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#killfiredelay-eventname), [`Dissolve(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#dissolvefiredelay-eventname), [`Disable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#disablefiredelay-eventname), [`Enable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#enablefiredelay-eventname), [`IsDrawEnabled() -> bool`](SRC/IDT/readme.md#isdrawenabled) |
 | **Naming** | [`SetName(name: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setnamename-firedelay-eventname), [`SetUniqueName(prefix: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setuniquenameprefix-firedelay-eventname), [`GetNamePrefix() -> string`](SRC/IDT/readme.md#getnameprefix), [`GetNamePostfix() -> string`](SRC/IDT/readme.md#getnamepostfix) |
 | **Player** | [`EyePosition() -> Vector`](SRC/IDT/readme.md#eyeposition), [`EyeAngles() -> Vector`](SRC/IDT/readme.md#eyeangles), [`EyeForwardVector() -> Vector`](SRC/IDT/readme.md#eyeforwardvector) |
 | **Transform** | [`SetAngles(x: number, y: number, z: number)`](SRC/IDT/readme.md#setanglesx-y-z), [`SetAbsAngles(angles: Vector)`](SRC/IDT/readme.md#setabsanglesangles), [`SetCenter(vector: Vector)`](SRC/IDT/readme.md#setcentervector), [`SetAbsCenter(vector: Vector)`](SRC/IDT/readme.md#setabscentervector), [`SetParent(parentEnt: string\|CBaseEntity\|pcapEntity, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setparentparentent-firedelay-eventname), [`GetParent() -> pcapEntity`](SRC/IDT/readme.md#getparent), [`SetModelScale(scaleValue: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setmodelscalescalevalue-firedelay-eventname), [`GetModelScale() -> number`](SRC/IDT/readme.md#getmodelscale) |
@@ -368,7 +368,7 @@ Provides utility functions.
 | [`GetDist(vec1: Vector, vec2: Vector) -> number`](SRC/Utils/readme.md#macrosgetdistvec1-vec2) | Distance between vectors.  |
 | [`StrToVec(str: string) -> Vector`](SRC/Utils/readme.md#macrosstrtovecstr) | String to vector. |
 | [`VecToStr(vec: Vector, sep: String) -> string`](SRC/Utils/readme.md#macrosvectostrvec-sep) | Vector to string.  |
-| [`isEqually(val1: any, val2: any) -> bool`](SRC/Utils/readme.md#macrosisequallyval1-val2) | Equality check. |
+| [`IsEqual(val1: any, val2: any) -> bool`](SRC/Utils/readme.md#macrosIsEqualval1-val2) | Equality check. |
 | [`DeepCopy(container: iter) -> iter`](SRC/Utils/readme.md#macrosdeepcopycontainer) | Deep copy of a container. |
 | [`GetPrefix(name: string) -> string`](SRC/Utils/readme.md#macrosgetprefixname) | Name prefix. |
 | [`GetPostfix(name: string) -> string`](SRC/Utils/readme.md#macrosgetpostfixname) | Name postfix. |
@@ -515,8 +515,7 @@ Provides utility functions for working with vectors.
 
 | Function | Description |
 |---|---|
-| [`vector.isEqually(vec1: Vector, vec2: Vector)`](SRC/Math/readme.md#mathvectorisequallyvec1-vec2) | Vector equality check (integers). |
-| [`vector.isEqually2(vec1: Vector, vec2: Vector, precision: number)`](SRC/Math/readme.md#mathvectorisequally2vec1-vec2-precision) | Vector approximate equality. |
+| [`vector.IsEqual(vec1: Vector, vec2: Vector, precision: number)`](SRC/Math/readme.md#mathvectorIsEqualvec1-vec2-precision) | Vector approximate equality. |
 | [`vector.mul(vec1: Vector, vec2: Vector)`](SRC/Math/readme.md#mathvectormulvec1-vec2) | Element-wise multiplication. |
 | [`vector.rotate(vec: Vector, angle: Vector)`](SRC/Math/readme.md#mathvectorrotatevec-angle) | Vector rotation. |
 | [`vector.unrotate(vec: Vector, angle: Vector)`](SRC/Math/readme.md#mathvectorunrotatevec-angle) | Vector unrotation. |
@@ -575,7 +574,7 @@ Provides quaternion operations.
 | [`fromAxisAngle(axis: Vector, angle: number) -> Quaternion`](SRC/Math/readme.md#fromaxisangleaxis-angle) | Quaternion from axis-angle. |
 | [`toAxisAngle() -> table`](SRC/Math/readme.md#toaxisangle) | Converts to axis-angle. |
 | [`toVector() -> Vector`](SRC/Math/readme.md#tovector) | Converts to Euler angles. |
-| [`isEqually(other: Quaternion) -> bool`](SRC/Math/readme.md#isequallyother) | Quaternion equality check. |
+| [`IsEqual(other: Quaternion) -> bool`](SRC/Math/readme.md#IsEqualother) | Quaternion equality check. |
 | [`cmp(other: Quaternion) -> number`](SRC/Math/readme.md#cmpother) | Compares quaternion magnitudes. |
 
 
@@ -596,5 +595,5 @@ Provides matrix operations.
 | [`_mul(other: Matrix) -> Matrix`](SRC/Math/readme.md#_mulother) | Matrix multiplication. |
 | [`_add(other: Matrix) -> Matrix`](SRC/Math/readme.md#_addother) | Matrix addition. |
 | [`_sub(other: Matrix) -> Matrix`](SRC/Math/readme.md#_subother) | Matrix subtraction. |
-| [`isEqually(other: Matrix) -> bool`](SRC/Math/readme.md#isequallyother) | Matrix equality check. |
+| [`IsEqual(other: Matrix) -> bool`](SRC/Math/readme.md#IsEqualother) | Matrix equality check. |
 | [`cmp(other: Matrix) -> number`](SRC/Math/readme.md#cmpother) | Compares matrix component sums. |

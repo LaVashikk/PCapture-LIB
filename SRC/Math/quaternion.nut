@@ -262,7 +262,7 @@ math["Quaternion"] <- class {
      * @param {Quaternion} other - The other quaternion to compare.
      * @returns {boolean} - True if the quaternions are equal, false otherwise.
     */
-    function isEqually(other) {
+    function IsEqual(other) {
         return this.cmp(other) == 0
     }
 

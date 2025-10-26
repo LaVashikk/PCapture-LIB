@@ -13,8 +13,7 @@ The `Math` module provides various mathematical functions and objects for use in
 	- [`copysign(value, sign)`](#mathcopysignvalue-sign)
 	- [`RemapVal(val, A, B, C, D)`](#mathremapvalval-a-b-c-d)
 - [Math/utils\_vector.nut](#mathutils_vectornut)
-	- [`vector.isEqually(vec1, vec2)`](#mathvectorisequallyvec1-vec2)
-	- [`vector.isEqually2(vec1, vec2, precision)`](#mathvectorisequally2vec1-vec2-precision)
+	- [`vector.IsEqual(vec1, vec2, precision)`](#mathvectorIsEqualvec1-vec2-precision)
 	- [`vector.mul(vec1, vec2)`](#mathvectormulvec1-vec2)
 	- [`vector.rotate(vec, angle)`](#mathvectorrotatevec-angle)
 	- [`vector.unrotate(vec, angle)`](#mathvectorunrotatevec-angle)
@@ -77,7 +76,7 @@ The `Math` module provides various mathematical functions and objects for use in
 		- [`fromAxisAngle(axis, angle)`](#fromaxisangleaxis-angle)
 		- [`toAxisAngle()`](#toaxisangle)
 		- [`toVector()`](#tovector)
-		- [`isEqually(other)`](#isequallyother)
+		- [`IsEqual(other)`](#IsEqualother)
 		- [`cmp(other)`](#cmpother)
 - [Math/matrix.nut](#mathmatrixnut)
 	- [`Matrix(a, b, c, d, e, f, g, h, k)`](#matrixa-b-c-d-e-f-g-h-k)
@@ -92,7 +91,7 @@ The `Math` module provides various mathematical functions and objects for use in
 		- [`_mul(other)`](#_mulother)
 		- [`_add(other)`](#_addother)
 		- [`_sub(other)`](#_subother)
-		- [`isEqually(other)`](#isequallyother-1)
+		- [`IsEqual(other)`](#IsEqualother-1)
 		- [`cmp(other)`](#cmpother-1)
   
 ## [Math/algebraic.nut](algebraic.nut)
@@ -243,31 +242,7 @@ local remappedValue = math.RemapVal(50, 0, 100, -1, 1) // remappedValue will be 
 
 This file contains utility functions for working with vectors, including checking equality, rotating and un-rotating, generating random vectors, reflecting vectors, clamping components, and resizing vectors.
 
-### `math.vector.isEqually(vec1, vec2)`
-
-This function checks if two vectors are equal by comparing their integer components. 
-It effectively truncates the decimal part of each component before performing the comparison.
-
-**Parameters:**
-
-* `vec1` (Vector): The first vector.
-* `vec2` (Vector): The second vector.
-
-**Returns:**
-
-* (boolean): True if the vectors are considered equal (their rounded components are the same), false otherwise.
-
-**Example:**
-
-```js
-local vec1 = Vector(1.001, 2.002, 3.003)
-local vec2 = Vector(1.004, 2.005, 3.006)
-if (math.vector.isEqually(vec1, vec2)) {
-    // The vectors are considered equal (their rounded components are the same)
-}
-```
-
-### `math.vector.isEqually2(vec1, vec2, precision)`
+### `math.vector.IsEqual(vec1, vec2, precision)`
 
 This function checks if two vectors are approximately equal by rounding their components to a specified precision before comparing them. This is useful when dealing with floating-point numbers that might have minor discrepancies due to precision limitations.
 
@@ -280,18 +255,6 @@ This function checks if two vectors are approximately equal by rounding their co
 **Returns:**
 
 * (boolean): True if the vectors are approximately equal after rounding, false otherwise.
-
-**Example:**
-
-```js
-local vec1 = Vector(1.001, 2.002, 3.003)
-local vec2 = Vector(1.002, 2.001, 3.004)
-local isEqual = mVector.isEqually2(vec1, vec2, 100) // isEqual will be true (both round to 1.00, 2.00, 3.00)
-
-local isEqual2 = mVector.isEqually2(vec1, vec2, 1000) // isEqual2 will be false (1.001 != 1.002 etc.)
-```
-
-The key difference between `mVector.isEqually` and `mVector.isEqually2` is their approach to handling floating-point components. `mVector.isEqually` effectively truncates the decimal part and compares only the integer components. `mVector.isEqually2` provides a way to compare vectors with a specified precision, making it more robust in scenarios where minor floating-point differences are acceptable.
 
 ### `math.vector.mul(vec1, vec2)`
 
@@ -1331,7 +1294,7 @@ This method converts the quaternion to a vector representing Euler angles (pitch
 local eulerAngles = q.toVector() // Convert the quaternion to Euler angles
 ```
 
-### `isEqually(other)`
+### `IsEqual(other)`
 
 This method checks if this quaternion is equal to another quaternion based on their components and length. It uses a more precise comparison than simply checking for exact equality of the components due to potential floating-point precision errors.
 
@@ -1348,7 +1311,7 @@ This method checks if this quaternion is equal to another quaternion based on th
 ```js
 local q1 = math.Quaternion.fromEuler(Vector(0, 45, 0))
 local q2 = math.Quaternion.fromAxisAngle(Vector(0, 1, 0), math.rad(45))
-if (q1.isEqually(q2)) {
+if (q1.IsEqual(q2)) {
     // The quaternions represent the same rotation
 }
 ```
@@ -1591,7 +1554,7 @@ This method subtracts another matrix from this matrix.
 local resultMatrix = matrix1 - matrix2 // Subtract matrix2 from matrix1
 ```
 
-### `isEqually(other)`
+### `IsEqual(other)`
 
 This method checks if this matrix is equal to another matrix based on their components and sum. It uses a more precise comparison than simply checking for exact equality of the components due to potential floating-point precision errors.
 
@@ -1608,7 +1571,7 @@ This method checks if this matrix is equal to another matrix based on their comp
 ```js
 local matrix1 = math.Matrix(1, 2, 3, 4, 5, 6, 7, 8, 9)
 local matrix2 = math.Matrix(1, 2, 3, 4, 5, 6, 7, 8, 9)
-if (matrix1.isEqually(matrix2)) {
+if (matrix1.IsEqual(matrix2)) {
     // The matrices are considered equal
 }
 ```

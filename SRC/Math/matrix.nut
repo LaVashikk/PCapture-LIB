@@ -205,7 +205,7 @@ math["Matrix"] <- class {
      * @param {Matrix} other - The other matrix to compare.
      * @returns {boolean} - True if the matrices are equal, false otherwise.
     */
-    function isEqually(other) {
+    function IsEqual(other) {
         return this.cmp(other) == 0
     }
 

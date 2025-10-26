@@ -298,7 +298,7 @@ macros["CreateAlias"] <- function(key, action) {
  * @param {any} val2 - The second value.
  * @returns {boolean} - True if the values are equal, false otherwise. 
 */
-macros["isEqually"] <- function(val1, val2) {
+macros["IsEqual"] <- function(val1, val2) {
     if((typeof val1 == "instance" || typeof val2 == "instance") && (val1 instanceof CBaseEntity || val2 instanceof CBaseEntity)) 
         return val1.entindex() == val2.entindex()
     
@@ -308,13 +308,13 @@ macros["isEqually"] <- function(val1, val2) {
         case "float": 
             return math.round(val1, 1000) == math.round(val2, 1000)
         case "Vector": 
-            return math.vector.isEqually(val1, val2)
+            return math.vector.IsEqual(val1, val2)
         case "instance": 
             return val1 == val2; 
         case "Quaternion": 
         case "Matrix": 
         case "pcapEntity": 
-            return val1.isEqually(val2)  
+            return val1.IsEqual(val2)  
     }
 }
 
