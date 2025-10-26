@@ -27,7 +27,6 @@ class BufferedEntity {
     function _tostring() return this.entity.tostring()
 }
 
-const JumpPercent = 0.25
 ::EntBufferTable <- {} // To avoid repeated operations on objects that do not change their position.
 
 /*
@@ -39,7 +38,8 @@ const JumpPercent = 0.25
     settings = null;
     hitpos = null;
     hitent = null;
-    eqVecFunc = math.vector.isEqually2;
+    hitnormal = null;
+    eqVecFunc = math.vector.IsEqual;
 
     /*
      * Constructor for TraceLineAnalyzer.
@@ -57,6 +57,7 @@ const JumpPercent = 0.25
         local result = this.Trace(startpos, endpos, ignoreEntities, note)
         this.hitpos = result[0]
         this.hitent = result[1]
+        this.hitnormal = result[2]
     }
 
     /*
@@ -64,98 +65,70 @@ const JumpPercent = 0.25
      *
      * @returns {Vector} - The hit position. 
     */
-    function GetHitpos() {
-        return this.hitpos
-    }
+    function GetHitPos() { return this.hitpos }
 
     /* 
      * Gets the entity hit by the trace. 
      *
      * @returns {CBaseEntity|null} - The hit entity, or null if no entity was hit.
     */
-    function GetEntity() {
-        return this.hitent
-    }
+    function GetEntity() { return this.hitent }
 
-    /* 
-     * Performs a precise trace line analysis. 
-     *
-     * This method subdivides the trace into smaller segments and checks for entity collisions along the way, 
-     * considering entity priorities and ignore settings.
-     * 
-     * @param {Vector} startPos - The start position of the trace.
-     * @param {Vector} endPos - The end position of the trace.
-     * @param {array|CBaseEntity|null} ignoreEntities - A list of entities or a single entity to ignore during the trace. 
-     * @param {string|null} note - An optional note associated with the trace. 
-     * @returns {array} - An array containing the hit position and the hit entity (or null). 
+    /*
+     * This returns a simplified normal for AABB (axis-aligned only).
+     * For accurate normals on rotated entities, use CalculateImpactNormalFromBbox.
     */
-    function Trace(startPos, endPos, ignoreEntities, note) array(hitPos, hitEnt) 
-    /* 
-     * Checks if an entity is a priority entity based on the trace settings.
-     *
-     * @param {string} entityClass - The classname of the entity. 
-     * @returns {boolean} - True if the entity is a priority entity, false otherwise. 
-    */
+    function GetCheapNormal() { return this.hitnormal }
+
+    function Trace(startPos, endPos, ignoreEntities, note) array(hitPos, hitEnt, hitNormal) 
+    
     function _isPriorityEntity() bool
-    /* 
-     * Checks if an entity should be ignored based on the trace settings. 
-     *
-     * @param {string} entityClass - The classname of the entity. 
-     * @returns {boolean} - True if the entity should be ignored, false otherwise. 
-    */
+    
     function _isIgnoredEntity() bool
-    /* 
-     * Checks if the trace should consider a hit with the given entity.
-     * 
-     * @param {CBaseEntity} ent - The entity to check.
-     * @param {array|CBaseEntity|null} ignoreEntities - A list of entities or a single entity to ignore during the trace. 
-     * @param {string|null} note - An optional note associated with the trace. 
-     * @returns {boolean} - True if the trace should consider the hit, false otherwise. 
-    */
+
     function shouldHitEntity() bool
 }
 
 /*
- * Performs a precise trace line analysis. 
+ * Performs a precise trace line analysis using analytical ray-AABB intersection. 
  *
- * This method subdivides the trace into smaller segments and checks for entity collisions along the way, 
- * considering entity priorities and ignore settings.
+ * This method subdivides the trace into segments and uses the slab method to find
+ * exact intersection points with entity bounding boxes.
  * 
  * @param {Vector} startPos - The start position of the trace.
  * @param {Vector} endPos - The end position of the trace.
  * @param {array|CBaseEntity|null} ignoreEntities - A list of entities or a single entity to ignore during the trace. 
  * @param {string|null} note - An optional note associated with the trace. 
- * @returns {array} - An array containing the hit position and the hit entity (or null). 
+ * @returns {array} - An array containing [hitPos, hitEntity, hitNormal]. 
 */
 function TraceLineAnalyzer::Trace(startPos, endPos, ignoreEntities, note = null) {
     // Preventing VScript errors and ensuring correct results even with a broken TraceLine
-    if(macros.PointInBounds(startPos) == false) return [startPos, null]
-    
+    if(macros.PointInBounds(startPos) == false) return [startPos, null, null]
+
     // Get the hit position from the fast trace
     local hitPos = startPos + (endPos - startPos) * TraceLine(startPos, endPos, null)
     local dist = hitPos - startPos
+
+    const JumpPercent = 0.25
+    local halfSegment = dist * JumpPercent * 0.5
+    local searchRadius = halfSegment.Length()
     local entBuffer = List()
 
-    local halfSegment = dist * JumpPercent * 0.5
-    local segmentsLenght = halfSegment * 2
-    local searchRadius = halfSegment.Length()
-    local searchSteps = searchRadius / this.settings.depthAccuracy
-   
-    for(local segment = 0; segment < 1; segment += JumpPercent) {
-
-        //* "DIRTY" Search
+    for(local segment = 0.0; segment < 1.0; segment += JumpPercent) {
+        //* "DIRTY" Search - collect candidate entities near the current segment
         local segmentCenter = startPos + dist * (segment + JumpPercent * 0.5)
-        // dev.drawbox(segmentCenter, Vector(255,0,0), 6)
-        for (local ent; ent = Entities.FindByClassnameWithin(ent, "*", segmentCenter, searchRadius);) {
-            if (!ent || !this.shouldHitEntity(ent, ignoreEntities, note)) continue
+        local segmentStart = segmentCenter - halfSegment
+        local segmentEnd = segmentCenter + halfSegment
+
+        for(local ent; ent = Entities.FindByClassnameWithin(ent, "*", segmentCenter, searchRadius);) {
+            if(!ent || !this.shouldHitEntity(ent, ignoreEntities, note)) continue
 
             local idx = ent.entindex()
             local BEnt = null
-            // small cache system
+            // Small cache system to avoid repeated bbox calculations
             if(idx in EntBufferTable && EntBufferTable[idx].IsValid() && this.eqVecFunc(EntBufferTable[idx].origin, ent.GetOrigin())) {
                 BEnt = EntBufferTable[idx]
-            }
-            else {
+            } else {
                 BEnt = BufferedEntity(ent)
                 EntBufferTable[idx] <- BEnt
             }
@@ -164,89 +137,161 @@ function TraceLineAnalyzer::Trace(startPos, endPos, ignoreEntities, note = null)
             // It's crucial for allowing traces to originate from within large volumes (e.g., a trigger_multiple)
             // without immediately hitting that volume itself. The entity is flagged and will be ignored
             // for the entire duration of this trace, allowing the ray to 'escape' and hit what's next.
-            if(segment==0 && macros.PointInBBox(startPos, BEnt.bboxMin, BEnt.bboxMax)) {
+            if(segment == 0.0 && macros.PointInBBox(startPos, BEnt.bboxMin, BEnt.bboxMax)) {
                 BEnt.skipEntity = true
                 continue
             }
+            if(BEnt.skipEntity) continue
 
-            if(BEnt.skipEntity) {
-                continue
-            }
-            
-            if(BEnt.ignoreChecksCalc || RayAabbIntersect(startPos, endPos, BEnt.bboxMin, BEnt.bboxMax)) 
+            // Quick broad-phase check: does ray potentially intersect this AABB?
+            if(BEnt.ignoreChecksCalc || RayAabbHit(segmentStart, segmentEnd, BEnt.bboxMin, BEnt.bboxMax)[0]) {
                 entBuffer.append(BEnt)
-            else BEnt.ignoreChecksCalc = true
-
+            } else {
+                BEnt.ignoreChecksCalc = true
+            }
         }
 
         // The "dirty search" didn't turn up anything? Check the next segment
         if(entBuffer.len() == 0) continue
-        
-        //* Deep Search
-        local segmentStart = segmentCenter - halfSegment
-        for (local i = 0.0; i <= searchSteps; i++) {
-            local rayPart = segmentStart + segmentsLenght * (i / searchSteps)
-            
-            foreach(ent in entBuffer) {
-                if(macros.PointInBBox(rayPart, ent.bboxMin, ent.bboxMax)) {
-                    if(this.settings.bynaryRefinement) 
-                        return [BinaryRefinementSearch(rayPart - halfSegment * 0.5, rayPart + halfSegment * 0.5, ent.bboxMin, ent.bboxMax), ent.entity]
-                    return [rayPart, ent.entity] // VSquirrel doesn't support tuples, so i use arrays
-                }
-            }
 
+        //* Analytic narrow-phase: compute exact hit using slab method
+        local bestT = 999999999.9
+        local bestEnt = null
+        local bestNormal = null
+
+        foreach (BEnt in entBuffer.iter()) {
+            // Get precise intersection data: [hit, t_enter, t_exit, normal]
+            local res = RayAabbHit(segmentStart, segmentEnd, BEnt.bboxMin, BEnt.bboxMax)
+            if(!res[0]) continue
+
+            // Clamp t_enter to valid range [0, 1]
+            local tEnter = res[1] // todo!
+            if(tEnter < 0.0) tEnter = 0.0
+            if(tEnter > 1.0) tEnter = 1.0
+
+            // Keep track of the closest hit
+            if(tEnter < bestT) {
+                bestT = tEnter
+                bestEnt = BEnt
+                bestNormal = res[3]
+            }
+        }
+
+        // If we found a hit in this segment, return immediately
+        if(bestEnt != null) {
+            local hitPoint = segmentStart + (segmentEnd - segmentStart) * bestT
+
+            // Optional: refine the hit point using binary search for extra precision
+            if(this.settings.bynaryRefinement) {
+                local refined = RefineAroundT(segmentStart, segmentEnd, bestEnt.bboxMin, bestEnt.bboxMax, bestT)
+                if(refined != null) hitPoint = refined
+            }
+            return [hitPoint, bestEnt.entity, bestNormal]
         }
         
-
-        // Cleanup buffer
+        // Cleanup buffer for next segment
         entBuffer.clear()
     }
 
-    // Is entiti not found? Returning hitpos
-    return [hitPos, null]
+    // No entity was hit; return world hit position
+    return [hitPos, null, null]
 }
 
-function RayAabbIntersect(start, end, min, max) {
+/*
+ * Analytical AABB intersection using the "slab" method.
+ * 
+ * This function treats an AABB as the intersection of three slabs (pairs of parallel planes)
+ * and computes where a ray enters and exits this intersection.
+ * 
+ * @param {Vector} start - The start point of the ray segment.
+ * @param {Vector} end - The end point of the ray segment. 
+ * @param {Vector} bmin - The minimum corner of the AABB.
+ * @param {Vector} bmax - The maximum corner of the AABB.
+ * @returns {array} - [hit:boolean, t_enter:float, t_exit:float, normal:Vector|null]
+ *                    where t values are in range [0,1] along the ray segment.
+*/
+function RayAabbHit(start, end, bmin, bmax) {
     local dir = end - start;
+    const EPS = 0.000001;
 
-    local tEnter = -999999.0;
-    local tExit = 999999.0;
+    // Track the furthest entry point and nearest exit point across all slabs
+    local tEnter = 0.0;
+    local tExit  = 1.0;
+    local nAxis = -1;  // Which axis the entry plane belongs to
+    local nSign = 0.0; // Direction of the normal (+1 or -1)
 
-    foreach(axis in ["x", "y", "z"]) {
-        local startVal = start[axis];
-        local minVal = min[axis];
-        local maxVal = max[axis];
-        local dirVal = dir[axis];
+    // Check intersection with each slab (X, Y, Z)
+    foreach (axisIdx, axisName in ["x", "y", "z"]) {
+        local s = start[axisName], d = dir[axisName], mn = bmin[axisName], mx = bmax[axisName];
 
-        if (fabs(dirVal) < 0.000001) {
-            if (startVal < minVal || startVal > maxVal) {
-                return false;
-            }
-        } else {
-            local tMin = (minVal - startVal) / dirVal;
-            local tMax = (maxVal - startVal) / dirVal;
-
-            if (tMin > tMax) {
-                local temp = tMin;
-                tMin = tMax;
-                tMax = temp;
-            }
-
-            if (tMin > tEnter)
-                tEnter = tMin;
-            
-            if (tMax < tExit)
-                tExit = tMax;
-
-            if (tEnter > tExit)
-                return false;
+        // Ray is parallel to slab - check if it's inside
+        if(fabs(d) < EPS) {
+            if(s < mn || s > mx) return [false, 0.0, 0.0, null];
+            continue;
         }
+
+        // Calculate intersection t values with the two planes of this slab
+        local t1 = (mn - s) / d, t2 = (mx - s) / d;
+        local enter = t1, exit = t2, enterIsMinPlane = true;
+        if(t1 > t2) { 
+            enter = t2; 
+            exit = t1; 
+            enterIsMinPlane = false; 
+        }
+
+        // Update the overall entry/exit interval
+        if(enter > tEnter) {
+            tEnter = enter;
+            nAxis = axisIdx;
+            nSign = enterIsMinPlane ? -1.0 : 1.0;
+        }
+        if(exit < tExit) tExit = exit;
+        
+        // Early exit: ray misses the AABB
+        if(tEnter > tExit) return [false, 0.0, 0.0, null];
     }
 
-    return tExit >= 0.0 && tEnter <= 1.0;
+    // Check if intersection is within valid range
+    if(tExit < 0.0 || tEnter > 1.0) return [false, 0.0, 0.0, null];
+
+    // Construct the normal vector (axis-aligned for AABB)
+    local n = Vector(0, 0, 0);
+    if(nAxis == 0)      n.x = nSign;
+    else if(nAxis == 1) n.y = nSign;
+    else if(nAxis == 2) n.z = nSign;
+
+    return [true, tEnter, tExit, n];
 }
 
+/*
+ * Refines the hit point around the analytically computed t_enter value.
+ * This creates a small window around t_enter and uses binary search for extra precision.
+ * 
+ * @param {Vector} rayStart - The start of the ray segment.
+ * @param {Vector} rayEnd - The end of the ray segment.
+ * @param {Vector} bMin - The minimum corner of the AABB.
+ * @param {Vector} bMax - The maximum corner of the AABB.
+ * @param {float} tEnter - The analytically computed entry point (0-1).
+ * @param {float} window - The search window size around tEnter (default 0.05).
+ * @returns {Vector|null} - The refined hit point, or null if refinement fails.
+*/
+function RefineAroundT(rayStart, rayEnd, bMin, bMax, tEnter, window = 0.05) {
+    local dir = rayEnd - rayStart;
+    local leftT  = tEnter - window; if(leftT < 0.0) leftT = 0.0;
+    local rightT = tEnter + window; if(rightT > 1.0) rightT = 1.0;
+    return BinaryRefinementSearch(rayStart + dir * leftT, rayEnd + dir * rightT, bMin, bMax);
+}
 
+/*
+ * Performs binary search to find the exact point where ray enters the AABB.
+ * Used for extra precision when needed.
+ * 
+ * @param {Vector} rayStart - The start of the search segment.
+ * @param {Vector} rayEnd - The end of the search segment.
+ * @param {Vector} bMin - The minimum corner of the AABB.
+ * @param {Vector} bMax - The maximum corner of the AABB.
+ * @returns {Vector|null} - The refined hit point, or null if no hit found.
+*/
 function BinaryRefinementSearch(rayStart, rayEnd, bMin, bMax) {
     // Binary search between rayStart and rayEnd
     local closestHitPoint = null
@@ -256,107 +301,90 @@ function BinaryRefinementSearch(rayStart, rayEnd, bMin, bMax) {
     for(local i = 0; i < 10; i++) {
         local middle = (left + right) / 2.0
         local currentPoint = rayStart + (rayEnd - rayStart) * middle
-
+        
         if(macros.PointInBBox(currentPoint, bMin, bMax)) {
-            // If a point is inside bbox, we store it as a potential hit point
+            // If point is inside bbox, store it as potential hit point
             closestHitPoint = currentPoint
             // Keep searching closer to the beginning (left half of the segment)
             right = middle
         } 
-        // If the point is outside bbox, continue searching near the end (right half of the segment)
-        else left = middle
-        
+        else {
+            // If point is outside bbox, search in the right half
+            left = middle
+        }
     }
-
     return closestHitPoint
 }
 
 /*
-* Check if entity should be ignored.
-*
-* @param {Entity} ent - Entity to check.
-* @param {Entity|array} ignoreEntities - Entities being ignored. 
-* @returns {boolean} True if should ignore.
+ * Check if entity should be considered for hit detection.
+ *
+ * @param {CBaseEntity} ent - Entity to check.
+ * @param {CBaseEntity|array} ignoreEntities - Entities to ignore. 
+ * @param {string|null} note - Optional note for filter callbacks.
+ * @returns {boolean} True if entity should be checked for hits.
 */
 function TraceLineAnalyzer::shouldHitEntity(ent, ignoreEntities, note) { 
-    if(ent in TracePlusIgnoreEnts && TracePlusIgnoreEnts[ent])
-        return false
-    
-    if(settings.ApplyIgnoreFilter(ent, note))
-        return false
-
-    if(settings.ApplyCollisionFilter(ent, note))
-        return true
+    if(ent in TracePlusIgnoreEnts && TracePlusIgnoreEnts[ent]) return false
+    if(settings.ApplyIgnoreFilter(ent, note)) return false
+    if(settings.ApplyCollisionFilter(ent, note)) return true
 
     if(ignoreEntities) {
         // Processing for arrays
         local type = typeof ignoreEntities 
-        if (type == "array" || type == "ArrayEx") {
-            foreach (mask in ignoreEntities) {
-                if(ent.entindex() == mask.entindex()) return false 
-            }
+        if(type == "array" || type == "ArrayEx") {
+            foreach (mask in ignoreEntities) if(ent.entindex() == mask.entindex()) return false 
         } 
         else if(type == "List") {
-            foreach (mask in ignoreEntities.iter()) {
-                if(ent.entindex() == mask.entindex()) return false 
-            }
+            foreach (mask in ignoreEntities.iter()) if(ent.entindex() == mask.entindex()) return false
         }
-        // (ignoreEntities instanceof CBaseEntity || type == "pcapEntity") 
+        // Single entity check
         else if(ent.entindex() == ignoreEntities.entindex()) return false
     }
 
     local classname = ent.GetClassname()
-    if (_isIgnoredEntity(classname) && !_isPriorityEntity(classname)) {
-        return false
-    }
-    
-    if(_isIgnoredModels(ent.GetModelName())) {
-        return false
-    }
+    if(_isIgnoredEntity(classname) && !_isPriorityEntity(classname)) return false
+    if(_isIgnoredModels(ent.GetModelName())) return false
 
     return true
 }
 
 /*
-* Check if entity is a priority class.
-*
-* @param {string} entityClass - Entity class name.
-* @returns {boolean} True if priority.
+ * Check if entity class is in the priority list.
+ *
+ * @param {string} entityClass - Entity class name to check.
+ * @returns {boolean} True if entity class is prioritized.
 */
 function TraceLineAnalyzer::_isPriorityEntity(entityClass) {
-    if(settings.GetPriorityClasses().len() == 0) 
-        return false
-    return settings.GetPriorityClasses().search(function(val):(entityClass) {
-        return entityClass.find(val) >= 0
+    if(settings.GetPriorityClasses().len() == 0) return false
+    return settings.GetPriorityClasses().search(function(v) : (entityClass) { 
+        return entityClass.find(v) >= 0 
     }) != null
 }
 
 /* 
-* Check if entity is an ignored class.
-*
-* @param {string} entityClass - Entity class name.
-* @returns {boolean} True if ignored.
+ * Check if entity class should be ignored.
+ *
+ * @param {string} entityClass - Entity class name to check.
+ * @returns {boolean} True if entity class should be ignored.
 */
 function TraceLineAnalyzer::_isIgnoredEntity(entityClass) {
-    if(settings.GetIgnoreClasses().len() == 0) 
-        return false
-    if(settings.GetIgnoreClasses().contains("*"))
-        return true
-    return settings.GetIgnoreClasses().search(function(val):(entityClass) {
-        return entityClass.find(val) >= 0
+    if(settings.GetIgnoreClasses().len() == 0) return false
+    if(settings.GetIgnoreClasses().contains("*")) return true
+    return settings.GetIgnoreClasses().search(function(v) : (entityClass) { 
+        return entityClass.find(v) >= 0 
     }) != null
 }
 
 /* 
-* Check if the entity model is in the list of ignored models.
-*
-* @param {string} entityModel - The model name of the entity.
-* @returns {boolean} True if the model is ignored, false otherwise. 
+ * Check if entity model is in the ignored models list.
+ *
+ * @param {string} entityModel - The model name of the entity.
+ * @returns {boolean} True if the model should be ignored.
 */
 function TraceLineAnalyzer::_isIgnoredModels(entityModel) {
-    if(settings.GetIgnoredModels().len() == 0 || entityModel == "") 
-        return false
-    return settings.GetIgnoredModels().search(function(val):(entityModel) {
-        return entityModel.find(val) >= 0
+    if(settings.GetIgnoredModels().len() == 0 || entityModel == "") return false
+    return settings.GetIgnoredModels().search(function(v) : (entityModel) { 
+        return entityModel.find(v) >= 0 
     }) != null
 }
