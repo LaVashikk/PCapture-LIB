@@ -105,7 +105,7 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `GetHitPos() -> Vector` | Returns hit position. |
 | `GetFraction() -> number` | Returns hit fraction. |
 | `DidHit() -> bool` | Returns true if hit. |
-| `GetDir() -> Vector` | Returns trace direction. |
+| `GetDir() -> Vector` | Returns normalized trace direction. |
 | `GetPortalEntryInfo() -> CheapTraceResult` | Returns portal entry info. |
 | `GetAggregatedPortalEntryInfo() -> ArrayEx` | Returns all portal entry info.  |
 | `GetImpactNormal() -> Vector` | Returns impact normal.  |

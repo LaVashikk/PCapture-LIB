@@ -64,12 +64,13 @@ results["Cheap"] <- class {
     }
 
     /*
-     * Gets the direction vector of the trace.
+     * Gets the normalized direction vector of the trace.
      *
      * @returns {Vector} - The direction vector.
     */
     function GetDir() {
-        return (this.GetEndPos() - this.GetStartPos())
+        local dir = (this.traceHandler.endpos - this.traceHandler.startpos); dir.Norm()
+        return dir
     }
 
     /*
@@ -240,12 +241,13 @@ results["Bbox"] <- class {
     }
 
     /*
-     * Gets the direction vector of the trace.
+     * Gets the normalized direction vector of the trace.
      *
      * @returns {Vector} - The direction vector.
     */
     function GetDir() {
-        return (this.GetEndPos() - this.GetStartPos())
+        local dir = (this.traceHandler.endpos - this.traceHandler.startpos); dir.Norm()
+        return dir
     }
 
     /*

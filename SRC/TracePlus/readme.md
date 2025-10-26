@@ -122,7 +122,7 @@ This class represents the result of a cheap (fast but less accurate) trace. It s
 * `GetHitPos()`: Returns the hit position of the trace as a Vector.
 * `GetFraction()`: Returns the fraction of the trace distance where the hit occurred (between 0 and 1).
 * `DidHit()`: Returns `true` if the trace hit something, `false` otherwise.
-* `GetDir()`: Returns the direction vector of the trace as a Vector.
+* `GetDir()`: Returns the normalized direction vector of the trace as a Vector.
 * `GetPortalEntryInfo()`: Returns the portal entry information as a `CheapTraceResult` object, or `null` if no portal was entered.
 * `GetAggregatedPortalEntryInfo()`: Returns an `ArrayEx` containing all portal entry information for the trace, including nested portals, as `CheapTraceResult` objects.
 * `GetImpactNormal()`: Calculates and returns the impact normal of the surface hit by the trace as a Vector.
