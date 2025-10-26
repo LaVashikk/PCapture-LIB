@@ -47,6 +47,7 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.Kill, fireDelay, null, this)
 
+        if(!this.CBaseEntity || !this.CBaseEntity.IsValid()) return
         EntFireByHandle(this.CBaseEntity, "kill")
         this.CBaseEntity = null
     }
@@ -62,6 +63,7 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.Dissolve, fireDelay, null, this)
 
+        if(!dissolver || !dissolver.IsValid()) throw("The entity 'dissolver' is missing, the Dissolve method will not work.")
         if(this.GetName() == "")
             this.SetUniqueName("targetname")
         dissolver.SetKeyValue("target", this.GetName())
@@ -327,8 +329,13 @@
         
         if(typeof parentEnt != "string") {
             local Pent = entLib.FromEntity(parentEnt)
+            local hasUniqueName = true
             if(Pent.GetName() == "") 
                 Pent.SetUniqueName("parent")
+            for(local entity; entity = Entities.FindByName(entity, Pent.GetName()); ) if(!macros.IsEqual(Pent, entity)) {
+                Pent.SetUniqueName("parent")
+                break
+            }
             parentEnt = Pent.GetName()
         }
         
