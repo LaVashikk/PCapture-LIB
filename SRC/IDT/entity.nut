@@ -66,6 +66,11 @@
         if(!dissolver || !dissolver.IsValid()) throw("The entity 'dissolver' is missing, the Dissolve method will not work.")
         if(this.GetName() == "")
             this.SetUniqueName("targetname")
+        for(local entity; entity = Entities.FindByName(entity, this.GetName()); ) if(!macros.IsEqual(this, entity)) {
+            this.SetUniqueName()
+            break
+        }
+
         dissolver.SetKeyValue("target", this.GetName())
         EntFireByHandle(dissolver, "dissolve")
 
