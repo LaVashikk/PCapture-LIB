@@ -1,38 +1,4 @@
 /*
- * Calculates two new start positions for additional traces used in impact normal calculation. 
- * 
- * @param {Vector} startPos - The original start position of the trace. 
- * @param {Vector} dir - The direction vector of the trace. 
- * @returns {array} - An array containing two new start positions as Vectors. 
-*/
-function _getNewStartsPos(startPos, dir) {
-    // Calculate offset vectors perpendicular to the trace direction
-    local perpDir = Vector(-dir.y, dir.x, 0)
-    local offset1 = perpDir
-    local offset2 = dir.Cross(offset1)
-
-    // Calculate new start positions for two additional traces
-    local newStart1 = startPos + offset1
-    local newStart2 = startPos + offset2
-
-    return [
-        newStart1, 
-        newStart2
-    ]
-}
-
-/*
- * Performs a cheap trace from a new start position to find an intersection point.
- *
- * @param {Vector} newStart - The new start position for the trace. 
- * @param {Vector} dir - The direction vector of the trace. 
- * @returns {Vector} - The hit position of the trace.
-*/
-function _getIntPoint(newStart, dir) {    
-    return TracePlus.Cheap(newStart, (newStart + dir * 8000)).GetHitpos()
-}
-
-/*
  * Calculates the normal vector of a triangle .
  * 
  * @param {Vector} v1 - The first . 
@@ -70,7 +36,7 @@ function _findClosestVertices(point, vertices) {
 }
 
 function _numberIsCloseTo(num1, num2, tolerance = 1) {
-    return abs(num1 - num2) <= tolerance;
+    return abs(num1 - num2) <= tolerance
 }
 
 /*
@@ -98,7 +64,6 @@ function _getFaceVertices(allVertices, hitPoint, origin) {
     return null
 }
 
-
 /* 
  * Calculates the impact normal of a surface hit by a trace. 
  *
@@ -107,22 +72,32 @@ function _getFaceVertices(allVertices, hitPoint, origin) {
  * @returns {Vector} - The calculated impact normal vector. 
 */
 ::CalculateImpactNormal <- function(startPos, hitPos) {
-    // Calculate the normalized direction vector from startpos to hitpos
-    local dir = hitPos - startPos
-    dir.Norm()
+    const offset = 5.0; 
+    local dir = hitPos - startPos; dir.Norm()
 
-    // Get two new start positions for additional traces.
-    local newStartsPos = _getNewStartsPos(startPos, dir)
-    
-    // Perform cheap traces from the new start positions to find intersection points.
-    local point1 = _getIntPoint(newStartsPos[0], dir)
-    local point2 = _getIntPoint(newStartsPos[1], dir)
-    
-    return _calculateNormal(hitPos, point2, point1)
+    // Ortho Basis
+    local up = abs(dir.z) < 0.99 ? Vector(0,0,1) : Vector(0,1,0)
+    local right = dir.Cross(up); right.Norm()
+    local up2 = right.Cross(dir); up2.Norm()
+
+    local newStart1 = startPos + right * offset
+    local newStart2 = startPos + up2 * offset
+    local endPos1   = newStart1 + dir * 8000
+    local endPos2   = newStart2 + dir * 8000
+
+    local fraction1 = TraceLine(newStart1, endPos1, null)
+    local fraction2 = TraceLine(newStart2, endPos2, null)
+    local point1    = newStart1 + (endPos1 - newStart1) * fraction1
+    local point2    = newStart2 + (endPos2 - newStart2) * fraction2
+
+    local normal = _calculateNormal(hitPos, point1, point2)
+    if (normal.Dot(dir) > 0) normal = normal * -1.0;
+    return normal
 }
 
 ::CalculateImpactNormalFromBbox <- function(startPos, hitPos, hitEntity) {
-    // The algorithm proposed by Enderek
+    //* This algorithm proposed by Enderek (Lead of Portal: Singularity Collapse)! Code developed by laVashik
+    
     local closestVertices = _getFaceVertices(hitEntity.GetBBoxPoints(), hitPos, hitEntity.GetOrigin())
     if(!closestVertices)
         return CalculateImpactNormalFromBbox2(startPos, hitPos, hitEntity)
