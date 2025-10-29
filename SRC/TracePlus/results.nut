@@ -205,15 +205,6 @@ results["Bbox"] <- class {
     }
 
     /*
-     * Gets the note associated with the trace.
-     *
-     * @returns {string|null} - The trace note, or null if no note was provided.
-    */
-    function GetNote() {
-        return this.traceHandler.note
-    }
-
-    /*
      * Checks if the trace hit anything.
      *
      * @returns {boolean} - True if the trace hit something, false otherwise.

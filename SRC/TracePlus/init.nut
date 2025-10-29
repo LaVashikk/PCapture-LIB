@@ -20,6 +20,8 @@
     Bbox = null,
 }
 
+::USE_LEGACY_BBOXCAST_ANALYZER <- false
+
 IncludeScript("PCapture-LIB/SRC/TracePlus/results")
 IncludeScript("PCapture-LIB/SRC/TracePlus/trace_settings")
 TracePlus.defaultSettings = TracePlus.Settings.new()
@@ -29,4 +31,5 @@ IncludeScript("PCapture-LIB/SRC/TracePlus/bboxcast")
 IncludeScript("PCapture-LIB/SRC/TracePlus/portal_casting")
 
 IncludeScript("PCapture-LIB/SRC/TracePlus/bbox_analyzer")
+IncludeScript("PCapture-LIB/SRC/TracePlus/legacy_bbox_analyzer")
 IncludeScript("PCapture-LIB/SRC/TracePlus/calculate_normal")

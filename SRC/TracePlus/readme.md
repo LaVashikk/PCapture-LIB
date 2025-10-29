@@ -25,14 +25,14 @@ The `TracePlus` module enhances the ray tracing capabilities in VScripts by prov
    * [`TracePlus.PortalBbox(startPos, endPos, ignoreEntities, settings, note)`](#traceplusportalbboxstartpos-endpos-ignoreentities-settings-note)
    * [`TracePlus.FromEyes.PortalBbox(distance, player, ignoreEntities, settings)`](#traceplusfromeyesportalbboxdistance-player-ignoreentities-settings)
 7. [TracePlus/bbox\_analyzer.nut](#traceplusbbox_analyzernut)
-   * [`TraceLineAnalyzer`](#tracelineanalyzer)
+   * [`BboxTraceAnalyzer`](#tracelineanalyzer)
 8. [TracePlus/calculate\_normal.nut](#tracepluscalculate_normalnut)
    * [Global Functions:](#global-functions)
 
 
 ## [TracePlus/settings.nut](#traceplussettingsnut)
 
-This file defines the `TracePlus.Settings` class, which encapsulates settings for ray traces, including options for entity filtering, model filtering, custom collision and ignore filters, and parameters for precise trace line analysis in the `TraceLineAnalyzer` class. 
+This file defines the `TracePlus.Settings` class, which encapsulates settings for ray traces, including options for entity filtering, model filtering, custom collision and ignore filters, and parameters for precise trace line analysis in the `BboxTraceAnalyzer` class. 
 
 ### [`TracePlus.Settings`](#traceplussettings)
 
@@ -45,8 +45,8 @@ This class stores various settings that control the behavior of traces, such as 
 *   `ignoredModels` (ArrayEx): An array of entity model names to ignore during traces. Supports masks.
 *   `shouldRayHitEntity` (function or null): A custom function to determine if a ray should hit an entity. This function is used as a collision filter.
 *   `shouldIgnoreEntity` (function or null): A custom function to determine if an entity should be ignored during a trace. This function is used as an ignore filter.
-*   `depthAccuracy` (number): Controls the step size in the deep search algorithm of the `TraceLineAnalyzer` for bbox casts. Lower values increase precision but may impact performance. It's useful when the ray needs to hit very thin objects. (Default: 5, clamped between 0.3 and 15)
-*   `bynaryRefinement` (boolean): Enables an additional search level in the `TraceLineAnalyzer` for bbox casts to further improve the accuracy of the hit point. It's crucial when precise hit point calculation is needed, especially for accurate surface normal calculation. (Default: false)
+*   `depthAccuracy` (number): Controls the step size in the deep search algorithm of the `BboxTraceAnalyzer` for bbox casts. Lower values increase precision but may impact performance. It's useful when the ray needs to hit very thin objects. (Default: 5, clamped between 0.3 and 15)
+*   `bynaryRefinement` (boolean): Enables an additional search level in the `BboxTraceAnalyzer` for bbox casts to further improve the accuracy of the hit point. It's crucial when precise hit point calculation is needed, especially for accurate surface normal calculation. (Default: false)
 
 **Methods:**
 
@@ -54,8 +54,8 @@ This class stores various settings that control the behavior of traces, such as 
 *   `SetIgnoredClasses(ignoreClassesArray)`: Sets the list of entity classnames to ignore during traces. **(Builder)**
 *   `SetPriorityClasses(priorityClassesArray)`: Sets the list of entity classnames to prioritize during traces. **(Builder)**
 *   `SetIgnoredModels(ignoredModelsArray)`: Sets the list of entity model names to ignore during traces. **(Builder)**
-*   `SetDepthAccuracy(value)`: Sets the depth accuracy value for the `TraceLineAnalyzer`. **(Builder)**
-*   `SetBynaryRefinement(bool)`: Enables or disables binary refinement for the `TraceLineAnalyzer`. **(Builder)**
+*   `SetDepthAccuracy(value)`: Sets the depth accuracy value for the `BboxTraceAnalyzer`. **(Builder)**
+*   `SetBynaryRefinement(bool)`: Enables or disables binary refinement for the `BboxTraceAnalyzer`. **(Builder)**
 *   `AppendIgnoredClass(className)`: Appends an entity classname to the list of ignored classes. **(Builder)**
 *   `AppendPriorityClasses(className)`: Appends an entity classname to the list of priority classes. **(Builder)**
 *   `AppendIgnoredModel(modelName)`: Appends an entity model name to the list of ignored models. **(Builder)**
@@ -402,9 +402,9 @@ if (traceResult.DidHit()) {
 
 ## [TracePlus/bbox\_analyzer.nut](#traceplusbbox_analyzernut)
 
-This file defines the `TraceLineAnalyzer` class for precise trace line analysis, which is a core component of the BBox Casting algorithm.
+This file defines the `BboxTraceAnalyzer` class for precise trace line analysis, which is a core component of the BBox Casting algorithm.
 
-### [`TraceLineAnalyzer`](#tracelineanalyzer)
+### [`BboxTraceAnalyzer`](#tracelineanalyzer)
 
 This class provides methods for tracing lines with more precision and considering entity priorities and ignore settings. It subdivides the trace into smaller segments and checks for entity collisions along the way, taking into account the trace settings. **It's required for the Bboxcast**
 
@@ -423,7 +423,7 @@ This class provides methods for tracing lines with more precision and considerin
 
 **BBox Casting Algorithm:**
 
-The `TraceLineAnalyzer` class implements a sophisticated BBox Casting algorithm for accurate and efficient collision detection. A detailed description of the algorithm, including its steps, optimizations, and code examples, can be found in the [bbox\_analyzer.md](bbox_analyzer.md) file.
+The `BboxTraceAnalyzer` class implements a sophisticated BBox Casting algorithm for accurate and efficient collision detection. A detailed description of the algorithm, including its steps, optimizations, and code examples, can be found in the [bbox\_analyzer.md](bbox_analyzer.md) file.
 
 ## [TracePlus/calculate\_normal.nut](#tracepluscalculate_normalnut)
 

@@ -5,10 +5,9 @@
  * @param {Vector} endPos - The end position of the trace.
  * @param {array|CBaseEntity|null} ignoreEntities - A list of entities or a single entity to ignore during the trace. (optional)
  * @param {TraceSettings} settings - The settings to use for the trace. (optional, defaults to TracePlus.defaultSettings) 
- * @param {string|null} note - An optional note associated with the trace. 
  * @returns {BboxTraceResult} - The trace result object. 
 */
-TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings = TracePlus.defaultSettings, note = null) {
+TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings = TracePlus.defaultSettings) {
     if(typeof startPos != "Vector") throw("TracePlus.Bbox: 'startPos' argument must be a Vector, but got " + typeof startPos);
     if(typeof endPos != "Vector") throw("TracePlus.Bbox: 'endPos' argument must be a Vector, but got " + typeof endPos);
     if(typeof settings != "TraceSettings")  throw("TracePlus.Bbox: 'settings' argument must be a TraceSettings, but got " + typeof settings);
@@ -31,11 +30,11 @@ TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings 
     SCOPE.endpos <- endPos;
     SCOPE.ignoreEntities <- ignoreEntities 
     SCOPE.settings <- settings
-    SCOPE.note <- note
 
-    local result = TraceLineAnalyzer(startPos, endPos, ignoreEntities, settings, note)
+    local BboxAnalyzer = USE_LEGACY_BBOXCAST_ANALYZER ? LegacyBboxAnalyzer : BboxTraceAnalyzer
+    local result = BboxAnalyzer(startPos, endPos, ignoreEntities, settings)
     
-    return TracePlus.Result.Bbox(SCOPE, result.GetHitPos(), result.GetEntity())
+    return TracePlus.Result.Bbox(SCOPE, result.hitpos, result.hitent)
 }
 
 /*
