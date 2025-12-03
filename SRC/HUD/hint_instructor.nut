@@ -40,7 +40,7 @@ HUD["HintInstructor"] <- class {
     }
 
     // Displays the hint.  
-    function Enable() null
+    function Enable(delay) null
     // Hides the hint. 
     function Disable() null
     // Updates and redisplays the hint.  
@@ -71,8 +71,8 @@ HUD["HintInstructor"] <- class {
 /*
  * Displays the hint. 
 */
-function HUD::HintInstructor::Enable() {
-    EntFireByHandle(this.CPcapEntity, "ShowHint")
+function HUD::HintInstructor::Enable(delay=0) {
+    EntFireByHandle(this.CPcapEntity, "ShowHint", "", delay)
 }
 
 // Implementation of 'disable' to hide the on-screen text
