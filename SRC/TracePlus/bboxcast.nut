@@ -15,6 +15,7 @@ TracePlus["Bbox"] <- function(startPos, endPos, ignoreEntities = null, settings 
         local ignoreType = typeof ignoreEntities;
         if (ignoreType == "array" || ignoreType == "ArrayEx" || ignoreType == "List") {
             foreach(idx, ent in ignoreEntities) {
+                if(!ent || !ent.IsValid()) throw(format("TracePlus.Bbox: 'ignoreEntities' array/list contains a not-valid entity at index %d", idx))
                 if (typeof ent != "pcapEntity" && !(ent instanceof CBaseEntity)) {
                     throw(format("TracePlus.Bbox: 'ignoreEntities' array/list contains a non-entity value at index %d (got %s). It must contain only entity handles.", idx, typeof ent));
                 }

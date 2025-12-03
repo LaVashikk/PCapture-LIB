@@ -22,6 +22,13 @@
 
 ::USE_LEGACY_BBOXCAST_ANALYZER <- false
 
+function TracePlus::InvalidateEntity(ent) {
+    local idx = ent.entindex()
+    if(idx in EntBufferTable) {
+        EntBufferTable[idx].lastFrameTime = -1
+    }
+}
+
 IncludeScript("PCapture-LIB/SRC/TracePlus/results")
 IncludeScript("PCapture-LIB/SRC/TracePlus/trace_settings")
 TracePlus.defaultSettings = TracePlus.Settings.new()

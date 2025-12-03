@@ -3,6 +3,8 @@
 */
 TracePlus["Settings"] <- class {
     id = null;
+    ignoreAllClasses = false;
+    
     // An array of entity classnames to ignore during traces. 
     ignoreClasses = ArrayEx("viewmodel", "weapon_", "beam", "light",
         "trigger_", "phys_", "env_", "point_", "info_", "vgui_", "logic_",
@@ -64,6 +66,8 @@ TracePlus["Settings"] <- class {
         if(typeof ignoreClassesArray != "array" && typeof ignoreClassesArray != "ArrayEx") throw("TracePlus.Settings.SetIgnoredClasses: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof ignoreClassesArray)
 
         this.ignoreClasses = ArrayEx.FromArray(ignoreClassesArray)
+        this.ignoreAllClasses = this.ignoreClasses && this.ignoreClasses.contains("*")
+        
         return this
     }
 
@@ -107,11 +111,15 @@ TracePlus["Settings"] <- class {
      * @param {string} className - The classname to append. 
     */
     function AppendIgnoredClass(className) {
+        if(typeof className != "string") throw("TracePlus.Settings.AppendIgnoredClass: Invalid argument type. Expected a 'string', but got " + typeof className)
+
         // CoW Mechanism
         if(this.ignoreClasses == TracePlus.Settings.ignoreClasses)
             this.ignoreClasses = this.ignoreClasses.Clone()
         
         this.ignoreClasses.append(className)
+        this.ignoreAllClasses = this.ignoreClasses && this.ignoreClasses.contains("*")
+        
         return this
     }
 
@@ -121,6 +129,8 @@ TracePlus["Settings"] <- class {
      * @param {string} className - The classname to append. 
     */
     function AppendPriorityClasses(className) {
+        if(typeof className != "string") throw("TracePlus.Settings.AppendPriorityClasses: Invalid argument type. Expected a 'string', but got " + typeof className)
+
         // CoW Mechanism
         if(this.priorityClasses == TracePlus.Settings.priorityClasses)
             this.priorityClasses = this.priorityClasses.Clone()
@@ -135,6 +145,8 @@ TracePlus["Settings"] <- class {
      * @param {string} modelName - The model name to append. 
     */
     function AppendIgnoredModel(modelName) {
+        if(typeof modelName != "string") throw("TracePlus.Settings.AppendIgnoredModel: Invalid argument type. Expected a 'string', but got " + typeof modelName)
+
         // CoW Mechanism
         if(this.ignoredModels == TracePlus.Settings.ignoredModels)
             this.ignoredModels = this.ignoredModels.Clone()
