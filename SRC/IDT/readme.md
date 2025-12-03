@@ -62,7 +62,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
     * [`reduce(func, initial)`](#reducefunc-initial)
     * [`totable()`](#totable)
     * [`toarray()`](#toarray)
-    * [`swapNode(node1, node2)`](#swapnodenode1-node2)
+    * [`swapNode(node1, node2)`](#swapNodenode1-node2)
 3. [IDT/tree_sort.nut](#idttree_sortnut)
     * [`AVLTree(...)`](#avltree)
     * [`FromArray(array)`](#fromarrayarray)
@@ -76,7 +76,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
     * [`GetMax()`](#getmax)
     * [`inorderTraversal()`](#inordertraversal)
     * [`printTree()`](#printtree)
-    * [`Comparison with `](#comparison-with)
+    * [`Comparison with array, list and AVLTree`](#comparison-with-array-list-and-avltree)
 * [`*Choosing the Right Data Structure**](#choosing-the-right-data-structure)
 4. [IDT/entity_creator.nut](#idtentity_creatornut)
     * [`CreateByClassname(classname, keyvalues)`](#createbyclassnameclassname-keyvalues)
@@ -155,14 +155,15 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`StopSoundEx(soundName, fireDelay = 0, eventName = "global")`](#stopsoundexsoundname-firedelay--0-eventname--global)
 
     *   **Outputs and Inputs:**
-        *   [`AddOutput(outputName, target, input, param, delay, fires)`](#AddOutputoutputname-target-input-param-delay-fires)
+        *   [`AddOutput(outputName, target, input, param, delay, fires)`](#addoutputoutputname-target-input-param-delay-fires)
         *   [`ConnectOutputEx(outputName, script, delay, fires)`](#connectoutputexoutputname-script-delay-fires)
         *   [`SetInputHook(inputName, closure)`](#setinputhookinputname-closure)
 
     *   **Bounding Box and Position:**
-        *   [`SetBBox(minBounds, maxBounds)`](#setbboxminbounds-maxbounds)
+        *   [`SetBBox(minBounds: Vector, maxBounds: Vector)`](#setbboxminbounds-maxbounds)
         *   [`IsSquareBbox()`](#issquarebbox)
         *   [`GetAABB()`](#getaabb)
+        *   [`GetBoundingCenter()`](#getboundingcenter)
         *   [`CreateAABB(stat)`](#createaabbstat)
         *   [`GetBBoxPoints()`](#getbboxpoints)
         *   [`GetBBoxFaces()`](#getbboxfaces)
@@ -717,7 +718,7 @@ local listLength = myList.len()
 ```
 
 ### `iter()`
-Returns an iterator object for the list. This method is more efficient than using a built-in iterator.
+Returns an iterator object for the list. This is the **only supported way** to iterate over a `List` instance. Attempting to use the built-in `foreach (item in mylist)` syntax will result in a runtime error. This method provides an efficient and explicit way to traverse the list.
 
 **Returns:**
 
@@ -1535,6 +1536,14 @@ local entitiesInSphere = entLib.FindInSphere(myPosition, 100)
 ## [IDT/entity.nut](entity.nut)
 
 This file defines the `pcapEntity` class, which extends the functionality of `CBaseEntity` with additional methods for manipulating entity properties, setting outputs, managing user data, and retrieving information about the entity's bounding box and other attributes. **Use entLib to create it**
+
+When a `pcapEntity` is created, it automatically adds a `selfEx` property to the script scope of the underlying `CBaseEntity`. This allows you to easily access the `pcapEntity` wrapper from the raw entity object.
+**Example:**
+```js
+local myEntity = entLib.CreateByClassname("prop_physics")
+local pcapWrapper = myEntity.GetScriptScope().selfEx 
+// pcapWrapper is now the same as myEntity
+```
 
 ### `SetAngles(x, y, z)`
 Sets the angles (pitch, yaw, roll) of the entity, ensuring that the angles are within the range of 0 to 359 degrees.

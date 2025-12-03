@@ -402,7 +402,7 @@ This function rounds the components of a vector to the specified precision.
 **Parameters:**
 
 * `vec` (Vector): The vector to round.
-* `precision` (number, optional): The precision to round to (e.g., 1000 for rounding to three decimal places, default is 1).
+* `precision` (number, optional): The precision to round to (e.g., 1000 for rounding to three decimal places, default is 1000).
 
 **Returns:**
 

@@ -72,8 +72,8 @@ The `Utils` module provides a collection of utility functions for script executi
 	* [`GetEyeEndpos(player, distance)`](#macrosgeteyeendposplayer-distance)
 	* [`GetVertex(x, y, z, ang)`](#macrosgetvertexx-y-z-ang)
 	* [`GetTriangle()`](#macrosgettrianglev1-v2-v3)
-	* [`BuildAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildanimatefunctionname-propertysetterfunc-valueCalculator)
-	* [`BuildRTAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildrtanimatefunctionname-propertysetterfunc-valueCalculator)
+	* [`BuildAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildanimatefunctionname-propertysetterfunc-valuecalculator)
+	* [`BuildRTAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildrtanimatefunctionname-propertysetterfunc-valuecalculator)
 * [`Utils/const.nut`](#utilsconstnut)
 
 
@@ -840,28 +840,29 @@ macros.PrintIter(myTable) // Output: "name: Bob", "age: 42"
 
 ### `macros.MaskSearch(iter, match)`
 
-This macro searches for a matching string within an array, taking into account a wildcard character '\*'.
+This macro checks if the `match` string contains any of the substrings (masks) defined in the `iter` array. It is useful for checking if a string matches any pattern in a blacklist or whitelist.
 
 **Parameters:**
 
-* `iter` (array or ArrayEx): The array to search in.
-* `match` (string): The string to search for.
+* `iter` (array or ArrayEx): The array of masks/patterns to search for.
+* `match` (string): The string to check against the masks.
 
 **Returns:**
 
 * (int or null):
-    * The index of the first element in the array that contains the `match` string, even partially.
-    * `null` if no match is found.
-    * `0` if the first element of `iter` is "\*", indicating a wildcard match for any string.
+    * The index of the first element (mask) in the `iter` array that is found within the `match` string.
+    * `null` if no mask from the array is found in the string.
+    * `0` if the first element of `iter` is "*", indicating a wildcard match for any string.
 
 **Example:**
 
 ```js
-local myArray = ["apple", "banana", "cherry"]
-local matchIndex = macros.MaskSearch(myArray, "an") // matchIndex will be 1 (index of "banana")
+local bannedWords = ["admin", "root", "mod"]
+local userName = "super_admin_123"
+local matchIndex = macros.MaskSearch(bannedWords, userName) // matchIndex will be 0 (index of "admin") because "admin" is in "super_admin_123"
 
-local anotherArray = ["*", "grape", "orange"]
-local wildcardIndex = macros.MaskSearch(anotherArray, "any_string") // wildcardIndex will be 0 
+local whitelist = ["*", "safe"]
+local wildcardIndex = macros.MaskSearch(whitelist, "unsafe_string") // wildcardIndex will be 0 (wildcard match)
 ```
 
 ### `macros.GetRectangle(v1, v2, v3, v4)`

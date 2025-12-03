@@ -91,8 +91,8 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `GetIgnoredModels() -> ArrayEx` | Returns ignored models.  |
 | `GetCollisionFilter() -> function` | Returns collision filter function. |
 | `GetIgnoreFilter() -> function` | Returns ignore filter function.  |
-| `ApplyCollisionFilter(entity: pcapEntity, note: string)` | Applies collision filter. |
-| `ApplyIgnoreFilter(entity: pcapEntity, note: string)` | Applies ignore filter.  |
+| `ApplyCollisionFilter(entity: pcapEntity)` | Applies collision filter. |
+| `ApplyIgnoreFilter(entity: pcapEntity)` | Applies ignore filter.  |
 | `UpdateIgnoreEntities(ignoreEntities: table, newEnt: pcapEntity)` | Updates ignored entities. |
 
 ### [`TracePlus/results.nut`](SRC/TracePlus/readme.md#traceplusresultsnut)
@@ -114,7 +114,6 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `GetEntityClassname() -> string` | Returns hit entity classname.  |
 | `GetIngoreEntities() -> table` | Returns ignored entities. |
 | `GetTraceSettings() -> TraceSettings` | Returns trace settings. |
-| `GetNote() -> string` | Returns trace note.  |
 | `DidHitWorld() -> bool` | Returns true if hit world geometry. |
 
 
@@ -129,7 +128,7 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 
 | Function | Description |
 |---|---|
-| [`TracePlus.Bbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings, note: string) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusbboxstartpos-endpos-ignoreentities-settings-note) | Performs a bbox cast. |
+| [`TracePlus.Bbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusbboxstartpos-endpos-ignoreentities-settings) | Performs a bbox cast. |
 | [`TracePlus.FromEyes.Bbox(distance: number, player: pcapEntity, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesbboxdistance-player-ignoreentities-settings) | Bbox cast from player's eyes. |
 
 ### [`TracePlus/portal_casting.nut`](SRC/TracePlus/readme.md#traceplusportal_castingnut)
@@ -138,14 +137,14 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 |---|---|
 | [`TracePlus.PortalCheap(startPos: Vector, endPos: Vector) -> CheapTraceResult`](SRC/TracePlus/readme.md#traceplusportalcheapstartpos-endpos) | Cheap trace with portals. |
 | [`TracePlus.FromEyes.PortalCheap(distance: number, player: pcapEntity) -> CheapTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesportalcheapdistance-player) | Cheap trace from player's eyes with portals. |
-| [`TracePlus.PortalBbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings, note: string) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusportalbboxstartpos-endpos-ignoreentities-settings-note) | Bbox cast with portals. |
+| [`TracePlus.PortalBbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusportalbboxstartpos-endpos-ignoreentities-settings) | Bbox cast with portals. |
 | [`TracePlus.FromEyes.PortalBbox(distance: number, player: pcapEntity, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesportalbboxdistance-player-ignoreentities-settings) | Bbox cast from player's eyes with portals. |
 
 ### [`TracePlus/bbox_analyzer.nut`](SRC/TracePlus/readme.md#traceplusbbox_analyzernut)
 
 | Class/Method | Description |
 |---|---|
-| [`TraceLineAnalyzer`](SRC/TracePlus/readme.md#tracelineanalyzer) | Precise trace line analysis. |
+| [`BboxTraceAnalyzer`](SRC/TracePlus/readme.md#bboxtraceanalyzer) | Precise trace line analysis. |
 
 ### [`TracePlus/calculate_normal.nut`](SRC/TracePlus/readme.md#tracepluscalculate_normalnut)
 
@@ -153,7 +152,6 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 |---|---|
 | `CalculateImpactNormal(startPos: Vector, hitPos: Vector) -> Vector` | Impact normal for world geometry. |
 | `CalculateImpactNormalFromBbox(startPos: Vector, hitPos: Vector, hitEntity: pcapEntity) -> Vector` | Impact normal from bounding box. |
-| `CalculateImpactNormalFromBbox2(startPos: Vector, hitPos: Vector, hitEntity: pcapEntity) -> Vector` | Fallback bounding box normal. |
 
 
 ## 2. [IDT](SRC/IDT/readme.md#idt-module-improved-data-types)
@@ -220,7 +218,7 @@ Provides enhanced data structures.
 | [`reduce(func: function, initial: any) -> any`](SRC/IDT/readme.md#reducefunc-initial) | Reduces the list. |
 | [`totable() -> table`](SRC/IDT/readme.md#totable) | Converts to table. |
 | [`toarray() -> array`](SRC/IDT/readme.md#toarray) | Converts to array. |
-| [`SwapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#swapnodenode1-node2) | Swaps nodes. |
+| [`swapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#swapNodenode1-node2) | Swaps nodes. |
 
 
 ### [`IDT/tree_sort.nut`](SRC/IDT/readme.md#idttree_sortnut)
@@ -359,7 +357,7 @@ Provides utility functions.
 | [`GetValues(table: object) -> List`](SRC/Utils/readme.md#macrosgetvaluestable) | Returns values from table as List. |
 | [`InvertTable(table: table) -> table`](SRC/Utils/readme.md#macrosinverttabletable) | Inverts table. |
 | [`PrintIter(iterable: iterable)`](SRC/Utils/readme.md#macrosprintiteriterable) | Prints iterable. |
-| [`MaskSearch(iter: array\|ArrayEx, match: string) -> number`](SRC/Utils/readme.md#macrosmasksearchiter-match) | Mask search in array. |
+| [`MaskSearch(iter: array\|ArrayEx, match: string) -> number`](SRC/Utils/readme.md#macrosmasksearchiter-match) | Checks if string matches any mask in array. |
 | [`GetRectangle(v1: Vector, v2: Vector, v3: Vector, v4: Vector) -> table`](SRC/Utils/readme.md#macrosgetrectanglev1-v2-v3-v4) | Creates rectangle object.  |
 | [`PointInBBox(point: Vector, bMin: Vector, bMax: Vector) -> bool`](SRC/Utils/readme.md#macrospointinbboxpoint-bmin-bmax) | Point in bbox check. |
 | [`PointInBounds(point: Vector) -> bool`](SRC/Utils/readme.md#macrospointinboundspoint) | Point in world's bounds check. |
@@ -400,8 +398,7 @@ Provides enhanced event scheduling.
 | [`AddActions(eventName: string, actions: array\|List, noSort: bool)`](SRC/ActionScheduler/readme.md#scheduleeventaddactionseventname-actions-nosort) | Adds multiple actions. |
 | [`Cancel(eventName: string, delay: number)`](SRC/ActionScheduler/readme.md#scheduleeventcanceleventname-delay) | Cancels event.  |
 | [`TryCancel(eventName: string, delay: number) -> bool`](SRC/ActionScheduler/readme.md#scheduleeventtrycanceleventname-delay) | Tries to cancel event. |
-| [`CancelByAction(action: string\|function, delay: number)`](SRC/ActionScheduler/readme.md#scheduleeventcancelbyactionaction-delay) | Cancels by action. |
-| [`CancelAll()`](SRC/ActionScheduler/readme.md#scheduleeventcancelall) | Cancels all events. |
+| [`CancelAll()`](SRC/ActionScheduler/readme.md#scheduleeventcancelall) | Cancels all events, except for global ones. |
 | [`GetEvent(eventName: string) -> List`](SRC/ActionScheduler/readme.md#scheduleeventgeteventeventname) | Gets event actions. |
 | [`IsValid(eventName: string) -> bool`](SRC/ActionScheduler/readme.md#scheduleeventisvalideventname) | Checks event validity. |
 
@@ -415,7 +412,6 @@ Provides animation functions.
 | Class/Function | Description |
 |---|---|
 | [`AnimEvent(name: string, settings: table, entities: array\|CBaseEntity\|pcapEntity, time: number)`](SRC/Animations/readme.md#animeventname-settings-entities-time0) | Animation event data.  |
-| [`applyAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animateapplyanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Applies animation.  |
 | [`applyRTAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animateapplyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Applies real-time animation. |
 | [`_applyRTAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animate_applyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Internal function for real-time animation. |
 
@@ -487,7 +483,7 @@ Provides animation functions.
 | [`SetPositioning(value: number, ent: CBaseEntity\|pcapEntity) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetpositioningvalue-ent) | Sets positioning. |
 | [`SetColor(string_color: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetcolorstring_color) | Sets color.  |
 | [`SetIconOnScreen(icon: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticononscreenicon) | Sets on-screen icon. |
-| [`SetIconOffScreen(screen: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticonoffscreenscreen) | Sets off-screen icon. |
+| [`SetIconOffScreen(icon: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticonoffscreenscreen) | Sets off-screen icon. |
 | [`SetHoldTime(time: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetholdtimetime) | Sets hold time.  |
 | [`SetDistance(value: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetdistancevalue) | Sets distance.  |
 | [`SetEffects(sizePulsing: number, alphaPulsing: number, shaking: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseteffectssizepulsing-alphapulsing-shaking) | Sets effects. |
@@ -539,7 +535,7 @@ Provides linear interpolation functions.
 | [`lerp.SmoothStep(edge0: number, edge1: number, x: number)`](SRC/Math/readme.md#mathlerpsmoothstepedge0-edge1-x) | Smoothstep interpolation. |
 | [`lerp.FLerp(f1: number, f2: number, i1: number, i2: number, x: number)`](SRC/Math/readme.md#mathlerpflerpf1-f2-i1-i2-x) | Custom parameter interpolation. |
 
-### [`Math/easing_equation.nut`](SRC/Math/readme.md#matheasincirc)
+### [`Math/easing_equation.nut`](SRC/Math/readme.md#matheasing_equationnut)
 Provides various easing functions.
 
 | Function | Description |

@@ -24,7 +24,7 @@ The `Animations` module provides functions for creating various animations in VS
 
 This file initializes the `Animations` module, defines the `AnimEvent` class for managing animation events, and includes the necessary script files for the module's functionality.
 
-### `AnimEvent(name, settings, entities, time=0)`
+### `AnimEvent(name, settings, entities, time)`
 
 The `AnimEvent` class is used internally by the animation functions to store and manage information about an animation event. It is not intended for direct use in your scripts.
 
@@ -39,7 +39,7 @@ Creates a new `AnimEvent` object with the specified name, settings, entities, an
 *   `entities` (array, CBaseEntity, or pcapEntity): An array of entities, a single entity, or a pcapEntity to animate.
 *   `time` (number, optional): The duration of the animation in seconds (default is 0).
 
-### Animation Settings Table (propertySetter)
+### Animation Settings Table
 
 The `settings` table in the `AnimEvent` constructor can contain the following optional properties:
 
@@ -64,7 +64,7 @@ This function applies an animation over a specified duration, calculating and se
 *   `valueCalculator` (function): A function that calculates the new value for the property at each frame. The function should take three arguments: current step, total steps, and optional variables (`vars`).
 *   `propertySetter` (function): A function that sets the new value for the property on each entity. The function should take two arguments: the entity and the calculated value.
 *   `vars` (any, optional): Optional variables to pass to the `valueCalculator` function. Can be used for your custom animations.
-*   `transitionFrames` (number, optional): The total number of frames in the animation. If 0, it's calculated based on `animInfo.delay` and `animInfo.frameInterval`. (default: 0)
+*   `transitionFrames` (number, optional): The total number of frames in the animation. If 0, it's calculated based on `animInfo.delay` and `animInfo.frameInterval`. Otherwise, the provided value is used.
 
 **Example:**
 
@@ -89,7 +89,11 @@ animate.applyRTAnimation(animInfo, valueCalculator, propertySetter) // Apply the
 
 ### `animate._applyRTAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
 
-Applies the animation in real-time, evaluating each frame as it occurs without pre-calculating.  This function works similarly to `applyAnimation`, but rather than calculating all the steps in advance, it applies `propertySetter` in real-time for each frame. This is useful in cases where you might need to interrupt or alter the animation at runtime using `filterCallback`, or if the animation is too long for VSquirrel to process upfront.  The arguments are the same as those for `applyAnimation`. This function is intended for internal use and should generally be called through `applyRTAnimation`.
+
+
+
+
+Applies the animation in real-time, evaluating each frame as it occurs without pre-calculating. This function works similarly to `applyAnimation`, but rather than calculating all the steps in advance, it applies `propertySetter` in real-time for each frame. This is useful in cases where you might need to interrupt or alter the animation at runtime using `filterCallback`, or if the animation is too long for VSquirrel to process upfront. This function is intended for internal use and is called by `animate.applyRTAnimation`. Its arguments are managed internally.
 
 
 
@@ -294,9 +298,7 @@ animate.RT.AnglesTransitionByTime(myEntity, startAngles, endAngles, 2) // Rotate
 
 ## Custom Animation Functions
 
-You can create your own custom animation functions using the `macros.BuildAnimateFunction` and `animate.applyAnimation` functions. Real-time versions of custom animations can be created by using `macros.BuildRTAnimateFunction` and `animate.applyRTAnimation`.
-
-#### [More info here](../Utils/readme.md#macrosbuildanimatefunctionname-propertysetterfunc-valueCalculator)
+You can create your own custom animation functions using `animate.applyAnimation`. Real-time versions of custom animations can be created by using `animate.applyRTAnimation`.
 
 ### `animate.applyAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)` | `animate.applyRTAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
 
@@ -315,18 +317,18 @@ animate["SkinTransition"] <- function(entities, startSkin, endSkin, time, animSe
     if(vars.delta == 0) return 0
 
     animSetting["frameInterval"] <- time / abs(vars.delta)
-    local animSetting = AnimEvent("skin", animSetting, entities, time)
+    local animInfo = AnimEvent("skin", animSetting, entities, time)
 
     animate.applyAnimation( 
-        animSetting, 
+        animInfo, 
         function(step, steps, v) {return v.start + step * v.mut},
         function(ent, newSkin) {ent.SetSkin(newSkin)},
         vars,
         abs(vars.delta)
     )
     
-    animSetting.callOutputs()
-    return animSetting.delay
+    animInfo.CallOutput()
+    return animInfo.delay
 }
 ```
 
@@ -334,17 +336,25 @@ animate["SkinTransition"] <- function(entities, startSkin, endSkin, time, animSe
 
 ```js
 animate.RT["SkinTransition"] <- function(entities, startSkin, endSkin, time, animSetting = {}) {
-    // ... (same logic as the standard animation example, but use applyRTAnimation instead)
+    local vars = {
+        start = startSkin,
+        delta = endSkin - startSkin,
+        mut = (endSkin - startSkin) < 0 ? -1 : 1 
+    }
+    if(vars.delta == 0) return 0
+
+    animSetting["frameInterval"] <- time / abs(vars.delta)
+    local animInfo = AnimEvent("skin", animSetting, entities, time)
 
     animate.applyRTAnimation( 
-        animSetting, 
+        animInfo, 
         function(step, steps, v) {return v.start + step * v.mut},
         function(ent, newSkin) {ent.SetSkin(newSkin)},
         vars,
         abs(vars.delta)
     )
     
-    animSetting.callOutputs()
-    return animSetting.delay   
+    animInfo.CallOutput()
+    return animInfo.delay   
 }
 ```
