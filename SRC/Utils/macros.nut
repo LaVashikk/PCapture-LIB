@@ -128,7 +128,7 @@ macros["MaskSearch"] <- function(iter, match) {
     if(iter.len() == 0) return null
     if(iter[0] == "*") return 0
 
-    foreach(idx, val in iter) {
+    foreach(idx, val in typeof iter == "List" ? iter.iter() : iter) {
         if(match.find(val) >= 0)
             return idx
     }
@@ -197,6 +197,7 @@ macros["fprint"] <- function(msg, ...) {
 
     printl(macros.format.acall(args))
 }
+::dev.fprint <- macros.fprint // fallback for earlier version of the lib
 
 /*
  * Compiles a function from a string representation.
