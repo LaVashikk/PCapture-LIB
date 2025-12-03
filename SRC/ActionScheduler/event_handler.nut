@@ -23,7 +23,7 @@
             }
             catch(exception) {
                 // ScheduleEvent unwinding
-                macros.fprint("\nSCHEDULED EVENT\n[Name] {}\n{}\n[Exception] {}\n[Event Action List] {}", eventName, event.GetInfo(), exception, ScheduleEvent.eventsList[eventName])
+                macros.fprint("\nSCHEDULED EVENT\n[Name] {}\n{}\n[Exception] {}\n[Event Action List] {}\n[Time] {}", eventName, event.GetInfo(), exception, ScheduleEvent.eventsList[eventName], time)
 
                 if(typeof event.action == "function" || typeof event.action == "native function") {
                     printl("\nFUNCTION INFO")
