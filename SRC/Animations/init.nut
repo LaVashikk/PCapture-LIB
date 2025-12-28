@@ -49,6 +49,8 @@
         this.maxFrames = macros.GetFromTable(table, "fps", 60.0)
         this.autoOptimization = macros.GetFromTable(table, "optimization", true)
 
+        if(this.frameInterval == 0) throw("frameInterval is not to have 0")
+
         // If the class points to the root table, it will result in a circular reference. This fixed here
         if(this.scope == getroottable()) {
             this.scope = null
@@ -70,11 +72,11 @@
             if(entities.find("*") == null) {
                 local ent = entLib.FindByName(entities);
                 if (!ent) dev.warning(actionName + " AnimEvent: Could not find entity with name '" + entities + "'");
-                else foundEnts.push(ent);
+                else foundEnts.append(ent);
             }
             else {
                 for(local ent; ent = entLib.FindByName(entities, ent);)
-                    foundEnts.push(ent)
+                    foundEnts.append(ent)
                 if (foundEnts.len() == 0) dev.warning(actionName + " AnimEvent: Could not find any entities matching name pattern '" + entities + "'");
             }
             return foundEnts;
@@ -139,7 +141,8 @@ animate["applyAnimation"] <- function(animInfo, valueCalculator, propertySetter,
 
         local newValue = valueCalculator(step, transitionFrames, vars)
         
-        foreach(ent in animInfo.entities) {
+        local iter = typeof animInfo.entities == "List" ? animInfo.entities.iter() : animInfo.entities
+        foreach(ent in iter) {
             local action = ScheduleAction(this, propertySetter, elapsed, [ent, newValue])
             actionsList.append(action)
         }
@@ -196,35 +199,35 @@ animate["_applyRTAnimation"] <- function(animInfo, valueCalculator, propertySett
 
     // Helper function to process each animation step
     function processStep(step, animInfo, valueCalculator, propertySetter, vars, transitionFrames) {
-    // Stop if all frames are processed
-    if (step > transitionFrames) {
-        animInfo.delay = 0;
-        animInfo.globalDelay = 0;
-        animInfo.CallOutput();
-        return;
+        // Stop if all frames are processed
+        if (step > transitionFrames) {
+            animInfo.delay = 0;
+            animInfo.globalDelay = 0;
+            animInfo.CallOutput();
+            return;
+        }
+
+        // Calculate the new property value
+        local newValue = valueCalculator(step, transitionFrames, vars);
+
+        // Stop if the filter callback signals to cancel the animation
+        if (animInfo.filterCallback(animInfo, newValue, transitionFrames, step, vars)) {
+            return;
+        }
+
+        // Apply the new value to all entities
+        foreach(ent in animInfo.entities)
+            propertySetter(ent, newValue)
+
+        // Move to the next step
+        ScheduleEvent.Add(
+            animInfo.eventName,
+            processStep,
+            animInfo.frameInterval,
+            [++step, animInfo, valueCalculator, propertySetter, vars, transitionFrames],
+            this  
+        );
     }
-
-    // Calculate the new property value
-    local newValue = valueCalculator(step, transitionFrames, vars);
-
-    // Stop if the filter callback signals to cancel the animation
-    if (animInfo.filterCallback(animInfo, newValue, transitionFrames, step, vars)) {
-        return;
-    }
-
-    // Apply the new value to all entities
-    foreach(ent in animInfo.entities)
-        propertySetter(ent, newValue)
-
-    // Move to the next step
-    ScheduleEvent.Add(
-        animInfo.eventName,
-        processStep,
-        animInfo.frameInterval,
-        [++step, animInfo, valueCalculator, propertySetter, vars, transitionFrames],
-        this  
-    );
-}
 
     // Start the animation
     processStep(0, animInfo, valueCalculator, propertySetter, vars, transitionFrames);
@@ -236,4 +239,3 @@ IncludeScript("PCapture-LIB/SRC/Animations/alpha")
 IncludeScript("PCapture-LIB/SRC/Animations/color")
 IncludeScript("PCapture-LIB/SRC/Animations/position")
 IncludeScript("PCapture-LIB/SRC/Animations/angles")
-// IncludeScript("PCapture-LIB/SRC/Animations/forward")

@@ -20,8 +20,8 @@ The `HUD` module provides functions and classes for creating and managing Heads-
         * [`SetFadeOut(value)`](#hudscreentextsetfadeoutvalue)
         * [`SetHoldTime(time)`](#hudscreentextsetholdtimetime)
         * [`SetPos(Vector)`](#hudscreentextsetposvector)
-    * [**builder-pattern-usage**](#hudscreentext-builder-pattern-usage)
-3.  [HUD/HintInstructor.nut](#hudhintinstructornut)
+    * [**HUD.ScreenText Builder Usage**](#hudscreentext-builder-usage)
+3.  [HUD/hint_instructor.nut](#hudhintinstructornut)
     * [`HUD.HintInstructor(message, holdtime, icon, showOnHud, targetname)`](#hudhintinstructormessage-holdtime-icon-showonhud-targetname)
         * [`Enable()`](#hudhintinstructorenable)
         * [`Disable()`](#hudhintinstructordisable)
@@ -31,19 +31,19 @@ The `HUD` module provides functions and classes for creating and managing Heads-
         * [`SetPositioning(value, ent)`](#hudhintinstructorsetpositioningvalue-ent)
         * [`SetColor(string_color)`](#hudhintinstructorsetcolorstring_color)
         * [`SetIconOnScreen(icon)`](#hudhintinstructorseticononscreenicon)
-        * [`SetIconOffScreen(screen)`](#hudhintinstructorseticonoffscreenscreen)
+        * [`SetIconOffScreen(icon)`](#hudhintinstructorseticonoffscreenicon)
         * [`SetHoldTime(time)`](#hudhintinstructorsetholdtimetime)
         * [`SetDistance(value)`](#hudhintinstructorsetdistancevalue)
         * [`SetEffects(sizePulsing, alphaPulsing, shaking)`](#hudhintinstructorseteffectssizepulsing-alphapulsing-shaking)
-    * [**builder-pattern-usage**](#hudhintinstructor-builder-pattern-usage)
+    * [**HUD.HintInstructor Builder Usage**](#hudhintinstructor-builder-usage)
 
 ## [HUD/init.nut](init.nut)
 
 This file initializes the `HUD` module by declaring a global table `::HUD` which will store all HUD-related functions and classes.
 
-## [HUD/ScreenText.nut](ScreenText.nut)
+## [HUD/game_text.nut](game_text.nut)
 
-This file provides the `HUD.ScreenText` class for creating and managing on-screen text elements using the "game\_text" entity.
+This file provides the `HUD.ScreenText` class for creating and managing on-screen text elements using the "game_text" entity.
 
 ### `HUD.ScreenText`
 
@@ -266,7 +266,7 @@ local newPos = Vector(0.25, 0.75, 0)
 myText.SetPos(newPos) // Move the text to a new position
 ```
 
-#### **Builder Pattern Usage:**
+#### **HUD.ScreenText Builder Usage:**
 
 The methods of `HUD.ScreenText` can be chained together using the builder pattern, allowing you to configure the text element in a concise and readable way. Each method returns the `HUD.ScreenText` object itself, so you can call multiple methods in sequence.
 
@@ -283,7 +283,7 @@ HUD.ScreenText(Vector(0, 0.5, 0), "My Text", 999)
 ```
 
 
-## [HUD/HintInstructor.nut](HintInstructor.nut)
+## [HUD/hint_instructor.nut](hint_instructor.nut)
 
 This file provides the `HUD.HintInstructor` class for creating and managing hints using the "env\_instructor\_hint" entity.
 
@@ -433,13 +433,13 @@ Sets the icon to display when the hint is on-screen.
 myHint.SetIconOnScreen("icon_interact") // Set a custom icon
 ```
 
-#### `HUD.HintInstructor.SetIconOffScreen(screen)`
+#### `HUD.HintInstructor.SetIconOffScreen(icon)`
 
 Sets the icon to display when the hint is off-screen.
 
 **Parameters:**
 
-*   `screen` (string): The icon name to display (e.g., "icon\_tip").
+*   `icon` (string): The icon name to display (e.g., "icon\_tip").
 
 **Returns:**
 
@@ -507,7 +507,7 @@ Sets the visual effects for the hint.
 myHint.SetEffects(1, 0, 1) // Enable size pulsing and shaking
 ```
 
-#### **Builder Pattern Usage:**
+#### **HUD.HintInstructor Builder Usage:**
 
 Similar to `HUD.ScreenText`, the methods of `HUD.HintInstructor` can also be chained together using the builder pattern, providing a fluent way to configure hint elements.
 

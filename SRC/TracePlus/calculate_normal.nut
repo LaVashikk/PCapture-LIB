@@ -1,46 +1,11 @@
 /*
- * Calculates two new start positions for additional traces used in impact normal calculation. 
- * 
- * @param {Vector} startPos - The original start position of the trace. 
- * @param {Vector} dir - The direction vector of the trace. 
- * @returns {array} - An array containing two new start positions as Vectors. 
-*/
-function _getNewStartsPos(startPos, dir) {
-    // Calculate offset vectors perpendicular to the trace direction
-    local perpDir = Vector(-dir.y, dir.x, 0)
-    local offset1 = perpDir
-    local offset2 = dir.Cross(offset1)
-
-    // Calculate new start positions for two additional traces
-    local newStart1 = startPos + offset1
-    local newStart2 = startPos + offset2
-
-    return [
-        newStart1, 
-        newStart2
-    ]
-}
-
-/*
- * Performs a cheap trace from a new start position to find an intersection point.
- *
- * @param {Vector} newStart - The new start position for the trace. 
- * @param {Vector} dir - The direction vector of the trace. 
- * @returns {Vector} - The hit position of the trace.
-*/
-function _getIntPoint(newStart, dir) {    
-    return TracePlus.Cheap(newStart, (newStart + dir * 8000)).GetHitpos()
-}
-
-/*
- * Calculates the normal vector of a triangle .
- * 
- * @param {Vector} v1 - The first . 
- * @param {Vector} v2 - The second .
- * @param {Vector} v3 - The third . 
+ * Calculates the normal vector of a triangle.
+ * * @param {Vector} v1 - The first vertex. 
+ * @param {Vector} v2 - The second vertex.
+ * @param {Vector} v3 - The third vertex. 
  * @returns {Vector} - The normal vector of the triangle. 
 */
-function _calculateNormal(v1, v2, v3) {
+::_calculateNormal <- function(v1, v2, v3) {
     // Calculate two edge vectors of the triangle. 
     local edge1 = v2 - v1
     local edge2 = v3 - v1
@@ -52,114 +17,92 @@ function _calculateNormal(v1, v2, v3) {
     return normal 
 }
 
-/*
- * Finds the three closest vertices to a given point from a list of vertices. 
- *
- * @param {Vector} point - The point to find the closest vertices to.
- * @param {array} vertices - An array of Vector objects representing the vertices. 
- * @returns {array} - An array containing the three closest vertices as Vector objects.
-*/ 
-function _findClosestVertices(point, vertices) {
-    // Sort the vertices based on their distance to the point.
-    vertices.sort(function(a, b):(point) {
-        return (a - point).LengthSqr() - (b - point).LengthSqr() 
-    })
-
-    // Return the three closest vertices.
-    return vertices.slice(0, 3)  
+// Fast coordinate system transformations
+function _worldToLocal(entity, worldPoint, R) {
+    local origin = entity.GetOrigin()
+    return R.unrotateVector(worldPoint - origin)
 }
-
-function _numberIsCloseTo(num1, num2, tolerance = 1) {
-    return abs(num1 - num2) <= tolerance;
-}
-
-/*
-  Gets the proper vertices of a face (4 of them), regarding the hitPoint
-  allVertices - Array of Vectors, where each vector represents the position of a vertex point of the bounding box
-  hitPoint - vector of the position where the ray hit
-*/
-function _getFaceVertices(allVertices, hitPoint, origin) {
-    local resultX = []
-    local resultY = []
-    local resultZ = []
-    hitPoint -= origin
-
-    foreach(vertexPoint in allVertices) {
-        if(_numberIsCloseTo(vertexPoint.x, hitPoint.x)) resultX.append(vertexPoint)
-        else if(_numberIsCloseTo(vertexPoint.y, hitPoint.y)) resultY.append(vertexPoint)
-        else if(_numberIsCloseTo(vertexPoint.z, hitPoint.z)) resultZ.append(vertexPoint)
-        if(3 in resultX || 3 in resultY || 3 in resultZ) break
-    }
-
-    if(3 in resultX) return resultX
-    if(3 in resultY) return resultY
-    if(3 in resultZ) return resultZ
-
-    return null
+function _localDirToWorld(localDir, R) {
+    // For normal/direction: rotation only, no translation
+    return R.rotateVector(localDir)
 }
 
 
-/* 
- * Calculates the impact normal of a surface hit by a trace. 
+/* * Calculates the impact normal of a surface hit by a trace. 
  *
  * @param {Vector} startPos - The start position of the trace.
  * @param {Vector} hitPos - The hit position of the trace.
  * @returns {Vector} - The calculated impact normal vector. 
 */
 ::CalculateImpactNormal <- function(startPos, hitPos) {
-    // Calculate the normalized direction vector from startpos to hitpos
-    local dir = hitPos - startPos
-    dir.Norm()
+    const offset = 5.0;
+    local dir = hitPos - startPos; dir.Norm()
 
-    // Get two new start positions for additional traces.
-    local newStartsPos = _getNewStartsPos(startPos, dir)
-    
-    // Perform cheap traces from the new start positions to find intersection points.
-    local point1 = _getIntPoint(newStartsPos[0], dir)
-    local point2 = _getIntPoint(newStartsPos[1], dir)
-    
-    return _calculateNormal(hitPos, point2, point1)
+    // Ortho Basis
+    local up = abs(dir.z) < 0.99 ? Vector(0,0,1) : Vector(0,1,0)
+    local right = dir.Cross(up); right.Norm()
+    local up2 = right.Cross(dir); up2.Norm()
+
+    local newStart1 = startPos + right * offset
+    local newStart2 = startPos + up2 * offset
+    local endPos1   = newStart1 + dir * 8000
+    local endPos2   = newStart2 + dir * 8000
+
+    local fraction1 = TraceLine(newStart1, endPos1, null)
+    local fraction2 = TraceLine(newStart2, endPos2, null)
+    local point1    = newStart1 + (endPos1 - newStart1) * fraction1
+    local point2    = newStart2 + (endPos2 - newStart2) * fraction2
+
+    local normal = _calculateNormal(hitPos, point1, point2)
+    if (normal.Dot(dir) > 0) normal = normal * -1.0
+    return normal
 }
 
 ::CalculateImpactNormalFromBbox <- function(startPos, hitPos, hitEntity) {
-    // The algorithm proposed by Enderek
-    local closestVertices = _getFaceVertices(hitEntity.getBBoxPoints(), hitPos, hitEntity.GetOrigin())
-    if(!closestVertices)
-        return CalculateImpactNormalFromBbox2(startPos, hitPos, hitEntity)
-    
-    local faceNormal = _calculateNormal(closestVertices[0], closestVertices[1], closestVertices[2])
+    // Construct rotation matrix
+    local angles = hitEntity.GetAngles()
+    local R = math.Matrix().fromEuler(angles)  // local -> world
 
-    local traceDir = (hitPos - startPos)
-    traceDir.Norm()
-    if (faceNormal.Dot(traceDir) > 0) 
-        return faceNormal * -1
+    // Transform hit point to local space
+    local localHit = _worldToLocal(hitEntity, hitPos, R)
 
-    return faceNormal 
+    // Get local AABB bounds (engine always stores them in local space)
+    local bmin = hitEntity.GetBoundingMins()
+    local bmax = hitEntity.GetBoundingMaxs()
+
+    // Find the nearest plane
+    local distXmin = fabs(localHit.x - bmin.x)
+    local distXmax = fabs(bmax.x - localHit.x)
+    local distYmin = fabs(localHit.y - bmin.y)
+    local distYmax = fabs(bmax.y - localHit.y)
+    local distZmin = fabs(localHit.z - bmin.z)
+    local distZmax = fabs(bmax.z - localHit.z)
+
+    local axis = 0   // 0=X,1=Y,2=Z
+    local sign = -1.0
+    local best = distXmin
+
+    if (distXmax < best) { best = distXmax; axis = 0; sign =  1.0 }
+    if (distYmin < best) { best = distYmin; axis = 1; sign = -1.0 }
+    if (distYmax < best) { best = distYmax; axis = 1; sign =  1.0 }
+    if (distZmin < best) { best = distZmin; axis = 2; sign = -1.0 }
+    if (distZmax < best) { best = distZmax; axis = 2; sign =  1.0 }
+
+    // Local normal of that plane
+    local nLocal = Vector(0,0,0)
+    if (axis == 0) nLocal.x = sign
+    else if (axis == 1) nLocal.y = sign
+    else nLocal.z = sign
+
+    // Rotate normal back to world space
+    local nWorld = _localDirToWorld(nLocal, R)
+    nWorld.Norm()
+
+    // Ensure the normal points AGAINST the trace direction
+    local traceDir = (hitPos - startPos); traceDir.Norm()
+    if (nWorld.Dot(traceDir) > 0) nWorld = nWorld * -1.0
+
+    return nWorld
 }
 
-/*
- * Calculates the impact normal of a surface hit by a trace using the bounding box of the hit entity.
- *
- * @param {Vector} startPos - The start position of the trace.
- * @param {Vector} hitPos - The hit position of the trace.
- * @param {BboxTraceResult} traceResult - The trace result object.
- * @returns {Vector} - The calculated impact normal vector. 
-*/
-::CalculateImpactNormalFromBbox2 <- function(startPos, hitPos, hitEntity) {
-    // Get the entity bounding box vertices.
-    local bboxVertices = hitEntity.getBBoxPoints()
-
-    // Find the three closest vertices to the hit position.
-    local closestVertices = _findClosestVertices(hitPos - hitEntity.GetOrigin(), bboxVertices)
-
-    // Calculate the normal vector of the face formed by the three closest vertices.
-    local faceNormal = _calculateNormal(closestVertices[0], closestVertices[1], closestVertices[2])
-
-    // Ensure the normal vector points away from the trace direction.
-    local traceDir = (hitPos - startPos)
-    traceDir.Norm()
-    if (faceNormal.Dot(traceDir) > 0)
-        return faceNormal * -1
-
-    return faceNormal 
-}
+// todo inline all

@@ -1,7 +1,7 @@
 commands_separator <- ",\n"
 
 // Basic information
-macros.CreateCommand("PCapLib_version", "script printl(::_lib_version_)")
+macros.CreateCommand("PCapLib_version", "script printl(::LIB_VERSION)")
 
 // Logger level control commands
 macros.CreateCommand("PCapLib_level_trace", "script ::LibLogger = LoggerLevels.Trace")

@@ -26,6 +26,7 @@
         this.action = action
         this.executionTime = delay + Time()
 
+        if(args != null && typeof args != "array") throw("arguments must be an array, but got " + typeof args)
         this.args = args
     }
 
@@ -45,14 +46,9 @@
             return this.action.call(scope)
         }
         
-        // SAFETY: checks are now in action_scheluder
-        // if(typeof this.args != "array" && typeof this.args != "ArrayEx" && typeof this.args != "List") {
-        //     // throw("Invalid arguments for ScheduleEvent! The argument must be itterable, not (" + args + ")")
-        // }
-
         local actionArgs = [this.scope]
         actionArgs.extend(this.args)
-        return action.acall(actionArgs)
+        return this.action.acall(actionArgs)
     }
 
     /*
@@ -68,13 +64,16 @@
         
         try {delay = delay.tofloat()} 
         catch(err) {throw "Invalid value for sleep. " + err}
+        if (delay <= 0.0) delay = FrameTime()
         
-        // todo Optimization: can edit this, change its time, and move in queue
-        if(eventName in ScheduleEvent.eventsList)
+        if(eventName in ScheduleEvent.eventsList) {
             ScheduleEvent.Add(eventName, generator, delay, null, this.scope)
+        } else {
+            dev.warning("Generator pause will not take effect as the event '{}' no longer exists in the schedule.", eventName)
+        }
     }
 
-    function GetInfo() return "[Scope] " + scope + "\n[Action] " + action + "\n[executionTime] " + executionTime
+    function GetInfo() return "[Scope] " + scope + "\n[Action] " + this.action + "\n[executionTime] " + executionTime
     function _typeof() return "ScheduleAction"
     function _tostring() return "ScheduleAction: (" + this.executionTime + ")"
     function _cmp(other) {    

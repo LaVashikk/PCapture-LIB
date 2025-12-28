@@ -18,7 +18,6 @@
     AddInterval = null,
 
     Cancel = null,
-    CancelByAction = null,
     CancelAll = null,
     
     GetEvent = null,
@@ -31,6 +30,8 @@ IncludeScript("PCapture-LIB/SRC/ActionScheduler/action_scheduler")
 IncludeScript("PCapture-LIB/SRC/ActionScheduler/event_handler")
 
 // Create a logic_timer to process the event loop.
-local timer = entLib.CreateByClassname("logic_timer", {RefireTime=0.001, targetname="@ScheduledEventLoop"})
-timer.ConnectOutput("OnTimer", "ScheduledEventLoop")
-EntFire("@ScheduledEventLoop", "Enable")
+if(!Entities.FindByName(null, "@ScheduledEventLoop")) {
+    local timer = entLib.CreateByClassname("logic_timer", {RefireTime=0.001, targetname="@ScheduledEventLoop"})
+    timer.ConnectOutput("OnTimer", "ScheduledEventLoop")
+    EntFire("@ScheduledEventLoop", "Enable")
+}

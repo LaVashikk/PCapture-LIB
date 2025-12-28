@@ -156,6 +156,7 @@ math["Quaternion"] <- class {
     */
     function normalize() {
         local magnitude = this.length()
+        if(magnitude == 0) throw "Quaternion.normalize: zero length"
 
         return math.Quaternion(
             this.x / magnitude,
@@ -190,8 +191,9 @@ math["Quaternion"] <- class {
      * @returns {Quaternion} - The inverse quaternion.
     */
     function inverse() {
-        local lengthSquared = this.length() * this.length();
-        return math.Quaternion(this.x / lengthSquared, -this.y / lengthSquared, -this.z / lengthSquared, -this.w / lengthSquared);
+        local len2 = this.length() * this.length();
+        if (len2 == 0) throw "Quaternion.inverse: zero length";
+        return math.Quaternion(-this.x / len2, -this.y / len2, -this.z / len2, this.w / len2);
     }
 
     /*
@@ -260,7 +262,7 @@ math["Quaternion"] <- class {
      * @param {Quaternion} other - The other quaternion to compare.
      * @returns {boolean} - True if the quaternions are equal, false otherwise.
     */
-    function isEqually(other) {
+    function IsEqual(other) {
         return this.cmp(other) == 0
     }
 

@@ -1,6 +1,7 @@
 if("AllPlayers" in getroottable()) return
 
 ::AllPlayers <- ArrayEx()
+const PLAYER_DEATH_MARKER = -999
 
 /* 
  * Gets an array of all players in the game. 
@@ -42,26 +43,33 @@ if("AllPlayers" in getroottable()) return
  * for dead players and schedules their respawn logic.
 */
 ::HandlePlayerEventsMP <- function() {
-    foreach(player in AllPlayers){
+    local playersToRemove = []
+    foreach(idx, player in AllPlayers){
         if(!player.IsValid()) {
             OnPlayerLeft(player)
-            AllPlayers.remove(AllPlayers.search(player))
+            playersToRemove.append(idx)
             continue
         }
-
-        if(player.GetHealth() > 0 || player.GetHealth() == -999) continue
+        
+        if(player.GetHealth() > 0 || player.GetHealth() == PLAYER_DEATH_MARKER) continue
 
         OnPlayerDeath(player)
         ScheduleEvent.AddInterval("global", _monitorRespawn, 0.3, 0, null, player)
-        player.SetHealth(-999)
+        player.SetHealth(PLAYER_DEATH_MARKER)
     }
+
+    if(playersToRemove.len() > 0) {
+        for(local i = playersToRemove.len() - 1; i >= 0; i--) {
+            AllPlayers.remove(playersToRemove[i])
+        }        
+    } 
 }
 
 ::HandlePlayerEventsSP <- function() {
     local h = AllPlayers[0].GetHealth()
-    if(h > 0 || h == -999) return
+    if(h > 0 || h == PLAYER_DEATH_MARKER) return
     OnPlayerDeath(AllPlayers[0])
-    AllPlayers[0].SetHealth(-999)
+    AllPlayers[0].SetHealth(PLAYER_DEATH_MARKER)
 }
 
 /* 

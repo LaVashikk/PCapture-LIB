@@ -35,9 +35,9 @@
         "body": "math.RemapVal(${1:value}, ${2:low1}, ${3:high1}, ${4:low2}, ${5:high2})",
         "description": "Remaps a value from the range [A, B] to the range [C, D]." 
     },
-    "math.vector.isEqually": { 
-        "prefix": "math.vector.isEqually",
-        "body": "math.vector.isEqually(${1:vec1}, ${2:vec2})", 
+    "math.vector.IsEqual": { 
+        "prefix": "math.vector.IsEqual",
+        "body": "math.vector.IsEqual(${1:vec1}, ${2:vec2}, ${3:precision})", 
         "description": "Checks if two vectors are equal."
     }, 
     "math.vector.rotate": { 
@@ -315,9 +315,9 @@
         "body": "toVector()", 
         "description": "Converts the quaternion to Euler angles."
     },
-    "math.Quaternion.isEqually": {
-        "prefix": "isEqually",
-        "body": "isEqually(${1:other})",
+    "math.Quaternion.IsEqual": {
+        "prefix": "IsEqual",
+        "body": "IsEqual(${1:other})",
         "description": "Checks if this quaternion is equal to another quaternion."
     },
     "math.Matrix": { 
@@ -326,12 +326,12 @@
         "description": "Creates a matrix." 
     }, 
     "math.Matrix.rotateVector": { 
-        "prefix": "rotateVector",
+        "prefix": "rotateVector", 
         "body": "rotateVector(${1:point})", 
         "description": "Rotates a point using the matrix." 
     },
     "math.Matrix.unrotateVector": { 
-        "prefix": "unrotateVector",
+        "prefix": "unrotateVector", 
         "body": "unrotateVector(${1:point})",
         "description": "Unrotates a point using the matrix."
     }, 
@@ -360,9 +360,9 @@
         "body": "rotateX(${1:angle})",
         "description": "Rotates the matrix around the X axis by a given angle."
     },
-    "math.Matrix.isEqually": {
-        "prefix": "isEqually", 
-        "body": "isEqually(${1:other})", 
+    "math.Matrix.IsEqual": {
+        "prefix": "IsEqual", 
+        "body": "IsEqual(${1:other})", 
         "description": "Checks if this matrix is equal to another matrix." 
     },
     "math.Matrix.cmp": { 
@@ -492,6 +492,11 @@
         "body": "List(${1:values})",
         "description": "Creates a new List object."
     }, 
+    "List.iter": {
+        "prefix": "iter",
+        "body": "iter()",
+        "description": "Returns an iterator for the list (required for foreach loops)."
+    },
     "List.append": { 
         "prefix": "append",
         "body": "append(${1:value})",
@@ -549,7 +554,7 @@
     },
     "List.search": {
         "prefix": "search", 
-        "body": "search(${1:value or function})",
+        "body": "search(${1:value or function})", 
         "description": "Searches for a value or matching element in the list."
     }, 
     "List.map": {
@@ -680,9 +685,9 @@
         "body": "SetAngles(${1:x}, ${2:y}, ${3:z})", 
         "description": "Sets the angles (pitch, yaw, roll) of the entity."
     }, 
-    "pcapEntity.SetAbsAngles": {
-        "prefix": "SetAbsAngles",
-        "body": "SetAbsAngles(${1:angles})",
+    "pcapEntity.SetAngles2": {
+        "prefix": "SetAngles2",
+        "body": "SetAngles2(${1:angles})",
         "description": "Sets the absolute rotation angles of the entity."
     },
     "pcapEntity.Destroy": { 
@@ -759,12 +764,7 @@
         "prefix": "SetParent",
         "body": "SetParent(${1:parentEnt}, ${2:fireDelay})", 
         "description": "Sets the parent entity for the entity."
-    }, 
-    "pcapEntity.GetParent": { 
-        "prefix": "GetParent",
-        "body": "GetParent()", 
-        "description": "Gets the parent entity of the entity."
-    }, 
+    },
     "pcapEntity.SetCollision": {
         "prefix": "SetCollision", 
         "body": "SetCollision(${1:solidType}, ${2:fireDelay})", 
@@ -794,7 +794,7 @@
         "prefix": "SetSkin",
         "body": "SetSkin(${1:skin}, ${2:fireDelay})",
         "description": "Sets the skin of the entity." 
-    },
+    }, 
     "pcapEntity.SetDrawEnabled": { 
         "prefix": "SetDrawEnabled",
         "body": "SetDrawEnabled(${1:isEnabled}, ${2:fireDelay})", 
@@ -830,10 +830,20 @@
         "body": "SetCenter(${1:vector})",
         "description": "Sets the center of the entity." 
     }, 
+    "pcapEntity.SetAbsOrigin": {
+        "prefix": "SetAbsOrigin",
+        "body": "SetAbsOrigin(${1:origin})",
+        "description": "Sets the absolute origin of the entity (teleport logic)."
+    },
+    "pcapEntity.SetAbsOriginNative": {
+        "prefix": "SetAbsOriginNative",
+        "body": "SetAbsOriginNative(${1:origin})",
+        "description": "Sets the absolute origin using the native engine method (supports interpolation)."
+    },
     "pcapEntity.SetBBox": {
         "prefix": "SetBBox", 
         "body": "SetBBox(${1:minBounds}, ${2:maxBounds})", 
-        "description": "Sets the bounding box of the entity." 
+        "description": "Sets the bounding box of the entity (requires Vectors)." 
     },
     "pcapEntity.SetContext": { 
         "prefix": "SetContext",
@@ -849,12 +859,7 @@
         "prefix": "GetUserData",
         "body": "GetUserData(${1:name})", 
         "description": "Gets a stored user data value."
-    }, 
-    "pcapEntity.GetBBox": { 
-        "prefix": "GetBBox", 
-        "body": "GetBBox()",
-        "description": "Gets the bounding box of the entity."
-    }, 
+    },
     "pcapEntity.GetAABB": {
         "prefix": "GetAABB",
         "body": "GetAABB()",
@@ -905,10 +910,15 @@
         "body": "CreateAABB(${1:stat})",
         "description": "Gets a specific face of the entity's oriented bounding box (AABB)."
     },
-    "pcapEntity.getBBoxPoints": { 
-        "prefix": "getBBoxPoints", 
-        "body": "getBBoxPoints()",
+    "pcapEntity.GetBBoxPoints": { 
+        "prefix": "GetBBoxPoints", 
+        "body": "GetBBoxPoints()",
         "description": "Gets the vertices of the entity's axis-aligned bounding box (AABB)."
+    },
+    "pcapEntity.GetBBoxFaces": {
+        "prefix": "GetBBoxFaces",
+        "body": "GetBBoxFaces()",
+        "description": "Gets the faces of the entity's bounding box."
     },
 
     // * Utils 
@@ -1053,9 +1063,9 @@
         "body": "macros.VecToStr(${1:vec})",
         "description": "Converts a Vector object to a string representation."
     },
-    "macros.isEqually": { 
-        "prefix": "macros.isEqually", 
-        "body": "macros.isEqually(${1:val1}, ${2:val2})", 
+    "macros.IsEqual": { 
+        "prefix": "macros.IsEqual", 
+        "body": "macros.IsEqual(${1:val1}, ${2:val2})", 
         "description": "Checks if two values are equal, handling different data types." 
     },
     "macros.GetPrefix": { 
@@ -1333,7 +1343,7 @@
     }, 
     "TracePlus.Bbox": {
         "prefix": "TracePlus.Bbox", 
-        "body": "TracePlus.Bbox(${1:startPos}, ${2:endPos}, ${3:ignoreEntities}, ${4:settings}, ${5:note})", 
+        "body": "TracePlus.Bbox(${1:startPos}, ${2:endPos}, ${3:ignoreEntities}, ${4:settings})", 
         "description": "Performs a bbox cast." 
     },
     "TracePlus.PortalCheap": { 
@@ -1343,7 +1353,7 @@
     }, 
     "TracePlus.PortalBbox": {
         "prefix": "TracePlus.PortalBbox", 
-        "body": "TracePlus.PortalBbox(${1:startPos}, ${2:endPos}, ${3:ignoreEntities}, ${4:settings}, ${5:note})", 
+        "body": "TracePlus.PortalBbox(${1:startPos}, ${2:endPos}, ${3:ignoreEntities}, ${4:settings})", 
         "description": "Performs a bbox cast with portal support."
     },
     "TracePlus.FromEyes.Cheap": {
@@ -1448,12 +1458,12 @@
     },
     "TracePlus.Settings.ApplyCollisionFilter": { 
         "prefix": "ApplyCollisionFilter",
-        "body": "ApplyCollisionFilter(${1:entity}, ${2:note})", 
+        "body": "ApplyCollisionFilter(${1:entity})", 
         "description": "Applies the custom collision filter function to an entity."
     },
     "TracePlus.Settings.ApplyIgnoreFilter": { 
         "prefix": "ApplyIgnoreFilter",
-        "body": "ApplyIgnoreFilter(${1:entity}, ${2:note})", 
+        "body": "ApplyIgnoreFilter(${1:entity})", 
         "description": "Applies the custom ignore filter function to an entity."
     }, 
     "TracePlus.Settings.ToggleUseCostlyNormal": { 
@@ -1465,5 +1475,5 @@
         "prefix": "UpdateIgnoreEntities",
         "body": "UpdateIgnoreEntities(${1:ignoreEntities}, ${2:newEnt})", 
         "description": "Updates the list of entities to ignore during a trace, including the player entity." 
-    }, 
-} 
+    }
+}

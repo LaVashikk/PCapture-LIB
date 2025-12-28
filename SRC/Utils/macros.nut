@@ -3,12 +3,13 @@
 /* 
  * Precaches a sound script or a list of sound scripts for later use.
  * 
- * @param {string|array|ArrayEx} sound_path - The path to the sound script or a list of paths.
+ * @param {string|array|ArrayEx|List} sound_path - The path to the sound script or a list of paths.
 */
 macros["Precache"] <- function(soundPath) {
     if(typeof soundPath == "string")
         return self.PrecacheSoundScript(soundPath)
-    foreach(path in soundPath)
+    local iter = typeof soundPath == "List" ? soundPath.iter() : soundPath
+    foreach(path in iter)
         self.PrecacheSoundScript(path)
 }
 
@@ -22,7 +23,7 @@ macros["Precache"] <- function(soundPath) {
  * @returns {any} - The value associated with the key, or the default value if the key is not found. 
 */ 
 macros["GetFromTable"] <- function(table, key, defaultValue = null) {
-    if(key in table && table[key]) 
+    if(key in table && table[key] != null) 
         return table[key]
     return defaultValue
 }
@@ -64,7 +65,7 @@ macros["GetValues"] <- function(table) {
 macros["InvertTable"] <- function(table) {
     local result = {}
     foreach(key, value in table) {
-        result[value] = key
+        result[value] <- key
     }
     return result
 }
@@ -75,6 +76,7 @@ macros["InvertTable"] <- function(table) {
  * @param {iterable} iterable - The iterable object to print.
 */
 macros["PrintIter"] <- function(iterable) {
+    iterable = typeof iterable == "List" ? iterable.iter() : iterable
     foreach(k, i in iterable) 
         macros.fprint("{}: {}", k, i)
 }
@@ -88,6 +90,8 @@ macros["PrintIter"] <- function(iterable) {
  * @returns {List} - A list of numbers within the specified range.
 */ 
 macros["Range"] <- function(start, end, step = 1) {
+    if(step == 0) throw("macros.Range: step must be non-zero");
+    
     local result = List()
     for (local i = start; i <= end; i += step) {
         result.append(i)
@@ -104,6 +108,8 @@ macros["Range"] <- function(start, end, step = 1) {
  * @yields {number} - The next number in the range.
 */ 
 macros["RangeIter"] <- function(start, end, step = 1) {
+    if(step == 0) throw("macros.RangeIter: step must be non-zero");
+
     for (local i = start; i <= end; i += step) {
         yield i
     }
@@ -122,7 +128,7 @@ macros["MaskSearch"] <- function(iter, match) {
     if(iter.len() == 0) return null
     if(iter[0] == "*") return 0
 
-    foreach(idx, val in iter) {
+    foreach(idx, val in typeof iter == "List" ? iter.iter() : iter) {
         if(match.find(val) >= 0)
             return idx
     }
@@ -136,8 +142,6 @@ macros["MaskSearch"] <- function(iter, match) {
  * @param {any} vargs... - Additional arguments to substitute into the placeholders.
 */
 macros["format"] <- function(msg, ...) {
-    if(msg.len() == 1) return msg
-    
     // If you are sure of what you are doing, you don't have to use it
     local subst_count = 0;
     for (local i = 0; i < msg.len() - 1; i++) {
@@ -166,7 +170,7 @@ macros["format"] <- function(msg, ...) {
         result += parts[i];
         if (i < args.len()) {
             local txt = args[i]
-            result += txt;
+            result += ("" + txt);
         }
     }
 
@@ -193,6 +197,7 @@ macros["fprint"] <- function(msg, ...) {
 
     printl(macros.format.acall(args))
 }
+::dev.fprint <- macros.fprint // fallback for earlier version of the lib
 
 /*
  * Compiles a function from a string representation.
@@ -211,7 +216,7 @@ macros["CompileFromStr"] <- function(funcBody, ...) {
         args[i + 2] = vargv[i]
     }
 
-    return compilefromstr(macros.format.acall(args))
+    return compilestring(macros.format.acall(args))
 }
 
 /* 
@@ -294,7 +299,7 @@ macros["CreateAlias"] <- function(key, action) {
  * @param {any} val2 - The second value.
  * @returns {boolean} - True if the values are equal, false otherwise. 
 */
-macros["isEqually"] <- function(val1, val2) {
+macros["IsEqual"] <- function(val1, val2) {
     if((typeof val1 == "instance" || typeof val2 == "instance") && (val1 instanceof CBaseEntity || val2 instanceof CBaseEntity)) 
         return val1.entindex() == val2.entindex()
     
@@ -304,13 +309,13 @@ macros["isEqually"] <- function(val1, val2) {
         case "float": 
             return math.round(val1, 1000) == math.round(val2, 1000)
         case "Vector": 
-            return math.vector.isEqually(val1, val2)
+            return math.vector.IsEqual(val1, val2)
         case "instance": 
             return val1 == val2; 
         case "Quaternion": 
         case "Matrix": 
         case "pcapEntity": 
-            return val1.isEqually(val2)  
+            return val1.IsEqual(val2)  
     }
 }
 
@@ -327,10 +332,16 @@ macros["DeepCopy"] <- function(container, _ = null) {
             local result = clone container; 
             foreach( k,v in container) result[k] = macros.DeepCopy(v); 
             return result; 
+        
         case "array": 
+            local a = array(container.len());
+            for (local i=0; i<container.len(); i++) a[i] = macros.DeepCopy(container[i]);
+            return a;
+
         case "ArrayEx": 
         case "List":
             return container.map(macros.DeepCopy); 
+        
         default: return container; 
     }
 }
@@ -479,6 +490,9 @@ macros["BuildAnimateFunction"] <- function(name, propertySetterFunc, valueCalcul
     if (valueCalculator != null && typeof valueCalculator != "function") throw("macros.BuildAnimateFunction: 'valueCalculator' must be a function or null, but got " + typeof valueCalculator);
 
     return function(entities, startValue, endValue, time, animSetting = {}) : (name, propertySetterFunc, valueCalculator) {
+        if(!entities) throw(name+" Anim: entities cannot be null")
+        if(time <= 0) throw(name+" Anim: time must be positive")
+    
         local animSetting = AnimEvent(name, animSetting, entities, time) 
         local varg = {
             start = startValue,
@@ -489,7 +503,7 @@ macros["BuildAnimateFunction"] <- function(name, propertySetterFunc, valueCalcul
         animate.applyAnimation(
             animSetting,
             valueCalculator ? valueCalculator : function(step, steps, v) {return v.start + v.delta * v.easeFunc(step / steps)},
-            propertySetterFunc
+            propertySetterFunc,
             varg
         ) 
 
@@ -512,7 +526,7 @@ macros["BuildRTAnimateFunction"] <- function(name, propertySetterFunc, valueCalc
         animate.applyRTAnimation(
             animSetting,
             valueCalculator ? valueCalculator : function(step, steps, v) {return v.start + v.delta * v.easeFunc(step / steps)},
-            propertySetterFunc
+            propertySetterFunc,
             varg
         ) 
 

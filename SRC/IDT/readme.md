@@ -62,7 +62,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
     * [`reduce(func, initial)`](#reducefunc-initial)
     * [`totable()`](#totable)
     * [`toarray()`](#toarray)
-    * [`swapNode(node1, node2)`](#swapnodenode1-node2)
+    * [`SwapNode(node1, node2)`](#SwapNodenode1-node2)
 3. [IDT/tree_sort.nut](#idttree_sortnut)
     * [`AVLTree(...)`](#avltree)
     * [`FromArray(array)`](#fromarrayarray)
@@ -76,7 +76,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
     * [`GetMax()`](#getmax)
     * [`inorderTraversal()`](#inordertraversal)
     * [`printTree()`](#printtree)
-    * [`Comparison with `](#comparison-with)
+    * [`Comparison with array, list and AVLTree`](#comparison-with-array-list-and-avltree)
 * [`*Choosing the Right Data Structure**](#choosing-the-right-data-structure)
 4. [IDT/entity_creator.nut](#idtentity_creatornut)
     * [`CreateByClassname(classname, keyvalues)`](#createbyclassnameclassname-keyvalues)
@@ -94,7 +94,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`GetIndex()`](#getindex)
         *   [`IsValid()`](#isvalid)
         *   [`IsPlayer()`](#isplayer)
-        *   [`isEqually(other)`](#isequallyother)
+        *   [`IsEqual(other)`](#IsEqualother)
         *   [`Destroy(fireDelay, eventName)`](#destroyfiredelay-eventname)
         *   [`Kill(fireDelay, eventName)`](#killfiredelay-eventname)
         *   [`Dissolve(fireDelay, eventName)`](#dissolvefiredelay-eventname)
@@ -115,11 +115,10 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
 
     *   **Transformations:**
         *   [`SetAngles(x, y, z)`](#setanglesx-y-z)
-        *   [`SetAbsAngles(angles)`](#setabsanglesangles)
+        *   [`SetAngles2(angles)`](#SetAngles2angles)
         *   [`SetCenter(vector)`](#setcentervector)
         *   [`SetAbsCenter(vector)`](#setabscentervector)
         *   [`SetParent(parentEnt, fireDelay, eventName)`](#setparentparentent-firedelay-eventname)
-        *   [`GetParent()`](#getparent)
         *   [`GetChildren()`](#getchildren)
         *   [`GetAllChildrenRecursively()`](#getallchildrenrecursively)
         *   [`SetModelScale(scaleValue, fireDelay, eventName)`](#setmodelscalescalevalue-firedelay-eventname)
@@ -156,18 +155,18 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
         *   [`StopSoundEx(soundName, fireDelay = 0, eventName = "global")`](#stopsoundexsoundname-firedelay--0-eventname--global)
 
     *   **Outputs and Inputs:**
-        *   [`AddOutput(outputName, target, input, param, delay, fires)`](#AddOutputoutputname-target-input-param-delay-fires)
+        *   [`AddOutput(outputName, target, input, param, delay, fires)`](#addoutputoutputname-target-input-param-delay-fires)
         *   [`ConnectOutputEx(outputName, script, delay, fires)`](#connectoutputexoutputname-script-delay-fires)
         *   [`SetInputHook(inputName, closure)`](#setinputhookinputname-closure)
 
     *   **Bounding Box and Position:**
-        *   [`SetBBox(minBounds, maxBounds)`](#setbboxminbounds-maxbounds)
-        *   [`GetBBox()`](#getbbox)
+        *   [`SetBBox(minBounds: Vector, maxBounds: Vector)`](#setbboxminbounds-maxbounds)
         *   [`IsSquareBbox()`](#issquarebbox)
         *   [`GetAABB()`](#getaabb)
+        *   [`GetBoundingCenter()`](#getboundingcenter)
         *   [`CreateAABB(stat)`](#createaabbstat)
-        *   [`getBBoxPoints()`](#getbboxpoints)
-        *   [`getBBoxFaces()`](#getbboxfaces)
+        *   [`GetBBoxPoints()`](#getbboxpoints)
+        *   [`GetBBoxFaces()`](#getbboxfaces)
 
 ## [IDT/array.nut](array.nut)
 
@@ -719,7 +718,7 @@ local listLength = myList.len()
 ```
 
 ### `iter()`
-Returns an iterator object for the list. This method is more efficient than using a built-in iterator.
+Returns an iterator object for the list. This is the **only supported way** to iterate over a `List` instance. Attempting to use the built-in `foreach (item in mylist)` syntax will result in a runtime error. This method provides an efficient and explicit way to traverse the list.
 
 **Returns:**
 
@@ -744,7 +743,7 @@ Similar to `iter`, but returns the node instead of the node's value.
 
 ```js
 foreach(node in myList.rawIter()) {
-    printl(node.next_ref.value)
+    printl(node._nextRef.value)
 }
 // Output: 2
 //         3
@@ -1133,7 +1132,7 @@ Converts the list to an array.
 local myArray = myList.toarray()
 ```
 
-### `swapNode(node1, node2)`
+### `SwapNode(node1, node2)`
 **This is a global function, not the method of List class**. Swaps two nodes in the list. This method updates the references of the previous and next nodes accordingly.
 
 **Parameters:**
@@ -1146,7 +1145,7 @@ local myArray = myList.toarray()
 ```js
 local nodeA = myList.getNode(0)
 local nodeB = myList.getNode(1)
-List.swapNode(nodeA, nodeB)
+List.SwapNode(nodeA, nodeB)
 ```
 
 ## [IDT/tree_sort.nut](tree_sort.nut)
@@ -1538,6 +1537,14 @@ local entitiesInSphere = entLib.FindInSphere(myPosition, 100)
 
 This file defines the `pcapEntity` class, which extends the functionality of `CBaseEntity` with additional methods for manipulating entity properties, setting outputs, managing user data, and retrieving information about the entity's bounding box and other attributes. **Use entLib to create it**
 
+When a `pcapEntity` is created, it automatically adds a `selfEx` property to the script scope of the underlying `CBaseEntity`. This allows you to easily access the `pcapEntity` wrapper from the raw entity object.
+**Example:**
+```js
+local myEntity = entLib.CreateByClassname("prop_physics")
+local pcapWrapper = myEntity.GetScriptScope().selfEx 
+// pcapWrapper is now the same as myEntity
+```
+
 ### `SetAngles(x, y, z)`
 Sets the angles (pitch, yaw, roll) of the entity, ensuring that the angles are within the range of 0 to 359 degrees.
 
@@ -1553,7 +1560,7 @@ Sets the angles (pitch, yaw, roll) of the entity, ensuring that the angles are w
 myPcapEntity.SetAngles(45, 90, 0) // Set the entity's angles
 ```
 
-### `SetAbsAngles(angles)`
+### `SetAngles2(angles)`
 Sets the absolute rotation angles of the entity using a Vector.
 
 **Parameters:**
@@ -1563,7 +1570,7 @@ Sets the absolute rotation angles of the entity using a Vector.
 **Example:**
 
 ```js
-myPcapEntity.SetAbsAngles(Vector(0, 180, 0)) // Set the entity to face the opposite direction
+myPcapEntity.SetAngles2(Vector(0, 180, 0)) // Set the entity to face the opposite direction
 ```
 
 ### `Destroy(fireDelay, eventName)`
@@ -1638,7 +1645,7 @@ if (myPcapEntity.IsPlayer()) {
 }
 ```
 
-### `isEqually(other)`
+### `IsEqual(other)`
 Checks if this entity is equal to another entity based on their entity indices
 
 **Parameters:**
@@ -1869,24 +1876,8 @@ Sets the parent entity for the entity, establishing a parent-child relationship.
 **Example:**
 
 ```js
-local parentEntity = entLib.FindByClassname("prop_static")
+local parentEntity = entLib.FindByClassname("prop_dynamic")
 myPcapEntity.SetParent(parentEntity) // Set the parent entity
-```
-
-### `GetParent()`
-Gets the parent entity of the entity, if set.
-
-**Returns:**
-
-* (pcapEntity or null): The parent entity as a `pcapEntity` object, or `null` if no parent is set.
-
-**Example:**
-
-```js
-local parent = myPcapEntity.GetParent()
-if (parent) {
-    // ... do something with the parent entity
-}
 ```
 
 ### `GetChildren()`
@@ -2155,27 +2146,13 @@ printl("Local Position: " + localData.pos)
 printl("Local Angles: " + localData.ang)
 ```
 
-### `SetAbsOrigin2(desiredAbsVec)`
-An experimental function that sets the entity's absolute origin in world space using teleportation instead of position setting. The key difference is that standard position-setting functions use client-side interpolation, causing the entity to visibly slide to its new position. This function bypasses interpolation, making the position change instantaneous.
-
-**Parameters:**
-
-* `desiredAbsVec` (Vector): The desired absolute position in world coordinates.
-
-**Example:**
-```js
-// Place the entity precisely at the world's center, regardless of its parent's position.
-myPcapEntity.SetAbsOrigin2(Vector(0, 0, 0))
-```
-
-
 ### `SetBBox(minBounds, maxBounds)`
 Sets the bounding box of the entity using vectors or string representations of vectors.
 
 **Parameters:**
 
-* `minBounds` (Vector or string): The minimum bounds of the bounding box as a Vector or a string representation (e.g., "-5 -5 -5").
-* `maxBounds` (Vector or string): The maximum bounds of the bounding box as a Vector or a string representation (e.g., "5 5 5").
+* `minBounds` (Vector): The minimum bounds of the bounding box.
+* `maxBounds` (Vector): The maximum bounds of the bounding box.
 
 **Example:**
 
@@ -2229,21 +2206,6 @@ Retrieves a stored user data value by name.
 ```js
 local myData = myPcapEntity.GetUserData("myData")
 macros.PrintIter(myData)
-```
-
-### `GetBBox()`
-Returns the bounding box of the entity as a table with two Vector properties: `min` and `max`, representing the minimum and maximum extents of the box.
-
-**Returns:**
-
-* (table): A table with `min` and `max` Vector properties representing the bounding box.
-
-**Example:**
-
-```js
-local bbox = myPcapEntity.GetBBox()
-printl("Bounding box min:", bbox.min)
-printl("Bounding box max:", bbox.max)
 ```
 
 ### `IsSquareBbox()`
@@ -2422,7 +2384,7 @@ Returns a specific face of the entity's oriented bounding box (AABB) as a vector
 local minBounds = myPcapEntity.CreateAABB(0) // Get the minimum bounds of the AABB
 ```
 
-### `getBBoxPoints()`
+### `GetBBoxPoints()`
 Returns an array of vectors representing the 8 vertices of the entity's axis-aligned bounding box (AABB). **This is required for `CreateAABB`**
 
 **Returns:**
@@ -2432,10 +2394,10 @@ Returns an array of vectors representing the 8 vertices of the entity's axis-ali
 **Example:**
 
 ```js
-local vertices = myPcapEntity.getBBoxPoints() // Get the vertices of the AABB
+local vertices = myPcapEntity.GetBBoxPoints() // Get the vertices of the AABB
 ```
 
-### `getBBoxFaces()`
+### `GetBBoxFaces()`
 This method retrieves the faces of an entity's bounding box as an array of triangle vertices. It is used to access and work with the individual triangular faces that make up the bounding box.
 
 **Returns:**
@@ -2446,7 +2408,7 @@ This method retrieves the faces of an entity's bounding box as an array of trian
 
 ```js
 local myEntity = entLib.FindByClassname("prop_physics")
-local faces = myEntity.getBBoxFaces()
+local faces = myEntity.GetBBoxFaces()
 
 // Iterate over the faces and print the vertices of each triangle
 foreach(i, face in faces ) {

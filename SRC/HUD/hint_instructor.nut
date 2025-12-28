@@ -40,7 +40,7 @@ HUD["HintInstructor"] <- class {
     }
 
     // Displays the hint.  
-    function Enable() null
+    function Enable(delay) null
     // Hides the hint. 
     function Disable() null
     // Updates and redisplays the hint.  
@@ -58,7 +58,7 @@ HUD["HintInstructor"] <- class {
     // Sets the icon to display when the hint is on-screen.  
     function SetIconOnScreen(icon) null
     // Sets the icon to display when the hint is off-screen.  
-    function SetIconOffScreen(bind) null
+    function SetIconOffScreen(icon) null
     // Sets the hold time (duration) of the hint.  
     function SetHoldTime(time) null
     // Sets the distance at which the hint is visible.  
@@ -71,8 +71,8 @@ HUD["HintInstructor"] <- class {
 /*
  * Displays the hint. 
 */
-function HUD::HintInstructor::Enable() {
-    EntFireByHandle(this.CPcapEntity, "ShowHint")
+function HUD::HintInstructor::Enable(delay=0) {
+    EntFireByHandle(this.CPcapEntity, "ShowHint", "", delay)
 }
 
 // Implementation of 'disable' to hide the on-screen text

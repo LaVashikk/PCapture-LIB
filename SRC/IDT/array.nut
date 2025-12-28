@@ -4,7 +4,6 @@
 ::ArrayEx <- class {
     // The internal array. 
     arr = null
-    length = 0;
     
     // The internal table representation. 
     table = null;
@@ -35,9 +34,12 @@
      * @returns {ArrayEx} - The newly created or the input ArrayEx object.
     */
     function FromArray(array) {
-        if(typeof array == "ArrayEx") // dumb-ass protection :P
+        // if it's already an ArrayEx, just return it.
+        if(typeof array == "ArrayEx")
             return array
         
+        if(typeof array != "array") throw("ArrayEx.FromArray: Invalid argument. This function only accepts a standard 'array' for conversion. Got type '" + typeof array + "' instead.")
+
         local arrayEx = ArrayEx()
         arrayEx.arr = array
         return arrayEx
@@ -132,7 +134,7 @@
     */
     function contains(match) { 
         if(!this.tableIsValid) this.totable()
-        return match in this.table
+        return match.tostring() in this.table
     }
 
     /*
@@ -143,13 +145,13 @@
     */
     function search(match) {
         if(typeof match == "function") {
-            foreach(idx, val in arr) {
+            foreach(idx, val in this.arr) {
                 if(match(val))
                     return idx
             }
         }
         else {
-            foreach(idx, val in arr) {
+            foreach(idx, val in this.arr) {
                 if(val == match)
                     return idx
             }
@@ -220,6 +222,7 @@
         local result = ArrayEx()
         
         foreach(value in this.arr) {
+            value = value.tostring()
             if(value in seen) continue
             seen[value] <- true    
             result.append(value)
@@ -357,7 +360,7 @@
         tableIsValid = true
         this.table.clear()
         foreach(element in arr) {
-            if(element) this.table[element] <- null
+            if(element != null) this.table[element.tostring()] <- null
         }
         return this.table
     }
@@ -387,7 +390,7 @@
     */
     function _pushToTable(val) {
         if(this.table.len() != 0)
-            this.table[val] <- null
+            this.table[val.tostring()] <- null
     }
 
     function Clone() {
@@ -428,24 +431,8 @@
 
 
     function _nexti(previdx) {
-        if(this.len() == 0) return null
+        if(this.arr.len() == 0) return null
         if (previdx == null) return 0;
-		return previdx < this.len() - 1 ? previdx + 1 : null;
+		return previdx < this.arr.len() - 1 ? previdx + 1 : null;
 	}
-
-    function cmp(other) { // lmao, why? :O
-        local thisSum = 0;
-        local otherSum = 0;
-        foreach (val in this) { thisSum += val; }
-        foreach (val in other) { otherSum += val; }
-
-    
-        if (thisSum > otherSum) {
-            return 1;
-        } else if (thisSum < otherSum) {
-            return -1;
-        } else {
-            return 0; 
-        }
-    }
 }

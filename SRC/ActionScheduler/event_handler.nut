@@ -22,16 +22,10 @@
                 }
             }
             catch(exception) {
-                //* Stack unwinding
-                macros.fprint("AN ERROR HAS OCCURED IN ScheduleEvent [{}]", exception)
-                printl("\nCALLSTACK")
-                local stack
-                for(local i = 1; stack = getstackinfos(i); i++)
-                    macros.fprint("*FUNCTION [{}()] {} line [{}]", stack.func, stack.src, stack.line)
+                // ScheduleEvent unwinding
+                macros.fprint("\nSCHEDULED EVENT\n[Name] {}\n{}\n[Exception] {}\n[Event Action List] {}\n[Time] {}", eventName, event.GetInfo(), exception, ScheduleEvent.eventsList[eventName], time)
 
-                macros.fprint("\nSCHEDULED EVENT\n[Name] {}\n{}\n[Exception] {}\n[Event Action List] {}", eventName, event.GetInfo(), exception, ScheduleEvent.eventsList[eventName])
-
-                if(type(event.action) == "function" || type(event.action) == "native function") {
+                if(typeof event.action == "function" || typeof event.action == "native function") {
                     printl("\nFUNCTION INFO")
                     foreach(key, val in event.action.getinfos()) {
                         if(type(val) == "array") val = ArrayEx.FromArray(val)
@@ -39,9 +33,11 @@
                     }
                 }
 
+                printl("-------------------------------------------------\n");
                 SendToConsole("playvol resource/warning.wav 1")
             }
         }
+        
         if(eventName != "global" && eventInfo.length == 0) {
             eventsToDelete.append(eventName) 
         }

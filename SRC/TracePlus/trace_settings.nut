@@ -2,8 +2,11 @@
  * Settings for ray traces.
 */
 TracePlus["Settings"] <- class {
+    id = null;
+    ignoreAllClasses = false;
+    
     // An array of entity classnames to ignore during traces. 
-    ignoreClasses = ArrayEx("viewmodel", "weapon_", "beam",
+    ignoreClasses = ArrayEx("viewmodel", "weapon_", "beam", "light",
         "trigger_", "phys_", "env_", "point_", "info_", "vgui_", "logic_",
         "clone", "prop_portal", "portal_base2D", "func_clip", "func_instance",
         "func_portal_detector", 
@@ -31,6 +34,7 @@ TracePlus["Settings"] <- class {
     */
     function new(settingsTable = {}) {
         local result = TracePlus.Settings()
+        result.id = UniqueString("TracePlus")
 
         // Set the ignoreClasses setting from the settings table or use the default. 
         result.SetIgnoredClasses(macros.GetFromTable(settingsTable, "ignoreClasses", TracePlus.Settings.ignoreClasses))
@@ -59,7 +63,11 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} ignoreClassesArray - An array or ArrayEx containing entity classnames to ignore. 
     */
     function SetIgnoredClasses(ignoreClassesArray) {
+        if(typeof ignoreClassesArray != "array" && typeof ignoreClassesArray != "ArrayEx") throw("TracePlus.Settings.SetIgnoredClasses: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof ignoreClassesArray)
+
         this.ignoreClasses = ArrayEx.FromArray(ignoreClassesArray)
+        this.ignoreAllClasses = this.ignoreClasses && this.ignoreClasses.contains("*")
+        
         return this
     }
 
@@ -69,6 +77,8 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} priorityClassesArray - An array or ArrayEx containing entity classnames to prioritize. 
     */
     function SetPriorityClasses(priorityClassesArray) {
+        if(typeof priorityClassesArray != "array" && typeof priorityClassesArray != "ArrayEx") throw("TracePlus.Settings.SetPriorityClasses: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof priorityClassesArray)
+
         this.priorityClasses = ArrayEx.FromArray(priorityClassesArray)
         return this
     }
@@ -79,6 +89,8 @@ TracePlus["Settings"] <- class {
      * @param {array|ArrayEx} ignoredModelsArray - An array or ArrayEx containing entity model names to ignore. 
     */
     function SetIgnoredModels(ignoredModelsArray) {
+        if(typeof ignoredModelsArray != "array" && typeof ignoredModelsArray != "ArrayEx") throw("TracePlus.Settings.SetIgnoredModels: Invalid argument type. Expected an 'array' or 'ArrayEx', but got " + typeof ignoredModelsArray)
+
         this.ignoredModels = ArrayEx.FromArray(ignoredModelsArray)
         return this
     }
@@ -99,11 +111,15 @@ TracePlus["Settings"] <- class {
      * @param {string} className - The classname to append. 
     */
     function AppendIgnoredClass(className) {
+        if(typeof className != "string") throw("TracePlus.Settings.AppendIgnoredClass: Invalid argument type. Expected a 'string', but got " + typeof className)
+
         // CoW Mechanism
         if(this.ignoreClasses == TracePlus.Settings.ignoreClasses)
-            this.ignoreClasses = clone this.ignoreClasses
+            this.ignoreClasses = this.ignoreClasses.Clone()
         
         this.ignoreClasses.append(className)
+        this.ignoreAllClasses = this.ignoreClasses && this.ignoreClasses.contains("*")
+        
         return this
     }
 
@@ -113,9 +129,11 @@ TracePlus["Settings"] <- class {
      * @param {string} className - The classname to append. 
     */
     function AppendPriorityClasses(className) {
+        if(typeof className != "string") throw("TracePlus.Settings.AppendPriorityClasses: Invalid argument type. Expected a 'string', but got " + typeof className)
+
         // CoW Mechanism
         if(this.priorityClasses == TracePlus.Settings.priorityClasses)
-            this.priorityClasses = clone this.priorityClasses
+            this.priorityClasses = this.priorityClasses.Clone()
         
         this.priorityClasses.append(className)
         return this
@@ -127,15 +145,15 @@ TracePlus["Settings"] <- class {
      * @param {string} modelName - The model name to append. 
     */
     function AppendIgnoredModel(modelName) {
+        if(typeof modelName != "string") throw("TracePlus.Settings.AppendIgnoredModel: Invalid argument type. Expected a 'string', but got " + typeof modelName)
+
         // CoW Mechanism
         if(this.ignoredModels == TracePlus.Settings.ignoredModels)
-            this.ignoredModels = clone this.ignoredModels
+            this.ignoredModels = this.ignoredModels.Clone()
 
         this.ignoredModels.append(modelName)
         return this
     }
-
-
 
     /* 
      * Gets the list of entity classnames to ignore during traces. 
@@ -206,22 +224,20 @@ TracePlus["Settings"] <- class {
      * Applies the custom collision filter function to an entity. 
      *
      * @param {CBaseEntity|pcapEntity} entity - The entity to check.
-     * @param {string|null} note - An optional note associated with the trace.
      * @returns {boolean} - True if the ray should hit the entity, false otherwise. 
     */
-    function ApplyCollisionFilter(entity, note) {
-        return this.shouldRayHitEntity ? this.shouldRayHitEntity(entity, note) : false
+    function ApplyCollisionFilter(entity) {
+        return this.shouldRayHitEntity ? this.shouldRayHitEntity(entity) : false
     }
 
     /*
      * Applies the custom ignore filter function to an entity. 
      *
      * @param {CBaseEntity|pcapEntity} entity - The entity to check.
-     * @param {string|null} note - An optional note associated with the trace.
      * @returns {boolean} - True if the entity should be ignored, false otherwise. 
     */
-    function ApplyIgnoreFilter(entity, note) {
-        return this.shouldIgnoreEntity ? this.shouldIgnoreEntity(entity, note) : false
+    function ApplyIgnoreFilter(entity) {
+        return this.shouldIgnoreEntity ? this.shouldIgnoreEntity(entity) : false
     }
 
     /*
@@ -252,7 +268,7 @@ TracePlus["Settings"] <- class {
     }
 
     function Clone() {
-        return TracePlus.Settings()
+        local set = TracePlus.Settings()
             .SetIgnoredClasses(this.ignoreClasses.Clone())
             .SetPriorityClasses(this.priorityClasses.Clone())
             .SetIgnoredModels(this.ignoredModels.Clone())
@@ -260,6 +276,8 @@ TracePlus["Settings"] <- class {
             .SetIgnoreFilter(this.shouldIgnoreEntity)
             .SetBynaryRefinement(this.bynaryRefinement)
             .SetDepthAccuracy(this.depthAccuracy)
+        set.id = this.id
+        return set
     }
 
     function _typeof() return "TraceSettings"

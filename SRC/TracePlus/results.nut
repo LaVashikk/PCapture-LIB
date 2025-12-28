@@ -41,7 +41,7 @@ results["Cheap"] <- class {
      *
      * @returns {Vector} - The hit position. 
     */
-    function GetHitpos() {
+    function GetHitPos() {
         return this.hitpos
     }
 
@@ -64,12 +64,13 @@ results["Cheap"] <- class {
     }
 
     /*
-     * Gets the direction vector of the trace.
+     * Gets the normalized direction vector of the trace.
      *
      * @returns {Vector} - The direction vector.
     */
     function GetDir() {
-        return (this.GetEndPos() - this.GetStartPos())
+        local dir = (this.traceHandler.endpos - this.traceHandler.startpos); dir.Norm()
+        return dir
     }
 
     /*
@@ -104,13 +105,13 @@ results["Cheap"] <- class {
         if(this.surfaceNormal)
             return this.surfaceNormal
         
-        this.surfaceNormal = CalculateImpactNormal(this.GetStartPos(), this.hitpos)
+        this.surfaceNormal = CalculateImpactNormal(this.traceHandler.startpos, this.hitpos)
         return this.surfaceNormal 
     } 
 
     function _typeof() return "TraceResult"
     function _tostring() {
-        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", fraction: " + GetFraction() + ", hitpos: " + GetHitpos()
+        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", fraction: " + GetFraction() + ", hitpos: " + GetHitPos()
     }
 }
 
@@ -162,7 +163,7 @@ results["Bbox"] <- class {
      *
      * @returns {Vector} - The hit position. 
     */
-    function GetHitpos() {
+    function GetHitPos() {
         return this.hitpos
     }
 
@@ -204,15 +205,6 @@ results["Bbox"] <- class {
     }
 
     /*
-     * Gets the note associated with the trace.
-     *
-     * @returns {string|null} - The trace note, or null if no note was provided.
-    */
-    function GetNote() {
-        return this.traceHandler.note
-    }
-
-    /*
      * Checks if the trace hit anything.
      *
      * @returns {boolean} - True if the trace hit something, false otherwise.
@@ -236,16 +228,17 @@ results["Bbox"] <- class {
      * @returns {number} - The hit fraction. 
     */
     function GetFraction() {
-        return macros.GetDist(this.GetStartPos(), this.GetHitpos()) / macros.GetDist(this.GetStartPos(), this.GetEndPos())
+        return macros.GetDist(this.traceHandler.startpos, this.hitpos) / macros.GetDist(this.traceHandler.startpos, this.traceHandler.endpos)
     }
 
     /*
-     * Gets the direction vector of the trace.
+     * Gets the normalized direction vector of the trace.
      *
      * @returns {Vector} - The direction vector.
     */
     function GetDir() {
-        return (this.GetEndPos() - this.GetStartPos())
+        local dir = (this.traceHandler.endpos - this.traceHandler.startpos); dir.Norm()
+        return dir
     }
 
     /*
@@ -292,6 +285,6 @@ results["Bbox"] <- class {
 
     function _typeof() return "BboxTraceResult"
     function _tostring() {
-        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", hitpos: " + GetHitpos() + ", entity: " + GetEntity()
+        return "TraceResult | startpos: " + GetStartPos() + ", endpos: " + GetEndPos() + ", hitpos: " + GetHitPos() + ", entity: " + GetEntity()
     }
 }

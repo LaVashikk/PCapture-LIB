@@ -65,15 +65,15 @@ The `Utils` module provides a collection of utility functions for script executi
 	* [`GetDist(vec1, vec2)`](#macrosgetdistvec1-vec2)
 	* [`StrToVec(str)`](#macrosstrtovecstr)
 	* [`VecToStr(vec, sep)`](#macrosvectostrvecsep)
-	* [`isEqually(val1, val2)`](#macrosisequallyval1-val2)
+	* [`IsEqual(val1, val2)`](#macrosIsEqualval1-val2)
 	* [`DeepCopy(container)`](#macrosdeepcopycontainer)
 	* [`GetPrefix(name)`](#macrosgetprefixname)
 	* [`GetPostfix(name)`](#macrosgetpostfixname)
 	* [`GetEyeEndpos(player, distance)`](#macrosgeteyeendposplayer-distance)
 	* [`GetVertex(x, y, z, ang)`](#macrosgetvertexx-y-z-ang)
 	* [`GetTriangle()`](#macrosgettrianglev1-v2-v3)
-	* [`BuildAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildanimatefunctionname-propertysetterfunc-valueCalculator)
-	* [`BuildRTAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildrtanimatefunctionname-propertysetterfunc-valueCalculator)
+	* [`BuildAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildanimatefunctionname-propertysetterfunc-valuecalculator)
+	* [`BuildRTAnimateFunction(name, propertySetterFunc, valueCalculator)`](#macrosbuildrtanimatefunctionname-propertysetterfunc-valuecalculator)
 * [`Utils/const.nut`](#utilsconstnut)
 
 
@@ -840,28 +840,29 @@ macros.PrintIter(myTable) // Output: "name: Bob", "age: 42"
 
 ### `macros.MaskSearch(iter, match)`
 
-This macro searches for a matching string within an array, taking into account a wildcard character '\*'.
+This macro checks if the `match` string contains any of the substrings (masks) defined in the `iter` array. It is useful for checking if a string matches any pattern in a blacklist or whitelist.
 
 **Parameters:**
 
-* `iter` (array or ArrayEx): The array to search in.
-* `match` (string): The string to search for.
+* `iter` (array or ArrayEx): The array of masks/patterns to search for.
+* `match` (string): The string to check against the masks.
 
 **Returns:**
 
 * (int or null):
-    * The index of the first element in the array that contains the `match` string, even partially.
-    * `null` if no match is found.
-    * `0` if the first element of `iter` is "\*", indicating a wildcard match for any string.
+    * The index of the first element (mask) in the `iter` array that is found within the `match` string.
+    * `null` if no mask from the array is found in the string.
+    * `0` if the first element of `iter` is "*", indicating a wildcard match for any string.
 
 **Example:**
 
 ```js
-local myArray = ["apple", "banana", "cherry"]
-local matchIndex = macros.MaskSearch(myArray, "an") // matchIndex will be 1 (index of "banana")
+local bannedWords = ["admin", "root", "mod"]
+local userName = "super_admin_123"
+local matchIndex = macros.MaskSearch(bannedWords, userName) // matchIndex will be 0 (index of "admin") because "admin" is in "super_admin_123"
 
-local anotherArray = ["*", "grape", "orange"]
-local wildcardIndex = macros.MaskSearch(anotherArray, "any_string") // wildcardIndex will be 0 
+local whitelist = ["*", "safe"]
+local wildcardIndex = macros.MaskSearch(whitelist, "unsafe_string") // wildcardIndex will be 0 (wildcard match)
 ```
 
 ### `macros.GetRectangle(v1, v2, v3, v4)`
@@ -1046,9 +1047,9 @@ local positionString = macros.VecToStr(position, " | ") // Convert the position 
 printl(positionString) // output: "10 | 20 | 30"
 ```
 
-### `macros.isEqually(val1, val2)`
+### `macros.IsEqual(val1, val2)`
 
-This macro checks if two values are equal, handling different data types appropriately. It uses the appropriate equality comparison for each type, including using the `isEqually` method for `Quaternion`, `Matrix`, and `pcapEntity` objects.
+This macro checks if two values are equal, handling different data types appropriately. It uses the appropriate equality comparison for each type, including using the `IsEqual` method for `Quaternion`, `Matrix`, and `pcapEntity` objects.
 
 **Parameters:**
 
@@ -1065,7 +1066,7 @@ This macro checks if two values are equal, handling different data types appropr
 // (TODO! more examples)
 local vec1 = Vector(1, 2, 3)
 local vec2 = Vector(1, 2, 3)
-if (macros.isEqually(vec1, vec2)) {
+if (macros.IsEqual(vec1, vec2)) {
     // The vectors are equal
 }
 ```
@@ -1155,7 +1156,7 @@ local endPos = macros.GetEyeEndpos(player, 100) // Calculate the end position of
 
 ### `macros.GetVertex(x, y, z, ang)`
 
-This macro calculates the position of a vertex of a bounding box based on the provided x, y, z bounds and the rotation angles of the bounding box. It is used internally by the `pcapEntity.getBBoxPoints()` method to retrieve the eight vertices of an entity's axis-aligned bounding box (AABB) in world coordinates.
+This macro calculates the position of a vertex of a bounding box based on the provided x, y, z bounds and the rotation angles of the bounding box. It is used internally by the `pcapEntity.GetBBoxPoints()` method to retrieve the eight vertices of an entity's axis-aligned bounding box (AABB) in world coordinates.
 
 **Parameters:**
 

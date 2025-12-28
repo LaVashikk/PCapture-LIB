@@ -1,18 +1,16 @@
+::__listnodetostring <- function () {return this.value.tostring()}
 ::ListNode <- function(value) return {
     value = value,
-    prev_ref = null,
-    next_ref = null,
+    _prevRef = null,
+    _nextRef = null,
 
-    tostring = function () {
-        return this.value.tostring();
-    }
+    tostring = __listnodetostring
 } 
 
-//! Deleting nodes should cause a leak!
 ::List <- class {
     length = 0;
-    first_node = null;
-    last_node = null;
+    firstNode = null;
+    lastNode = null;
 
     /*
      * Constructor for a list.
@@ -20,8 +18,8 @@
      * @param {...any} vargv - The initial values to add to the list.
     */
     constructor(...) {
-        this.first_node = ListNode(0);
-        this.last_node = this.first_node;
+        this.firstNode = ListNode(null);
+        this.lastNode = this.firstNode;
         
         for(local i = 0; i < vargc; i++) {
             this.append(vargv[i])
@@ -35,6 +33,7 @@
      * @returns {List} - The new list containing the elements from the array.
     */
     function FromArray(array) {
+        if(typeof array != "array") throw("Expected array, got " + typeof array)
         local list = List()
         foreach(val in array) 
             list.append(val)
@@ -58,12 +57,12 @@
     */
     function append(value) {
         local next_node = ListNode(value);
-        local current_node = this.last_node;
+        local current_node = this.lastNode;
 
-        current_node.next_ref = next_node;
-        next_node.prev_ref = current_node;
+        current_node._nextRef = next_node;
+        next_node._prevRef = current_node;
 
-        this.last_node = next_node;
+        this.lastNode = next_node;
         this.length++;
         return this
     }
@@ -78,15 +77,14 @@
     function insert(idx, value) {
         if(this.length == 0 || idx >= this.length) 
             return this.append(value)
-    
         local node = this.getNode(idx)
         local newNode = ListNode(value)
 
-        newNode.next_ref = node
-        newNode.prev_ref = node.prev_ref
+        newNode._nextRef = node
+        newNode._prevRef = node._prevRef
         
-        node.prev_ref.next_ref = newNode 
-        node.prev_ref = newNode
+        node._prevRef._nextRef = newNode 
+        node._prevRef = newNode
 
         this.length++
         return this
@@ -100,13 +98,25 @@
      * @throws {Error} - If the index is out of bounds.
     */
     function getNode(idx) {
-        if (idx >= this.length) {
+        if (idx >= this.length || idx < 0) {
             throw("the index '" + idx + "' does not exist!");
         }
 
-        local node = this.first_node.next_ref;
-        for (local i = 0; i < idx; i++) {
-            node = node.next_ref;
+        // If the index is in the first half, we search from the beginning
+        if (idx < this.length / 2) {
+            local node = this.firstNode._nextRef;
+            for (local i = 0; i < idx; i++) {
+                node = node._nextRef;
+            }
+            return node;
+        } 
+        // Otherwise, we search from the end
+        else {
+            local node = this.lastNode;
+            for (local i = this.length - 1; i > idx; i--) {
+                node = node._prevRef;
+            }
+            return node;
         }
         return node;
     }
@@ -134,20 +144,22 @@
     function remove(idx) {
         local node = this.getNode(idx);
         local value = node.value
-        local next = node.next_ref;
-        local prev = node.prev_ref;
-        // node.drop();
+        local next = node._nextRef;
+        local prev = node._prevRef;
+        
+        node._nextRef = null;
+        node._prevRef = null;
 
         if (prev) {
-            prev.next_ref = next; 
+            prev._nextRef = next; 
         } else {
-            this.first_node.next_ref = next;
+            this.firstNode._nextRef = next;
         }
     
         if (next) {
-            next.prev_ref = prev;
+            next._prevRef = prev;
         } else { 
-            this.last_node = prev; 
+            this.lastNode = prev; 
         } 
 
         this.length--;
@@ -160,9 +172,11 @@
      * @returns {any} - The value of the removed element.
     */
     function pop() {
-        local current = this.last_node;
-        this.last_node = current.prev_ref;
-        this.last_node.next_ref = null;
+        if(this.length == 0) throw("pop() on a empty list")
+
+        local current = this.lastNode;
+        this.lastNode = current._prevRef;
+        this.lastNode._nextRef = null;
         this.length--
         // current.drop()
         return current.value;
@@ -175,12 +189,12 @@
     */
     function top() {
         if(this.length == 0) throw("top() on a empty list")
-        return this.last_node.value
+        return this.lastNode.value
     }
 
     function first() {
         if(this.length == 0) throw("first() on a empty list")
-        return this.first_node.next_ref.value
+        return this.firstNode._nextRef.value
     }
 
     /*
@@ -188,23 +202,31 @@
      * @returns {List} - The List instance for chaining.
     */
     function reverse() {
-        local prev_node = null;
-        local current_node = this.first_node.next_ref;
+        if (this.length <= 1) return this;
 
-        while (current_node) {
-            local next_node = current_node.next_ref;
+        local new_tail = this.firstNode._nextRef;
+        local new_head = this.lastNode;
 
-            current_node.next_ref = prev_node;
-            current_node.prev_ref = next_node;
+        local current = this.firstNode._nextRef;
+        local prev = this.firstNode; 
 
-            prev_node = current_node;
-            current_node = next_node;
+        while (current) {
+            local next = current._nextRef; 
+            
+            current._nextRef = prev;
+            current._prevRef = next;
+
+            prev = current;
+            current = next;
         }
 
-        local temp = this.first_node.next_ref;
-        this.first_node.next_ref = prev_node;
-        this.last_node = temp;
-        return this
+        this.firstNode._nextRef = new_head;
+        new_head._prevRef = this.firstNode;
+
+        this.lastNode = new_tail;
+        this.lastNode._nextRef = null; 
+
+        return this;
     }
 
     /*
@@ -215,7 +237,7 @@
      * @returns {List} - The sliced list.
     */
     function slice(startIndex, endIndex = null) {
-        if(!endIndex) endIndex = this.len()
+        if(endIndex == null) endIndex = this.len()
 
         local result = List()
         foreach(idx, value in this.iter()) {
@@ -233,13 +255,14 @@
      * @returns {List} - The List instance for chaining.
     */
     function resize(size, fill = null) {
+        if(size < 0) throw("Size cannot be negative.")
         local diff = size - this.len()
         
         if(diff > 0) {
             // Add elements
             for(local i = 0; i < diff; i++)
                 this.append(fill)
-            return
+            return this
         }
 
         // Remove elements
@@ -254,35 +277,35 @@
      * @returns {List} - The List instance for chaining.
     */
     function sort() {
-        this.first_node.next_ref = _mergeSort(this.first_node.next_ref)
+        this.firstNode._nextRef = _mergeSort(this.firstNode._nextRef)
         
-        // Update prev_ref and next_ref links after sorting
-        local current = this.first_node.next_ref;
-        local previous = null;
+        // Update _prevRef and _nextRef links after sorting
+        local current = this.firstNode._nextRef;
+        local previous = this.firstNode;
         while (current) {
-            current.prev_ref = previous;
+            current._prevRef = previous;
             if (previous) {
-                previous.next_ref = current; 
+                previous._nextRef = current; 
             }
             previous = current; 
-            current = current.next_ref; 
+            current = current._nextRef; 
         } 
 
-        // Update last_node to point to the last node after sorting 
-        this.last_node = previous; 
+        // Update lastNode to point to the last node after sorting 
+        this.lastNode = previous; 
         
         return this
     }
 
     function _mergeSort(head) {
-        if (head == null || head.next_ref == null) {
+        if (head == null || head._nextRef == null) {
             return head  // List with one or zero elements already sorted
         }
     
         // Splitting the list into two parts
         local middle = _findMiddleNode(head)
-        local nextToMiddle = middle.next_ref 
-        middle.next_ref = null 
+        local nextToMiddle = middle._nextRef 
+        middle._nextRef = null 
     
         // Recursive sorting of two halves
         local left = _mergeSort(head)
@@ -295,10 +318,10 @@
     
     function _findMiddleNode(head) {
         local slow = head
-        local fast = head.next_ref
-        while (fast != null && fast.next_ref != null) {
-            slow = slow.next_ref
-            fast = fast.next_ref.next_ref 
+        local fast = head._nextRef
+        while (fast != null && fast._nextRef != null) {
+            slow = slow._nextRef
+            fast = fast._nextRef._nextRef 
         }
         return slow 
     }
@@ -310,58 +333,27 @@
     
         while (left != null && right != null) {
             if (left.value <= right.value) {
-                current.next_ref = left
-                left = left.next_ref 
+                current._nextRef = left
+                left = left._nextRef 
             } else {
-                current.next_ref = right
-                right = right.next_ref 
+                current._nextRef = right
+                right = right._nextRef 
             } 
-            current = current.next_ref
+            current = current._nextRef
         } 
     
         // Add the remaining elements
-        current.next_ref = left != null ? left : right
+        current._nextRef = left != null ? left : right
     
-        return dummyHead.next_ref 
+        return dummyHead._nextRef 
     }
 
     function SwapNode(node1, node2) {
-        if (node1 == node2) return
-    
-        //  Update references of previous nodes
-        if (node1.prev_ref) {
-            node1.prev_ref.next_ref = node2
-        } else {
-            this.first_node = node2
-        }
-    
-        if (node2.prev_ref) {
-            node2.prev_ref.next_ref = node1
-        } else {
-            this.first_node = node1
-        }
-    
-        //  Update links for the following nodes
-        if (node1.next_ref) {
-            node1.next_ref.prev_ref = node2
-        } else {
-            this.last_node = node2
-        }
-    
-        if (node2.next_ref) {
-            node2.next_ref.prev_ref = node1
-        } else {
-            this.last_node = node1
-        }
-    
-        //  Exchange the `prev_ref` and `next_ref` references of the nodes themselves
-        local temp = node1.prev_ref
-        node1.prev_ref = node2.prev_ref
-        node2.prev_ref = temp
-    
-        temp = node1.next_ref
-        node1.next_ref = node2.next_ref
-        node2.next_ref = temp
+        if (node1 == node2) return;
+        
+        local t = node1.value
+        node1.value = node2.value
+        node2.value = t;
     }
 
 
@@ -372,15 +364,17 @@
     function clear() {
         if(this.length == 0) return
         
-        local current = this.first_node.next_ref;
+        local current = this.firstNode._nextRef;
         while (current) {
-            local next_node = current.next_ref;
-            // current.drop()
+            local next_node = current._nextRef;
+            current._prevRef = null;
+            current._nextRef = null;
+
             current = next_node;
         }
 
-        this.first_node.next_ref = null;
-        this.last_node = this.first_node;
+        this.firstNode._nextRef = null;
+        this.lastNode = this.firstNode;
         this.length = 0;
         return this
     }
@@ -390,10 +384,10 @@
     */
     function iter() {
         if(this.length == 0) return
-        local current = this.first_node.next_ref;
+        local current = this.firstNode._nextRef;
         local next;
         while (current) {
-            next = current.next_ref
+            next = current._nextRef
             yield current.value
             current = next;
         }
@@ -403,10 +397,10 @@
      * Similar to `iter`, but returns the node instead of the node's value.
     */
     function rawIter() {
-        local current = this.first_node.next_ref;
+        local current = this.firstNode._nextRef;
         while (current) {
             yield current
-            current = current.next_ref;
+            current = current._nextRef;
         }
     }
 
@@ -447,10 +441,18 @@
      * @returns {List} - The List instance for chaining.
     */
     function extend(other) {
-        foreach(val in other) 
+        local iter = typeof other == "List" ? other.iter() : other
+        foreach(val in iter) 
             this.append(val)
         return this
     }
+
+    // function _unsafeFastExtend(otherLis) { // todo for actions
+    //     this.lastNode._nextRef = otherLis.firstNode._nextRef
+    //     otherLis.firstNode._nextRef._prevRef = this.lastNode
+    //     this.lastNode = otherLis.firstNode._nextRef
+    //     return this
+    // }
 
     /*
      * Searches for a value or a matching element in the list.
@@ -547,7 +549,8 @@
     function totable() {
         local table = {}
         foreach(element in this.iter()) {
-            if(element) table[element] <- null
+            if(element != null) // null can't be the key 
+                table[element] <- null
         }
         return table
     }
@@ -573,23 +576,27 @@
 
     //* OUTDATED! The standard iterator, it's terrible! Use `.iter()` method
     function _nexti(previdx) {
-        if(this.len() == 0) return null
-        if (previdx == null) return 0;
-        return previdx < this.len() - 1 ? previdx + 1 : null;
-    }
-
-    function _cmp(other) { // lmao, why? :O
-        local thisSum = 0;
-        local otherSum = 0;
-        foreach (val in this.iter()) { thisSum += val.value; }
-        foreach (val in other) { otherSum += val.value; }
-
-        if (thisSum > otherSum) {
-            return 1;
-        } else if (thisSum < otherSum) {
-            return -1;
-        } else {
-            return 0; 
+        local callstack = "\nCallstack:\n"
+        // Start at level 2 to skip this _nexti function and the internal VM call.
+        for (local level = 2; ; level++) {
+            local info = getstackinfos(level)
+            // Stop when we've gone through the entire stack.
+            if (info == null) break
+            
+            // Format the information for readability.
+            local source = ("src" in info) ? info.src : "unknown_source"
+            local line = ("line" in info) ? info.line : "?"
+            local func = ("func" in info) ? info.func : "global_scope"
+            
+            callstack += "  at " + source + ":" + line + " in function '" + func + "'\n"
         }
+
+        local errorMessage = "DEPRECATED ITERATION: Standard 'foreach' is not supported for List. " +
+                             "Please use the high-performance '.iter()' method instead.\n\n" +
+                             "Example: foreach (item in yourList.iter()) { ... }" +
+                             callstack
+
+        printl(errorMessage)
+        throw(errorMessage)
     }
 }

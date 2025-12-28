@@ -63,9 +63,11 @@ ScheduleEvent["Add"] <- function(eventName, action, timeDelay, args = null, scop
 ScheduleEvent["AddInterval"] <- function(eventName, action, interval, initialDelay = 0, args = null, scope = this) {
     if (typeof action != "string" && typeof action != "function" && typeof action != "native function" && typeof action != "generator") throw("ScheduleEvent.AddInterval: 'action' must be a function or a string, but got " + typeof action);
     if (typeof interval != "integer" && typeof interval != "float") throw("ScheduleEvent.AddInterval: 'interval' must be a number, but got " + typeof interval);
+    if (interval <= 0) throw("ScheduleEvent.AddInterval: 'interval' must be a positive number, but got " + interval);
     if (typeof initialDelay != "integer" && typeof initialDelay != "float") throw("ScheduleEvent.AddInterval: 'initialDelay' must be a number, but got " + typeof initialDelay);
     local argsType = typeof args;
     if(args && argsType != "array" && argsType != "ArrayEx" && argsType != "List") throw("ScheduleEvent.AddInterval: 'args' must be an array, List, or null, but got " + typeof args)
+
 
     ScheduleEvent.Add(eventName, action, initialDelay, args, scope)
     ScheduleEvent.Add(eventName, ScheduleEvent.AddInterval, initialDelay + interval, [eventName, action, interval, 0, args, scope], scope)
@@ -89,7 +91,7 @@ ScheduleEvent["AddActions"] <- function(eventName, actions, noSort = false) {
         }
     }
 
-    if (eventName in ScheduleEvent.eventsList ) {
+    if(eventName in ScheduleEvent.eventsList) {
         ScheduleEvent.eventsList[eventName].extend(actions)
         ScheduleEvent.eventsList[eventName].sort()
         if(developer() > 0) dev.trace("Added {} actions to Event \"{}\".", actions.len(), eventName)
@@ -130,7 +132,7 @@ ScheduleEvent["Cancel"] <- function(eventName, delay = 0) {
 /*
  * Attempts to cancel a scheduled event with the given name, optionally after a delay.
  *
- * @param {string} eventName - The name of the event to cancel.
+ * @param {string|any} eventName - The name of the event to cancel.
  * @param {number} delay - An optional delay in seconds before attempting to cancel the event.
  * @returns {boolean} - True if the event was found and canceled, false otherwise.
  * 
@@ -145,31 +147,19 @@ ScheduleEvent["TryCancel"] <- function(eventName, delay = 0) {
     return isValid
 }
 
-
 /*
- * Cancels all scheduled actions that match the given action, optionally after a delay.
- *
- * @param {functioan} action - The action to cancel.
- * @param {number} delay - An optional delay in seconds before canceling the actions. 
-*/
-ScheduleEvent["CancelByAction"] <- function(action, delay = 0) {
-    if(delay > 0)
-        return ScheduleEvent.Add("global", format("ScheduleEvent.Cancel(\"%s\")", eventName), delay)
-    
-    foreach(name, events in ScheduleEvent.eventsList) {
-        foreach(eventAction in events) {
-            if(eventAction.action == action) {
-                events.remove(eventAction)
-                dev.trace("\"{}\" was deleted from \"{}\"", eventAction, name)
-            }
-        }
-    }
-}
-
-/*
- * Cancels all scheduled events and actions, effectively clearing the event scheduler.
+* Cancels all scheduled events and actions, effectively clearing the event scheduler.
 */
 ScheduleEvent["CancelAll"] <- function() {
+    ScheduleEvent.eventsList = {global = ScheduleEvent.eventsList["global"]}
+    dev.trace("Scheduled events have been canceled!")
+}
+
+/* 
+* Cancels all scheduled events and actions, EVEN GLOBAL!! effectively clearing the event scheduler.
+* Undocumented unsafe function. You must understand what you are doing!
+*/
+ScheduleEvent["UNSAFE_ClearWithGlobal"] <- function() {
     ScheduleEvent.eventsList = {global = List()}
     dev.trace("All scheduled events have been canceled!")
 }
@@ -178,7 +168,7 @@ ScheduleEvent["CancelAll"] <- function() {
 /*
  * Gets info about a scheduled event.
  * 
- * @param {string} eventName - Name of event to get info for.
+ * @param {string|any} eventName - Name of event to get info for.
  * @returns {List|null} - The event info object or null if not found.
 */
 ScheduleEvent["GetEvent"] <- function(eventName) {
@@ -189,9 +179,9 @@ ScheduleEvent["GetEvent"] <- function(eventName) {
 /*
  * Checks if event is valid
  * 
- * @param {string} eventName - Name of event to get info for.
+ * @param {string|any} eventName - Name of event to get info for.
  * @returns {bool} - Object exists or not.
 */
 ScheduleEvent["IsValid"] <- function(eventName) {
-    return eventName in ScheduleEvent.eventsList && ScheduleEvent.eventsList[eventName].len() != 0
+    return eventName in ScheduleEvent.eventsList
 }

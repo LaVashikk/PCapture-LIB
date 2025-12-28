@@ -6,7 +6,8 @@
      *
      * @param {CBaseEntity} entity - The entity object.
     */
-    constructor(entity = null) { 
+    constructor(entity) { 
+        if (!entity || !entity.IsValid()) throw("pcapEntity: invalid entity");
         if(typeof entity == "pcapEntity")
             entity = entity.CBaseEntity
 
@@ -16,20 +17,12 @@
         entity.GetScriptScope().selfEx <- this // todo: no docs about it
     }
 
-
-    function SetAngles(x, y, z) {
-        x = x >= 360 ? 0 : x
-        y = y >= 360 ? 0 : y
-        z = z >= 360 ? 0 : z
-        this.CBaseEntity.SetAngles(x, y, z)
-    }
-
     /*
      * Sets the angles of the entity.
      *
      * @param {Vector} angles - The angle vector.
     */
-    function SetAbsAngles(angles) {
+    function SetAngles2(angles) {
         this.CBaseEntity.SetAngles(angles.x, angles.y, angles.z)
     }
 
@@ -54,7 +47,8 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.Kill, fireDelay, null, this)
 
-        EntFireByHandle(CBaseEntity, "kill")
+        if(!this.CBaseEntity || !this.CBaseEntity.IsValid()) return
+        EntFireByHandle(this.CBaseEntity, "kill")
         this.CBaseEntity = null
     }
 
@@ -69,8 +63,14 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.Dissolve, fireDelay, null, this)
 
+        if(!dissolver || !dissolver.IsValid()) throw("The entity 'dissolver' is missing, the Dissolve method will not work.")
         if(this.GetName() == "")
             this.SetUniqueName("targetname")
+        for(local entity; entity = Entities.FindByName(entity, this.GetName()); ) if(!macros.IsEqual(this, entity)) {
+            this.SetUniqueName()
+            break
+        }
+
         dissolver.SetKeyValue("target", this.GetName())
         EntFireByHandle(dissolver, "dissolve")
 
@@ -200,6 +200,8 @@
                 getroottable()[funcName] <- script
             }
             script = funcName + "()"
+        } else {
+            return this.ConnectOutput(outputName, script)
         }
 
         this.AddOutput(outputName, "!self", "RunScriptCode", script, delay, fires)
@@ -332,24 +334,19 @@
         if(fireDelay != 0)
             return ScheduleEvent.Add(eventName, this.SetParent, fireDelay, [parentEnt], this)
         
-        this.SetUserData("parent", parentEnt)
         if(typeof parentEnt != "string") {
             local Pent = entLib.FromEntity(parentEnt)
+            local hasUniqueName = true
             if(Pent.GetName() == "") 
                 Pent.SetUniqueName("parent")
+            for(local entity; entity = Entities.FindByName(entity, Pent.GetName()); ) if(!macros.IsEqual(Pent, entity)) {
+                Pent.SetUniqueName("parent")
+                break
+            }
             parentEnt = Pent.GetName()
         }
         
         EntFireByHandle(this.CBaseEntity, "SetParent", parentEnt)            
-    }
-
-    /*
-     * Gets the parent of the entity.
-     *
-     * @returns {pcapEntity|null} - The parent entity object or null if no parent is set.
-    */
-    function GetParent() {
-        return this.GetUserData("parent")
     }
 
     /*
@@ -376,7 +373,7 @@
      *
      * @returns {List} A List containing all descendant pcaptEntity objects.
     */    
-    function GetAllChildrenRecursivly() {
+    function GetAllChildrenRecursively() {
         local descendantsList = List();
         _findDescendantsRecursive(this.CBaseEntity, descendantsList);
 
@@ -556,7 +553,7 @@
         EntFireByHandle(this.CBaseEntity, "AddOutput", "ModelScale " + scaleValue)
         this.SetUserData("ModelScale", scaleValue)
         // hack for entity update
-        EntFireByHandle(this, "SetBodyGroup", "1"); EntFireByHandle(this, "SetBodyGroup", "0", 0.02)
+        EntFireByHandle(this.CBaseEntity, "SetBodyGroup", "1"); EntFireByHandle(this.CBaseEntity, "SetBodyGroup", "0", 0.02)
     }
 
     /*
@@ -592,25 +589,6 @@
     }
 
     /*
-     * Sets the bounding box of the entity.
-     *
-     * @param {Vector|string} min - The minimum bounds vector or a string representation of the vector.
-     * @param {Vector|string} max - The maximum bounds vector or a string representation of the vector.
-    */
-    function SetBBox(minBounds, maxBounds) {
-        // Please specify the data type of `min` and `max` to improve the documentation accuracy.
-        if (type(minBounds) == "string") {
-            minBounds = macros.StrToVec(minBounds)
-        }
-        if (type(maxBounds) == "string") {
-            maxBounds = macros.StrToVec(maxBounds)
-        }
-
-        this.CBaseEntity.SetSize(minBounds, maxBounds)
-    }
-
-
-    /*
      * Sets a context value for the entity.
      *
      * @param {string} name - The name of the context value.
@@ -635,7 +613,6 @@
         EntitiesScopes[this.CBaseEntity][name.tolower()] <- value
     }
 
-
     /*
      * Gets a stored user data value.
      *
@@ -647,18 +624,6 @@
         if(name in EntitiesScopes[this.CBaseEntity])
             return EntitiesScopes[this.CBaseEntity][name]
         return null
-    }
-
-
-    /*
-     * Gets the bounding box of the entity.
-     *
-     * @returns {table} - The minimum bounds and maximum bounds of the entity.
-    */
-    function GetBBox() {
-        local max = GetBoundingMaxs()
-        local min = GetBoundingMins()
-        return {min = min, max = max}
     }
 
     /*
@@ -692,40 +657,41 @@
     }
 
     /*
-     * An experimental function that sets the entity's absolute origin in world space using teleportation.
-     * The key difference is that standard position-setting functions use client-side interpolation, 
-     * causing the entity to visibly slide to its new position.
+     * A function that sets the entity's absolute origin in world space using teleportation.
      * This function bypasses interpolation, making the position change instantaneous.
      *
      * @param {Vector} desiredAbsVec - The desired absolute position in world coordinates.
     */
-    function SetAbsOrigin2(desiredAbsVec) {
-        local pParent = this.CBaseEntity.GetMoveParent();
+    function SetAbsOrigin(desiredAbsVec) {
+        local pParent = this.CBaseEntity.GetMoveParent()
 
-        // --- CASE 1: ENTITY HAS NO PARENT ---
+        // If there is no parent, local coordinates are equivalent to absolute coordinates.
         if (!pParent) {
-            // If there is no parent, local coordinates are equivalent to absolute coordinates.
-            // Simply use the 'local' SetOrigin to set them.
-            this.SetOrigin(desiredAbsVec);
-            return;
+            return this.CBaseEntity.SetOrigin(desiredAbsVec)
         }
 
-        // --- CASE 2: ENTITY HAS A PARENT ---
-        // We need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
-
-        // Get the parent's absolute coordinates and angles.
-        local parentWorldPos = pParent.GetOrigin();
-        local parentWorldAng = pParent.GetAngles();
+        // We have parent, so we need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
+        local parentWorldPos = pParent.GetOrigin()
+        local parentWorldAng = pParent.GetAngles()
 
         // Calculate the offset vector from the parent to the desired point in world coordinates.
-        local worldOffsetVector = desiredAbsVec - parentWorldPos;
+        local worldOffsetVector = desiredAbsVec - parentWorldPos
 
         // Transform the world offset vector into a local one.
-        // To do this, we need to "unrotate" it by the parent's angles.
-        // The math.vector.unrotate function does exactly that.
-        local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng);
+        local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng)
 
-        this.SetOrigin(localPos);
+        this.SetOrigin(localPos)
+    }
+
+    /*
+     * Sets the entity's absolute origin using the native engine method.
+     * Unlike the custom SetAbsOrigin, this method handles attachment parents correctly.
+     * However, it causes client-side interpolation (visual sliding) when moving the entity.
+     *
+     * @param {Vector} desiredAbsVec - The desired absolute position in world coordinates.
+    */
+    function SetAbsOriginNative(desiredAbsVec) {
+        this.CBaseEntity.SetAbsOrigin(desiredAbsVec)
     }
 
     /*
@@ -749,12 +715,7 @@
 
     //! TODO ADD TO DOCS
     function GetBoundingCenter() {
-        local cachedResult = GetUserData("BoundingCenter")
-        if(cachedResult) return cachedResult
-
-        local result = (this.GetBoundingMaxs() - this.GetBoundingMins()) * 0.5
-        this.SetUserData("BoundingCenter", result)
-        return result
+        return (this.CBaseEntity.GetBoundingMaxs() - this.CBaseEntity.GetBoundingMins()) * 0.5
     }
 
     /* 
@@ -763,12 +724,12 @@
      * @returns {table} - The minimum bounds, maximum bounds, and center of the entity.
     */ 
     function GetAABB() {
-        local max = CreateAABB(7)
-        local min = CreateAABB(0)
-        local center = CreateAABB(4)
-        return {min = min, center = center, max = max}
+        return {
+            min = this.CreateAABB(0),
+            center = this.CreateAABB(4),
+            max = this.CreateAABB(7)
+        }
     }
-
 
     /* 
      * Gets the index of the entity.
@@ -900,11 +861,7 @@
         if(stat == 4) 
             angles = Vector(45, 45, 45)
 
-        local cache = GetUserData("aabbCache")
-        if(cache && (angles - cache[0]).Length() <= 10)
-            return Vector(cache[1][stat], cache[2][stat], cache[3][stat]) // todo what about state 4?
-
-        local all_vertex = this.getBBoxPoints()
+        local all_vertex = this.GetBBoxPoints()
         local x = array(8)
         local y = array(8)
         local z = array(8)
@@ -918,14 +875,13 @@
         x.sort(); y.sort(); z.sort()
  
         local result
-        if(stat == 4) {// centered
+        if(stat == 4) { // centered
             result = ( Vector(x[7], y[7], z[7]) - Vector(x[0], y[0], z[0]) ) * 0.5
         } 
         else {
             result = Vector(x[stat], y[stat], z[stat])
         }
         
-        this.SetUserData("aabbCache", [angles, x, y, z])
         return result
     }
 
@@ -934,17 +890,17 @@
      *
      * @returns {Array<Vector>} - The 8 vertices of the bounding box.  
     */
-    function getBBoxPoints() {
+    function GetBBoxPoints() {
         local max = this.GetBoundingMaxs();
         local min = this.GetBoundingMins();
         local angles = this.GetAngles()
     
         local getVertex = macros.GetVertex
-        return [ // todo cache it?
+        return [
             getVertex(max, min, min, angles), // 0 - Right-Bottom-Front
             getVertex(max, max, min, angles), // 1 - Right-Top-Front
             getVertex(min, max, min, angles), // 2 - Left-Top-Front
-            getVertex(min, min, min, angles)  // 3 - Left-Bottom-Front 
+            getVertex(min, min, min, angles), // 3 - Left-Bottom-Front 
             getVertex(min, min, max, angles), // 4 - Left-Bottom-Back
             getVertex(min, max, max, angles), // 5 - Left-Top-Back
             getVertex(max, max, max, angles), // 6 - Right-Top-Back
@@ -957,10 +913,10 @@
      *
      * @returns {array} - An array of 12 Vector triplets, where each triplet represents the three vertices of a triangle face.
     */
-    function getBBoxFaces() {
-        local vertices = this.getBBoxPoints()
+    function GetBBoxFaces() {
+        local vertices = this.GetBBoxPoints()
         local getTriangle = macros.GetTriangle
-        return [ // todo cache it?
+        return [
             /* Bottom face triangles */ 
             getTriangle(vertices[0], vertices[3], vertices[4]), // Face 0: Right-Bottom-Front, Left-Bottom-Front, Left-Bottom-Back
             getTriangle(vertices[0], vertices[4], vertices[7]), // Face 1: Right-Bottom-Front, Left-Bottom-Back, Right-Bottom-Back
@@ -993,7 +949,7 @@
      * @param {pcapEntity} other - The other entity to compare.
      * @returns {boolean} - True if the entities are equal, false otherwise.
     */
-    function isEqually(other) return this.entindex() == other.entindex()
+    function IsEqual(other) return this.entindex() == other.entindex()
 
     /*
      * Converts the entity object to a string.
@@ -1054,10 +1010,36 @@ function pcapEntity::ValidateScriptScope() return this.CBaseEntity.ValidateScrip
 function pcapEntity::GetScriptScope() return this.CBaseEntity.GetScriptScope()
 function pcapEntity::entindex() return this.CBaseEntity.entindex()
 
-function pcapEntity::SetAbsOrigin(vector) this.CBaseEntity.SetAbsOrigin(vector)
 function pcapEntity::SetForwardVector(vector) this.CBaseEntity.SetForwardVector(vector)
 function pcapEntity::SetHealth(health) this.CBaseEntity.SetHealth(health)
 function pcapEntity::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
 function pcapEntity::SetModel(model_name) this.CBaseEntity.SetModel(model_name)
 function pcapEntity::SetOrigin(vector) this.CBaseEntity.SetOrigin(vector)
+function pcapEntity::SetAngles(x, y, z) this.CBaseEntity.SetAngles(x, y, z)
 function pcapEntity::SetVelocity(vector) this.CBaseEntity.SetVelocity(vector)
+function pcapEntity::SetBBox(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)
+function pcapEntity::SetSize(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)
+
+// KeyValues manipulation
+function pcapEntity::__KeyValueFromInt(key, value) return this.CBaseEntity.__KeyValueFromInt(key, value)
+function pcapEntity::__KeyValueFromFloat(key, value) return this.CBaseEntity.__KeyValueFromFloat(key, value)
+function pcapEntity::__KeyValueFromString(key, value) return this.CBaseEntity.__KeyValueFromString(key, value)
+function pcapEntity::__KeyValueFromVector(key, value) return this.CBaseEntity.__KeyValueFromVector(key, value)
+
+// Hierarchy & Movement relations
+function pcapEntity::FirstMoveChild() return this.CBaseEntity.FirstMoveChild()
+function pcapEntity::GetMoveParent() return this.CBaseEntity.GetMoveParent()
+function pcapEntity::GetRootMoveParent() return this.CBaseEntity.GetRootMoveParent()
+function pcapEntity::NextMovePeer() return this.CBaseEntity.NextMovePeer()
+function pcapEntity::GetOwner() return this.CBaseEntity.GetOwner()
+function pcapEntity::SetOwner(ent) this.CBaseEntity.SetOwner(ent)
+
+// State & Game
+function pcapEntity::GetPreTemplateName() return this.CBaseEntity.GetPreTemplateName()
+function pcapEntity::GetTeam() return this.CBaseEntity.GetTeam()
+function pcapEntity::SetTeam(team) this.CBaseEntity.SetTeam(team)
+function pcapEntity::GetSoundDuration(soundName, actorModel = "") return this.CBaseEntity.GetSoundDuration(soundName, actorModel)
+
+// Transform & Velocity
+function pcapEntity::GetVelocity() return this.CBaseEntity.GetVelocity()
+function pcapEntity::SetAngularVelocity(pitch, yaw, roll) this.CBaseEntity.SetAngularVelocity(pitch, yaw, roll)

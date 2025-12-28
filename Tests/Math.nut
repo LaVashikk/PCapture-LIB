@@ -13,7 +13,7 @@ math_tests <- {
         local start = Vector(0, 0, 0)
         local end = Vector(10, 10, 10)
         local result = math.lerp.vector(start, end, 0.5)
-        return assert(math.vector.isEqually(result, Vector(5, 5, 5)))
+        return assert(math.vector.IsEqual(result, Vector(5, 5, 5)))
     },
 
     // Test the lerp function for colors
@@ -30,14 +30,14 @@ math_tests <- {
         local end = Vector(0, 1, 0)
         local result = math.lerp.sVector(start, end, 0.5)
         local expected = Vector(0.5, 0.5, 0) //? why i get 0.500000, 0.500019, {0.002182}? 
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     // function ang2quad2vector() { 
     //     local vec = Vector(124, 92.2, 0)
     //     local q = math.Quaternion.fromEuler(vec)
     //     local result = q.toVector()
-    //     return assert(math.vector.isEqually(result, vec))
+    //     return assert(math.vector.IsEqual(result, vec))
     // },
 
     // Test the SmoothStep function
@@ -471,7 +471,7 @@ math_tests <- {
     function roundVector() {
         local vector = Vector(1.2345, 6.7890, -0.1234)
         local result = math.vector.round(vector, 1000)
-        return assert(math.vector.isEqually(result, Vector(1.235, 6.789, -0.123)))
+        return assert(math.vector.IsEqual(result, Vector(1.235, 6.789, -0.123)))
     },
 
     // Test the Sign function
@@ -502,7 +502,7 @@ math_tests <- {
         local angle = Vector(0, 90, 0)
         local result = math.vector.rotate(vector, angle)
         local expected = Vector(0, 1, 0)
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     // Test the unrotateVector function
@@ -511,7 +511,7 @@ math_tests <- {
         local angle = Vector(0, 90, 0)
         local result = math.vector.unrotate(vector, angle)
         local expected = Vector(1, 0, 0)
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     // Test the random function
@@ -528,7 +528,7 @@ math_tests <- {
         local normal = Vector(0, 1, 0)
         local result = math.vector.reflect(dir, normal)
         local expected = Vector(1, 0, 0) 
-        return assert(math.vector.isEqually(result, expected)) 
+        return assert(math.vector.IsEqual(result, expected)) 
     },
 
     // Test the resize function
@@ -539,7 +539,7 @@ math_tests <- {
         vector.Norm() 
         local expected = vector * 10  
 
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     // Quaternion tests
@@ -548,7 +548,7 @@ math_tests <- {
         local quat = math.Quaternion.fromEuler(angles)
         local expected = math.Quaternion(0, 0, 0.707107, 0.707107)
         
-        return assert(quat.isEqually(expected))
+        return assert(quat.IsEqual(expected))
     },
 
     function Quaternion_fromVector() {
@@ -563,7 +563,7 @@ math_tests <- {
         local quat = math.Quaternion.fromEuler(angle)
         local result = quat.rotateVector(vector)
         local expected = Vector(0, 1, 0)
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     function Quaternion_unrotateVector() {
@@ -572,7 +572,7 @@ math_tests <- {
         local quat = math.Quaternion.fromEuler(angle) 
         local result = quat.unrotateVector(vector)
         local expected = Vector(1, 0, 0)
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     function Quaternion_slerp() {
@@ -580,7 +580,7 @@ math_tests <- {
         local end = math.Quaternion.fromEuler(Vector(0, 90, 0))
         local result = start.slerp(end, 0.5) 
         local expected = math.Quaternion.fromEuler(Vector(0, 45, 0))
-        return assert(result.isEqually(expected))
+        return assert(result.IsEqual(expected))
     },
 
     function Quaternion_normalize() {
@@ -613,7 +613,7 @@ math_tests <- {
         local result = quat.toAxisAngle() 
         local expectedAxis = Vector(1, 0, 0) 
         local expectedAngle = 1.57082 // 90 * PI / 180 
-        return assert(math.vector.isEqually(result.axis, expectedAxis) && math.round(result.angle, 1000) == math.round(expectedAngle, 1000)) 
+        return assert(math.vector.IsEqual(result.axis, expectedAxis) && math.round(result.angle, 1000) == math.round(expectedAngle, 1000)) 
     },
 
     // Matrix tests 
@@ -625,7 +625,7 @@ math_tests <- {
             1, 0, 0,
             0, 0, 1
         )
-        return assert(matrix.isEqually(expected))
+        return assert(matrix.IsEqual(expected))
     },
     
     function Matrix_rotateVector() {
@@ -634,7 +634,7 @@ math_tests <- {
         local matrix = math.Matrix.fromEuler(angle)
         local result = matrix.rotateVector(vector)
         local expected = Vector(0, 1, 0)
-        return assert(math.vector.isEqually(result, expected))
+        return assert(math.vector.IsEqual(result, expected))
     },
 
     function Matrix_unrotateVector() { 
@@ -643,7 +643,7 @@ math_tests <- {
         local matrix = math.Matrix.fromEuler(angle) 
         local result = matrix.unrotateVector(vector) 
         local expected = Vector(1, 0, 0) 
-        return assert(math.vector.isEqually(result, expected)) 
+        return assert(math.vector.IsEqual(result, expected)) 
     },
 
     function Matrix_transpose() { 
@@ -658,7 +658,7 @@ math_tests <- {
             2, 5, 8, 
             3, 6, 9 
         ) 
-        return assert(result.isEqually(expected)) 
+        return assert(result.IsEqual(expected)) 
     }, 
  
     function Matrix_inverse() { 
@@ -673,7 +673,7 @@ math_tests <- {
             20, -15, -4, 
             -5, 4, 1 
         ) 
-        return assert(result.isEqually(expected))
+        return assert(result.IsEqual(expected))
     }, 
 
     function Matrix_determinant() { 
@@ -698,7 +698,7 @@ math_tests <- {
             8, 10, 12, 
             14, 16, 18 
         ) 
-        return assert(result.isEqually(expected)) 
+        return assert(result.IsEqual(expected)) 
     }, 
 }
 

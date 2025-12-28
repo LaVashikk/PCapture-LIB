@@ -91,8 +91,8 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `GetIgnoredModels() -> ArrayEx` | Returns ignored models.  |
 | `GetCollisionFilter() -> function` | Returns collision filter function. |
 | `GetIgnoreFilter() -> function` | Returns ignore filter function.  |
-| `ApplyCollisionFilter(entity: pcapEntity, note: string)` | Applies collision filter. |
-| `ApplyIgnoreFilter(entity: pcapEntity, note: string)` | Applies ignore filter.  |
+| `ApplyCollisionFilter(entity: pcapEntity)` | Applies collision filter. |
+| `ApplyIgnoreFilter(entity: pcapEntity)` | Applies ignore filter.  |
 | `UpdateIgnoreEntities(ignoreEntities: table, newEnt: pcapEntity)` | Updates ignored entities. |
 
 ### [`TracePlus/results.nut`](SRC/TracePlus/readme.md#traceplusresultsnut)
@@ -102,10 +102,10 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `CheapTraceResult` | Result of a cheap trace. |
 | `GetStartPos() -> Vector` | Returns start position. |
 | `GetEndPos() -> Vector` | Returns end position. |
-| `GetHitpos() -> Vector` | Returns hit position. |
+| `GetHitPos() -> Vector` | Returns hit position. |
 | `GetFraction() -> number` | Returns hit fraction. |
 | `DidHit() -> bool` | Returns true if hit. |
-| `GetDir() -> Vector` | Returns trace direction. |
+| `GetDir() -> Vector` | Returns normalized trace direction. |
 | `GetPortalEntryInfo() -> CheapTraceResult` | Returns portal entry info. |
 | `GetAggregatedPortalEntryInfo() -> ArrayEx` | Returns all portal entry info.  |
 | `GetImpactNormal() -> Vector` | Returns impact normal.  |
@@ -114,7 +114,6 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 | `GetEntityClassname() -> string` | Returns hit entity classname.  |
 | `GetIngoreEntities() -> table` | Returns ignored entities. |
 | `GetTraceSettings() -> TraceSettings` | Returns trace settings. |
-| `GetNote() -> string` | Returns trace note.  |
 | `DidHitWorld() -> bool` | Returns true if hit world geometry. |
 
 
@@ -129,7 +128,7 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 
 | Function | Description |
 |---|---|
-| [`TracePlus.Bbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings, note: string) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusbboxstartpos-endpos-ignoreentities-settings-note) | Performs a bbox cast. |
+| [`TracePlus.Bbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusbboxstartpos-endpos-ignoreentities-settings) | Performs a bbox cast. |
 | [`TracePlus.FromEyes.Bbox(distance: number, player: pcapEntity, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesbboxdistance-player-ignoreentities-settings) | Bbox cast from player's eyes. |
 
 ### [`TracePlus/portal_casting.nut`](SRC/TracePlus/readme.md#traceplusportal_castingnut)
@@ -138,14 +137,14 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 |---|---|
 | [`TracePlus.PortalCheap(startPos: Vector, endPos: Vector) -> CheapTraceResult`](SRC/TracePlus/readme.md#traceplusportalcheapstartpos-endpos) | Cheap trace with portals. |
 | [`TracePlus.FromEyes.PortalCheap(distance: number, player: pcapEntity) -> CheapTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesportalcheapdistance-player) | Cheap trace from player's eyes with portals. |
-| [`TracePlus.PortalBbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings, note: string) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusportalbboxstartpos-endpos-ignoreentities-settings-note) | Bbox cast with portals. |
+| [`TracePlus.PortalBbox(startPos: Vector, endPos: Vector, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusportalbboxstartpos-endpos-ignoreentities-settings) | Bbox cast with portals. |
 | [`TracePlus.FromEyes.PortalBbox(distance: number, player: pcapEntity, ignoreEntities: table, settings: TraceSettings) -> BboxTraceResult`](SRC/TracePlus/readme.md#traceplusfromeyesportalbboxdistance-player-ignoreentities-settings) | Bbox cast from player's eyes with portals. |
 
 ### [`TracePlus/bbox_analyzer.nut`](SRC/TracePlus/readme.md#traceplusbbox_analyzernut)
 
 | Class/Method | Description |
 |---|---|
-| [`TraceLineAnalyzer`](SRC/TracePlus/readme.md#tracelineanalyzer) | Precise trace line analysis. |
+| [`BboxTraceAnalyzer`](SRC/TracePlus/readme.md#bboxtraceanalyzer) | Precise trace line analysis. |
 
 ### [`TracePlus/calculate_normal.nut`](SRC/TracePlus/readme.md#tracepluscalculate_normalnut)
 
@@ -153,7 +152,6 @@ Enhances ray tracing capabilities, including portal and custom trace settings.
 |---|---|
 | `CalculateImpactNormal(startPos: Vector, hitPos: Vector) -> Vector` | Impact normal for world geometry. |
 | `CalculateImpactNormalFromBbox(startPos: Vector, hitPos: Vector, hitEntity: pcapEntity) -> Vector` | Impact normal from bounding box. |
-| `CalculateImpactNormalFromBbox2(startPos: Vector, hitPos: Vector, hitEntity: pcapEntity) -> Vector` | Fallback bounding box normal. |
 
 
 ## 2. [IDT](SRC/IDT/readme.md#idt-module-improved-data-types)
@@ -220,7 +218,7 @@ Provides enhanced data structures.
 | [`reduce(func: function, initial: any) -> any`](SRC/IDT/readme.md#reducefunc-initial) | Reduces the list. |
 | [`totable() -> table`](SRC/IDT/readme.md#totable) | Converts to table. |
 | [`toarray() -> array`](SRC/IDT/readme.md#toarray) | Converts to array. |
-| [`SwapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#swapnodenode1-node2) | Swaps nodes. |
+| [`SwapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#SwapNodenode1-node2) | Swaps nodes. |
 
 
 ### [`IDT/tree_sort.nut`](SRC/IDT/readme.md#idttree_sortnut)
@@ -264,16 +262,16 @@ Provides the [`pcapEntity`](SRC/IDT/readme.md#idtentitynut) class, extending `CB
 
 | Category | Methods |
 |---|---|
-| **State/Lifecycle** | [`GetIndex() -> number`](SRC/IDT/readme.md#getindex), [`IsValid() -> bool`](SRC/IDT/readme.md#isvalid), [`IsPlayer() -> bool`](SRC/IDT/readme.md#isplayer), [`isEqually(other: pcapEntity\|CBaseEntity) -> bool`](SRC/IDT/readme.md#isequallyother), [`Destroy(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#destroyfiredelay-eventname), [`Kill(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#killfiredelay-eventname), [`Dissolve(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#dissolvefiredelay-eventname), [`Disable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#disablefiredelay-eventname), [`Enable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#enablefiredelay-eventname), [`IsDrawEnabled() -> bool`](SRC/IDT/readme.md#isdrawenabled) |
+| **State/Lifecycle** | [`GetIndex() -> number`](SRC/IDT/readme.md#getindex), [`IsValid() -> bool`](SRC/IDT/readme.md#isvalid), [`IsPlayer() -> bool`](SRC/IDT/readme.md#isplayer), [`IsEqual(other: pcapEntity\|CBaseEntity) -> bool`](SRC/IDT/readme.md#IsEqualother), [`Destroy(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#destroyfiredelay-eventname), [`Kill(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#killfiredelay-eventname), [`Dissolve(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#dissolvefiredelay-eventname), [`Disable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#disablefiredelay-eventname), [`Enable(fireDelay: number, eventName: string)`](SRC/IDT/readme.md#enablefiredelay-eventname), [`IsDrawEnabled() -> bool`](SRC/IDT/readme.md#isdrawenabled) |
 | **Naming** | [`SetName(name: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setnamename-firedelay-eventname), [`SetUniqueName(prefix: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setuniquenameprefix-firedelay-eventname), [`GetNamePrefix() -> string`](SRC/IDT/readme.md#getnameprefix), [`GetNamePostfix() -> string`](SRC/IDT/readme.md#getnamepostfix) |
 | **Player** | [`EyePosition() -> Vector`](SRC/IDT/readme.md#eyeposition), [`EyeAngles() -> Vector`](SRC/IDT/readme.md#eyeangles), [`EyeForwardVector() -> Vector`](SRC/IDT/readme.md#eyeforwardvector) |
-| **Transform** | [`SetAngles(x: number, y: number, z: number)`](SRC/IDT/readme.md#setanglesx-y-z), [`SetAbsAngles(angles: Vector)`](SRC/IDT/readme.md#setabsanglesangles), [`SetCenter(vector: Vector)`](SRC/IDT/readme.md#setcentervector), [`SetAbsCenter(vector: Vector)`](SRC/IDT/readme.md#setabscentervector), [`SetParent(parentEnt: string\|CBaseEntity\|pcapEntity, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setparentparentent-firedelay-eventname), [`GetParent() -> pcapEntity`](SRC/IDT/readme.md#getparent), [`SetModelScale(scaleValue: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setmodelscalescalevalue-firedelay-eventname), [`GetModelScale() -> number`](SRC/IDT/readme.md#getmodelscale) |
+| **Transform** | [`SetAngles(x: number, y: number, z: number)`](SRC/IDT/readme.md#setanglesx-y-z), [`SetAngles2(angles: Vector)`](SRC/IDT/readme.md#SetAngles2angles), [`SetCenter(vector: Vector)`](SRC/IDT/readme.md#setcentervector), [`SetAbsCenter(vector: Vector)`](SRC/IDT/readme.md#setabscentervector), [`SetParent(parentEnt: string\|CBaseEntity\|pcapEntity, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setparentparentent-firedelay-eventname), [`SetModelScale(scaleValue: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setmodelscalescalevalue-firedelay-eventname), [`GetModelScale() -> number`](SRC/IDT/readme.md#getmodelscale) |
 | **Appearance** | [`SetAlpha(opacity: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setalphaopacity-firedelay-eventname), [`SetColor(colorValue: string\|Vector, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setcolorcolorvalue-firedelay-eventname), [`SetSkin(skin: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setskinskin-firedelay-eventname), [`SetDrawEnabled(isEnabled: bool, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setdrawenabledisenabled-firedelay-eventname), [`SetAnimation(animationName: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setanimationanimationname-firedelay-eventname), [`GetAlpha() -> number`](SRC/IDT/readme.md#getalpha), [`GetColor() -> string`](SRC/IDT/readme.md#getcolor), [`GetSkin() -> number`](SRC/IDT/readme.md#getskin), [`GetPartnerInstance() -> pcapEntity`](SRC/IDT/readme.md#getpartnerinstance) |
 | **KeyValues/Data** | [`SetKeyValue(key: string, value: any, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setkeyvaluekey-value-firedelay-eventname), [`SetUserData(name: string, value: any)`](SRC/IDT/readme.md#setuserdataname-value), [`GetUserData(name: string) -> any`](SRC/IDT/readme.md#getuserdataname), [`GetKeyValue(key: string) -> any`](SRC/IDT/readme.md#getkeyvaluekey), [`SetContext(name: string, value: any, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setcontextname-value-firedelay-eventname) |
 | **Collision** | [`SetCollision(solidType: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setcollisionsolidtype-firedelay-eventname), [`SetCollisionGroup(collisionGroup: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setcollisiongroupcollisiongroup-firedelay-eventname), [`SetTraceIgnore(isEnabled: bool, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#settraceignoreisenabled-firedelay-eventname), [`SetSpawnflags(flag: number, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#setspawnflagsflag-firedelay-eventname), [`GetSpawnflags() -> number`](SRC/IDT/readme.md#getspawnflags) |
 | **Sound** | [`EmitSound(soundName: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#emitsoundsoundname-firedelay-eventname), [`EmitSoundEx(soundName: string, volume: number, looped: bool, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#emitsoundexsoundname-volume-looped-firedelay-eventname), [`StopSoundEx(soundName: string, fireDelay: number, eventName: string)`](SRC/IDT/readme.md#stopsoundexsoundname-firedelay-eventname) |
 | **Outputs/Inputs** | [`AddOutput(outputName: string, target: string\|CBaseEntity\|pcapEntity, input: string, param: string, delay: number, fires: number)`](SRC/IDT/readme.md#addoutputoutputname-target-input-param-delay-fires), [`ConnectOutputEx(outputName: string\|function, script: string, delay: number, fires: number)`](SRC/IDT/readme.md#connectoutputexoutputname-script-delay-fires), [`SetInputHook(inputName: string, closure: function)`](SRC/IDT/readme.md#setinputhookinputname-closure) |
-| **BBox/Position** | [`SetBBox(minBounds: Vector\|string, maxBounds: Vector\|string)`](SRC/IDT/readme.md#setbboxminbounds-maxbounds), [`GetBBox() -> table`](SRC/IDT/readme.md#getbbox), [`IsSquareBbox() -> bool`](SRC/IDT/readme.md#issquarebbox), [`GetAABB() -> table`](SRC/IDT/readme.md#getaabb), [`CreateAABB(stat: number) -> Vector`](SRC/IDT/readme.md#createaabbstat), [`getBBoxPoints() -> array`](SRC/IDT/readme.md#getbboxpoints), [`getBBoxFaces() -> array`](SRC/IDT/readme.md#getbboxfaces) |
+| **BBox/Position** | [`SetBBox(minBounds: Vector\|string, maxBounds: Vector\|string)`](SRC/IDT/readme.md#setbboxminbounds-maxbounds), [`IsSquareBbox() -> bool`](SRC/IDT/readme.md#issquarebbox), [`GetAABB() -> table`](SRC/IDT/readme.md#getaabb), [`CreateAABB(stat: number) -> Vector`](SRC/IDT/readme.md#createaabbstat), [`GetBBoxPoints() -> array`](SRC/IDT/readme.md#getbboxpoints), [`GetBBoxFaces() -> array`](SRC/IDT/readme.md#getbboxfaces) |
 
 
 ## 3. [Utils](SRC/Utils/readme.md#utils-module)
@@ -359,7 +357,7 @@ Provides utility functions.
 | [`GetValues(table: object) -> List`](SRC/Utils/readme.md#macrosgetvaluestable) | Returns values from table as List. |
 | [`InvertTable(table: table) -> table`](SRC/Utils/readme.md#macrosinverttabletable) | Inverts table. |
 | [`PrintIter(iterable: iterable)`](SRC/Utils/readme.md#macrosprintiteriterable) | Prints iterable. |
-| [`MaskSearch(iter: array\|ArrayEx, match: string) -> number`](SRC/Utils/readme.md#macrosmasksearchiter-match) | Mask search in array. |
+| [`MaskSearch(iter: array\|ArrayEx, match: string) -> number`](SRC/Utils/readme.md#macrosmasksearchiter-match) | Checks if string matches any mask in array. |
 | [`GetRectangle(v1: Vector, v2: Vector, v3: Vector, v4: Vector) -> table`](SRC/Utils/readme.md#macrosgetrectanglev1-v2-v3-v4) | Creates rectangle object.  |
 | [`PointInBBox(point: Vector, bMin: Vector, bMax: Vector) -> bool`](SRC/Utils/readme.md#macrospointinbboxpoint-bmin-bmax) | Point in bbox check. |
 | [`PointInBounds(point: Vector) -> bool`](SRC/Utils/readme.md#macrospointinboundspoint) | Point in world's bounds check. |
@@ -368,7 +366,7 @@ Provides utility functions.
 | [`GetDist(vec1: Vector, vec2: Vector) -> number`](SRC/Utils/readme.md#macrosgetdistvec1-vec2) | Distance between vectors.  |
 | [`StrToVec(str: string) -> Vector`](SRC/Utils/readme.md#macrosstrtovecstr) | String to vector. |
 | [`VecToStr(vec: Vector, sep: String) -> string`](SRC/Utils/readme.md#macrosvectostrvec-sep) | Vector to string.  |
-| [`isEqually(val1: any, val2: any) -> bool`](SRC/Utils/readme.md#macrosisequallyval1-val2) | Equality check. |
+| [`IsEqual(val1: any, val2: any) -> bool`](SRC/Utils/readme.md#macrosIsEqualval1-val2) | Equality check. |
 | [`DeepCopy(container: iter) -> iter`](SRC/Utils/readme.md#macrosdeepcopycontainer) | Deep copy of a container. |
 | [`GetPrefix(name: string) -> string`](SRC/Utils/readme.md#macrosgetprefixname) | Name prefix. |
 | [`GetPostfix(name: string) -> string`](SRC/Utils/readme.md#macrosgetpostfixname) | Name postfix. |
@@ -400,8 +398,7 @@ Provides enhanced event scheduling.
 | [`AddActions(eventName: string, actions: array\|List, noSort: bool)`](SRC/ActionScheduler/readme.md#scheduleeventaddactionseventname-actions-nosort) | Adds multiple actions. |
 | [`Cancel(eventName: string, delay: number)`](SRC/ActionScheduler/readme.md#scheduleeventcanceleventname-delay) | Cancels event.  |
 | [`TryCancel(eventName: string, delay: number) -> bool`](SRC/ActionScheduler/readme.md#scheduleeventtrycanceleventname-delay) | Tries to cancel event. |
-| [`CancelByAction(action: string\|function, delay: number)`](SRC/ActionScheduler/readme.md#scheduleeventcancelbyactionaction-delay) | Cancels by action. |
-| [`CancelAll()`](SRC/ActionScheduler/readme.md#scheduleeventcancelall) | Cancels all events. |
+| [`CancelAll()`](SRC/ActionScheduler/readme.md#scheduleeventcancelall) | Cancels all events, except for global ones. |
 | [`GetEvent(eventName: string) -> List`](SRC/ActionScheduler/readme.md#scheduleeventgeteventeventname) | Gets event actions. |
 | [`IsValid(eventName: string) -> bool`](SRC/ActionScheduler/readme.md#scheduleeventisvalideventname) | Checks event validity. |
 
@@ -415,7 +412,6 @@ Provides animation functions.
 | Class/Function | Description |
 |---|---|
 | [`AnimEvent(name: string, settings: table, entities: array\|CBaseEntity\|pcapEntity, time: number)`](SRC/Animations/readme.md#animeventname-settings-entities-time0) | Animation event data.  |
-| [`applyAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animateapplyanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Applies animation.  |
 | [`applyRTAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animateapplyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Applies real-time animation. |
 | [`_applyRTAnimation(animInfo: AnimEvent, valueCalculator: function, propertySetter: function, vars: any, transitionFrames: number)`](SRC/Animations/readme.md#animate_applyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes) | Internal function for real-time animation. |
 
@@ -487,7 +483,7 @@ Provides animation functions.
 | [`SetPositioning(value: number, ent: CBaseEntity\|pcapEntity) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetpositioningvalue-ent) | Sets positioning. |
 | [`SetColor(string_color: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetcolorstring_color) | Sets color.  |
 | [`SetIconOnScreen(icon: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticononscreenicon) | Sets on-screen icon. |
-| [`SetIconOffScreen(screen: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticonoffscreenscreen) | Sets off-screen icon. |
+| [`SetIconOffScreen(icon: string) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseticonoffscreenscreen) | Sets off-screen icon. |
 | [`SetHoldTime(time: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetholdtimetime) | Sets hold time.  |
 | [`SetDistance(value: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorsetdistancevalue) | Sets distance.  |
 | [`SetEffects(sizePulsing: number, alphaPulsing: number, shaking: number) -> HintInstructor`](SRC/HUD/readme.md#hudhintinstructorseteffectssizepulsing-alphapulsing-shaking) | Sets effects. |
@@ -515,8 +511,7 @@ Provides utility functions for working with vectors.
 
 | Function | Description |
 |---|---|
-| [`vector.isEqually(vec1: Vector, vec2: Vector)`](SRC/Math/readme.md#mathvectorisequallyvec1-vec2) | Vector equality check (integers). |
-| [`vector.isEqually2(vec1: Vector, vec2: Vector, precision: number)`](SRC/Math/readme.md#mathvectorisequally2vec1-vec2-precision) | Vector approximate equality. |
+| [`vector.IsEqual(vec1: Vector, vec2: Vector, precision: number)`](SRC/Math/readme.md#mathvectorIsEqualvec1-vec2-precision) | Vector approximate equality. |
 | [`vector.mul(vec1: Vector, vec2: Vector)`](SRC/Math/readme.md#mathvectormulvec1-vec2) | Element-wise multiplication. |
 | [`vector.rotate(vec: Vector, angle: Vector)`](SRC/Math/readme.md#mathvectorrotatevec-angle) | Vector rotation. |
 | [`vector.unrotate(vec: Vector, angle: Vector)`](SRC/Math/readme.md#mathvectorunrotatevec-angle) | Vector unrotation. |
@@ -540,7 +535,7 @@ Provides linear interpolation functions.
 | [`lerp.SmoothStep(edge0: number, edge1: number, x: number)`](SRC/Math/readme.md#mathlerpsmoothstepedge0-edge1-x) | Smoothstep interpolation. |
 | [`lerp.FLerp(f1: number, f2: number, i1: number, i2: number, x: number)`](SRC/Math/readme.md#mathlerpflerpf1-f2-i1-i2-x) | Custom parameter interpolation. |
 
-### [`Math/easing_equation.nut`](SRC/Math/readme.md#matheasincirc)
+### [`Math/easing_equation.nut`](SRC/Math/readme.md#matheasing_equationnut)
 Provides various easing functions.
 
 | Function | Description |
@@ -575,7 +570,7 @@ Provides quaternion operations.
 | [`fromAxisAngle(axis: Vector, angle: number) -> Quaternion`](SRC/Math/readme.md#fromaxisangleaxis-angle) | Quaternion from axis-angle. |
 | [`toAxisAngle() -> table`](SRC/Math/readme.md#toaxisangle) | Converts to axis-angle. |
 | [`toVector() -> Vector`](SRC/Math/readme.md#tovector) | Converts to Euler angles. |
-| [`isEqually(other: Quaternion) -> bool`](SRC/Math/readme.md#isequallyother) | Quaternion equality check. |
+| [`IsEqual(other: Quaternion) -> bool`](SRC/Math/readme.md#IsEqualother) | Quaternion equality check. |
 | [`cmp(other: Quaternion) -> number`](SRC/Math/readme.md#cmpother) | Compares quaternion magnitudes. |
 
 
@@ -596,5 +591,5 @@ Provides matrix operations.
 | [`_mul(other: Matrix) -> Matrix`](SRC/Math/readme.md#_mulother) | Matrix multiplication. |
 | [`_add(other: Matrix) -> Matrix`](SRC/Math/readme.md#_addother) | Matrix addition. |
 | [`_sub(other: Matrix) -> Matrix`](SRC/Math/readme.md#_subother) | Matrix subtraction. |
-| [`isEqually(other: Matrix) -> bool`](SRC/Math/readme.md#isequallyother) | Matrix equality check. |
+| [`IsEqual(other: Matrix) -> bool`](SRC/Math/readme.md#IsEqualother) | Matrix equality check. |
 | [`cmp(other: Matrix) -> number`](SRC/Math/readme.md#cmpother) | Compares matrix component sums. |

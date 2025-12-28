@@ -2,20 +2,6 @@ math["vector"] <- {}
 local mVector = math["vector"]
 
 /*
- * Checks if two vectors are equal based on their rounded components.
- *
- * @param {Vector} vector - The first vector.
- * @param {Vector} other - The second vector.
- * @returns {boolean} - True if the vectors are exactly equal, false otherwise.
-*/
-mVector["isEqually"] <- function(vector, other) {
-    return ::abs(vector.x - other.x) == 0 && 
-           ::abs(vector.y - other.y) == 0 && 
-           ::abs(vector.z - other.z) == 0
-}
-
-
-/*
  * Checks if two vectors are approximately equal, within a certain precision.
  * This function rounds the components of both vectors before comparing them.
  *
@@ -24,7 +10,7 @@ mVector["isEqually"] <- function(vector, other) {
  * @param {int} precision - The precision factor (e.g., 1000 for rounding to three decimal places).
  * @returns {boolean} - True if the vectors are approximately equal, false otherwise.
 */
-mVector["isEqually2"] <- function(vector, other, precision = 1000) {
+mVector["IsEqual"] <- function(vector, other, precision = 1000) {
     vector = math.vector.round(vector, precision)
     other = math.vector.round(other, precision)
     return vector.x == other.x && 

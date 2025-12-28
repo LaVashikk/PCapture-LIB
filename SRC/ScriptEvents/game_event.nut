@@ -97,7 +97,10 @@ function VGameEvent::SetFilter(filterFunc) {
  * @param {array} args - Optional arguments to pass to the actions function. 
 */
 function VGameEvent::Trigger(args) {
-    if(this.actions.len() == 0) return
+    if(this.actions.len() == 0) {
+        dev.trace("Attempt to run {}, which has no actions", this.eventName)
+        return
+    }
 
     if (this.triggerCount != 0 && (this.filterFunction == null || this.filterFunction(args))) {
         if (this.triggerCount > 0) {
@@ -117,8 +120,12 @@ function VGameEvent::Trigger(args) {
 */
 function VGameEvent::ForceTrigger(args) {
     args.insert(0, this)
-    foreach(action in this.actions) {
-        action.acall(args)
+    foreach(action in this.actions.iter()) {
+        try {
+            action.acall(args)
+        } catch(err) {
+            throw("VGameEvent Error: " + this.eventName + " has accured: " + err )
+        }
     }
     dev.trace("VScript Event Fired - " + this.eventName)
     return true // todo: what ._.

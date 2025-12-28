@@ -1,62 +1,91 @@
-## BBox Casting Algorithm
-
-This document describes the implementation of a highly optimized BBox (Bounding Box) Casting algorithm used for precise collision detection in a game environment. This algorithm is designed to be performant even when dealing with a large number of entities, ensuring minimal impact on frame rate. This algorithm belongs to the class of algorithms that utilize approximation and heuristics to achieve practical performance in collision detection. :>
+<div align="center">
+    <h1>BBox Casting Algorithm</h1>
+    <img src="https://github.com/LaVashikk/portal2-BBoxCast-v1/raw/main/other/logo.png" alt="Logo" width="350" height="350">
+</div>
+<br>
+This document describes the implementation of an optimized BBox (Bounding Box) Casting algorithm for precise ray-entity collision detection. The algorithm uses analytical ray-AABB intersection methods combined with aggressive caching to achieve practical performance in production environments.
 
 ### Algorithm Overview
 
-The BBox Casting algorithm utilizes a multi-tiered search approach with caching and refinement techniques to efficiently determine if a ray intersects with the bounding box of any entity within the game world. This approach minimizes the number of expensive collision checks, significantly improving performance compared to a naive brute-force approach.
+The BBox Casting algorithm employs a two-phase approach: a broad-phase search to collect candidate entities, followed by a narrow-phase analytical intersection test using the slab method. This architecture minimizes expensive operations while maintaining precision through mathematical ray-AABB intersection rather than point sampling.
 
-### Algorithm Steps:
+The implementation is built around the `BboxTraceAnalyzer` class, which manages trace execution, entity filtering, and result caching through the `BufferedEntity` system.
 
-1. **Initial Position Validation:** The algorithm starts by validating the initial starting position of the ray to ensure it is within the allowed bounds. If invalid, the algorithm immediately returns the starting position and no entity, guaranteeing correctness and preventing potential scripting errors.
+### Algorithm Steps / Pipeline
 
-2. **Initial Trace:** A fast, inexpensive trace using the standard `TraceLine` function is performed to get an initial hit position against the world geometry, providing a baseline for further analysis.
+1. Bounds guard
+   - If start position fails a world-bounds check, return [start, null, null]. This avoids broken traces and scripting errors.
 
-3. **Segment-Based Search:** The ray's trajectory from the start position to the initial hit position is divided into segments based on a predefined `JumpPercent` constant. This segmentation allows for localized searches, improving efficiency.
+2. World trace budget
+   - Run TraceLine(start, end) once to get the world hit point. The algorithm only searches entities up to this distance.
 
-4. **"Dirty" Search (Entity Collection with Preliminary Filtering):** For each segment, a "dirty search" is performed using `Entities.FindByClassnameWithin()`, checking for entities within a sphere centered at the segment's midpoint. The sphere's radius is dynamically calculated based on the segment's length and a scaling factor. For each entity found:
-    *   **Filtering and Caching:** Entities undergo filtering based on the `TracePlus.Settings` object (ignore classes, priority classes, custom filters). To avoid redundant calculations, a caching mechanism (`EntBufferTable`) stores entity information (origin, bounding box dimensions) for entities that haven't changed their position. This cached data is reused in subsequent checks.
-    *   **AABB Intersection Test:** A fast `RayAabbIntersect` function checks if the ray segment intersects with the entity's bounding box. If an intersection is found, the `BufferedEntity` is added to the `entBuffer`. If not, it is marked to be ignored (`ignoreMe = true`) in subsequent segments, preventing unnecessary checks and further improving efficiency.
+3. Segmentation
+   - Split the ray into 4 equal segments (step = 0.25). For each segment, define a sub-ray centered on the segment and use its half-length as the search radius for candidate collection.
 
-5. **Deep Search (Precise Collision Check):** If the "dirty search" yields any filtered entities in the `entBuffer`, a "deep search" is initiated within the current segment. This search iterates through a number of points along the segment, determined by the `searchSteps` which is based on the search radius and `depthAccuracy` setting in `TracePlus.Settings`. For each point, a precise `PointInBBox()` check is performed to determine if the point lies within the bounding box of any entity in the `entBuffer`.
+4. Candidate collection (dirty phase)
+   - Enumerate entities within a sphere centered at the current segment center with radius equal to half the segment length.
+   - Perform fast ignore checks:
+     - Single-entity ignore (if ignoreEntities is a single instance).
+     - Indexed ignore set (if ignoreEntities is an array/List).
+     - Global ignore map (TracePlusIgnoreEnts), if present.
+   - Resolve or rebuild a BufferedEntity from a global cache (EntBufferTable) keyed by entindex:
+     - Cache includes entindex, classname, modelname, rounded origin (millimeter precision), and world-space AABB.
+     - If the entity moved (origin rounded changed) or became invalid, the cache entry is rebuilt.
+   - Run shouldHitEntityCached once per trace for the entity:
+     - Apply settings.ApplyIgnoreFilter(ent): if true → skip.
+     - Apply settings.ApplyCollisionFilter(ent): if true → keep.
+     - Otherwise, check class/model lists from settings:
+       - IgnoreClasses and IgnoredModels use substring matching; PriorityClasses overrides IgnoreClasses for matching classes.
+     - Result is cached per-trace in BufferedEntity (no repeated calls within the same trace).
+   - Handle “start inside”:
+     - If the trace begins inside the entity’s AABB (first segment), the entity is flagged to be skipped to avoid immediate self-hits.
+   - Broad-phase intersection:
+     - A fast RayAabbIntersectFast over the current sub-ray gates the expensive narrow phase. A per-entity flag controls subsequent reuse to avoid repeated broad-phase work.
 
-6. **Binary Refinement (Optional):** If the `bynaryRefinement` setting in `TracePlus.Settings` is enabled, and a point is found inside the bounding box during the "deep search," an additional binary refinement search is performed. This search iteratively narrows down the hit point to a more precise location within the bounding box, improving accuracy, especially for surface normal calculations.
+5. Narrow phase (analytic)
+   - For candidates in the current segment, compute the exact hit using an unrolled slab intersection (RayAabbHitOptimized), which returns:
+     - hit flag
+     - entry t in [0, 1] along the sub-ray
+     - exit t
+     - axis-aligned face normal
+   - Keep the closest entry (smallest t). If a hit is found in the segment, compute the hit point and return immediately.
 
-7. **Result Handling:** If a collision is confirmed during the "deep search" (with or without binary refinement), the algorithm returns the refined hit point and the corresponding entity, indicating a successful hit. If no collision is found within a segment, the entity buffer is cleared, and the algorithm proceeds to the next segment.
+6. Optional refinement
+   - If settings.bynaryRefinement is enabled and the hit is not at the ends of the sub-ray, refine the point with a short binary search in a tight window around t. Iteration count is small by design to cap cost.
 
-8. **Final Result:** If no intersection is found after processing all segments, the algorithm returns the initial hit position obtained in the first step and `null` for the entity, indicating that the ray did not hit any entity's bounding box.
+7. Fallback
+   - If no entity was hit after all segments, return the world TraceLine hit position and null.
 
-### Optimizations:
+### Optimizations
 
-*   **Initial Position Validation:** Prevents errors and ensures algorithm reliability.
-*   **Segment-Based Search:** Dividing the ray into segments and performing a coarse "dirty search" before a more precise "deep search" drastically reduces unnecessary checks, particularly when entities are sparsely distributed.
-*   **Entity Filtering and Caching:** Using `TracePlus.Settings` and the `EntBufferTable` avoids redundant checks and calculations for ignored entities or entities that haven't moved.
-*   **AABB Intersection Test with Ignore Flag:**  The `RayAabbIntersect` function, coupled with the `ignoreMe` flag for `BufferedEntity`, efficiently filters out entities that are guaranteed not to intersect with the ray in the current and subsequent segments.
-*   **Dynamic Search Radius:** The search radius for `FindByClassnameWithin()` is dynamically adjusted based on the segment's length, ensuring that the search area is appropriate for the current segment.
-*   **Binary Refinement:** The optional binary refinement step further improves the hit point accuracy when enabled.
+**Caching Strategy:**
+- Entity metadata (classname, modelname, entindex) cached once per entity
+- AABB bounds cached with position-change detection via rounded integer comparison
+- shouldHitEntity results cached per-trace via traceId tracking
+- Ignore entities converted to hashmap for O(1) membership testing
 
-### Code Example:
+**Computational Efficiency:**
+- Analytical slab method replaces iterative point sampling
+- Unrolled loop in RayAabbHitOptimized eliminates loop overhead
+- Separate fast/optimized AABB functions avoid unnecessary normal calculation in broad phase
+- Inline Vector comparison avoids function call overhead for cache validation
+- Pre-computed direction vectors reused across slab calculations
 
-```squirrel
-// ... (BufferedEntity class, JumpPercent constant, EntBufferTable) ...
+**Early Termination:**
+- Segment-based processing returns immediately on first hit
+- Per-axis early exit in AABB intersection tests
+- ignoreChecksCalc flag prevents repeated failed checks
+- skipEntity flag handles rays starting inside entities
 
-function TraceLineAnalyzer::Trace(startPos, endPos, ignoreEntities, note = null) {
-    // ... (Initial Position Validation, Initial Trace, entBuffer initialization, halfSegment, segmentsLenght, searchRadius, searchSteps calculations) ...
+**Memory Management:**
+- Entity buffer uses plain array instead of heavier collection types
+- Buffer cleared after each segment to prevent unbounded growth
+- Global EntBufferTable persists across traces for cross-trace caching
 
-    for (local segment = 0; segment < 1; segment += JumpPercent) {
-        // ... ("Dirty Search" with RayAabbIntersect logic) ...
+### Legacy Algorithm
 
-        // ... ("Deep Search" logic) ...
+A fallback implementation (outdated version) remains available for edge cases where the analytical approach may produce unexpected results. It can be enabled globally via `USE_LEGACY_BBOXCAST_ANALYZER = true`. The legacy algorithm uses point sampling along ray segments rather than analytical intersection, trading precision and performance for simpler logic. In practice, the analytical algorithm has proven stable and the legacy path is rarely needed.
 
-        // ... (Binary Refinement logic - optional) ...
+### Conclusion
 
-        // ... (Cleanup buffer) ...
-    }
-
-    // ... (Return result) ...
-}
-```
-
-### Conclusion:
-
-The BBox Casting algorithm implemented here presents a highly optimized solution for accurate and efficient collision detection in a game environment. By utilizing a tiered search strategy, caching relevant data, employing early termination techniques with AABB intersection testing, and offering optional binary refinement, this algorithm minimizes computational overhead and ensures smooth gameplay even in scenarios involving numerous entities.
+This BBox Casting implementation achieves precise ray-entity collision detection through analytical geometry while maintaining practical performance via aggressive caching and multi-phase filtering. The slab method provides exact intersection points and surface normals without iterative sampling, while the caching architecture eliminates redundant expensive operations. The segmented traversal with early termination ensures that computational cost scales with hit distance rather than total ray length, making the algorithm suitable for real-time game environments with dynamic entity populations.

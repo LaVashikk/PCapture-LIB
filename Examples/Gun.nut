@@ -1,5 +1,5 @@
 // Initialize the PCapture-Lib library. This must be done before any library functions are used.
-DoIncludeScript("PCapture-Lib", getroottable())
+DoIncludeScript("PCapture-Lib/SRC/PCapture-Lib", getroottable())
 
 // A simple weapon class demonstrating various PCapture-Lib features.
 class Weapon {
@@ -80,7 +80,7 @@ class Weapon {
         // Perform a precise BBox raycast from the player's eyes that correctly interacts with portals.
         local trace = TracePlus.FromEyes.PortalBbox(3000, this.player)
         // Use the dev utility to draw a small box at the hit position for debugging.
-        dev.drawbox(trace.GetHitpos(), Vector(50, 25, 25), 0.7)
+        dev.drawbox(trace.GetHitPos(), Vector(50, 25, 25), 0.7)
         // If the trace hit a world brush (like a wall), do nothing further.
         if(trace.DidHitWorld()) return
 

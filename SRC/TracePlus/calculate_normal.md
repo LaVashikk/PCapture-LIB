@@ -34,28 +34,8 @@ This algorithm calculates the impact normal for dynamic entities using an optimi
 
 4. **Verify Normal Direction:** The dot product of the face normal and the trace direction vector is calculated. If the dot product is positive, it indicates that the normal vector is pointing in the wrong direction (towards the trace origin), and it's inverted.
 
-5. **Fallback to `CalculateImpactNormalFromBbox2`:** If `_getFaceVertices` fails to find four suitable vertices (e.g., due to an inaccurate hit point), the algorithm falls back to the `CalculateImpactNormalFromBbox2` method.
-
-### 3. Fallback Bounding Box Normal Calculation (`CalculateImpactNormalFromBbox2`)
-
-This algorithm serves as a fallback when the `CalculateImpactNormalFromBbox` method cannot determine the normal vector reliably. It provides a less precise but more robust way to estimate the normal using the three closest vertices of the bounding box.
-
-**Steps:**
-
-1. **Retrieve Bounding Box Vertices:** The eight vertices of the hit entity's bounding box are retrieved.
-
-2. **Find Three Closest Vertices:** The three vertices closest to the hit point are identified based on their Euclidean distance.
-
-3. **Calculate Triangle Normal:** The normal vector of the triangle formed by the three closest vertices is calculated using the cross product of two edge vectors of the triangle.
-
-4. **Verify Normal Direction:** Similar to the previous algorithm, the dot product of the triangle normal and the trace direction vector is checked, and the normal vector is inverted if necessary.
-
-**Limitations:**
-
-This method can be less accurate, especially for rectangular objects, as the three closest vertices might not always represent the actual surface orientation at the hit point. For example, if the hit point is near a corner of a rectangular object, the closest vertices might be on opposite corners, leading to an incorrect normal calculation.
-
+    5. **Fallback:** If `_getFaceVertices` fails to find four suitable vertices (e.g., due to an inaccurate hit point), the algorithm falls back to a less precise but robust calculation or returns a default.
 
 **Conclusion:**
 
-The `calculate_normal.nut` file provides three different algorithms for calculating impact normals, each with its own strengths and limitations. The choice of algorithm depends on the type of surface being hit (world geometry or dynamic entity) and the desired level of accuracy. The optimized `CalculateImpactNormalFromBbox` method is generally preferred for dynamic entities, while the fallback `CalculateImpactNormalFromBbox2` method provides a more robust but potentially less precise alternative. The `CalculateImpactNormal` method is suitable for world geometry where the three-ray method can be applied reliably.
-
+The `calculate_normal.nut` file provides different algorithms for calculating impact normals. The choice of algorithm depends on the type of surface being hit (world geometry or dynamic entity) and the desired level of accuracy. The optimized `CalculateImpactNormalFromBbox` method is generally preferred for dynamic entities. The `CalculateImpactNormal` method is suitable for world geometry where the three-ray method can be applied reliably.

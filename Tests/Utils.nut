@@ -50,15 +50,15 @@ utils_tests <- {
         return assert(macros.GetPostfix("prefix-postfix") == "-postfix")
     },
 
-    function macros_isEqually() {
+    function macros_IsEqual() {
         return assert(
-            macros.isEqually(11343, 11343) && 
-            macros.isEqually(1.543543, 1.54354) &&
-            macros.isEqually(Vector(1,2,3.43), Vector(1,2,3.43)) &&
-            macros.isEqually(GetPlayer(), GetPlayer()) && 
-            macros.isEqually(GetPlayerEx(), GetPlayer()) && 
-            macros.isEqually(math.Quaternion.fromEuler(Vector(0, 90, 0)), math.Quaternion.fromEuler(Vector(0, 90, 0))) && 
-            macros.isEqually(math.Matrix.fromEuler(Vector(0, 90, 0)), math.Matrix.fromEuler(Vector(0, 90, 0)))
+            macros.IsEqual(11343, 11343) && 
+            macros.IsEqual(1.543543, 1.54354) &&
+            macros.IsEqual(Vector(1,2,3.43), Vector(1,2,3.43)) &&
+            macros.IsEqual(GetPlayer(), GetPlayer()) && 
+            macros.IsEqual(GetPlayerEx(), GetPlayer()) && 
+            macros.IsEqual(math.Quaternion.fromEuler(Vector(0, 90, 0)), math.Quaternion.fromEuler(Vector(0, 90, 0))) && 
+            macros.IsEqual(math.Matrix.fromEuler(Vector(0, 90, 0)), math.Matrix.fromEuler(Vector(0, 90, 0)))
         )
     }
 }

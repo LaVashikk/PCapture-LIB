@@ -15,7 +15,6 @@ The `ActionScheduler` module provides an enhanced system for creating and managi
     * [`AddActions(eventName, actions, noSort)`](#scheduleeventaddactionseventname-actions-nosort)
     * [`Cancel(eventName, delay)`](#scheduleeventcanceleventname-delay)
     * [`TryCancel(eventName, delay)`](#scheduleeventtrycanceleventname-delay)
-    * [`CancelByAction(action, delay)`](#scheduleeventcancelbyactionaction-delay)
     * [`CancelAll()`](#scheduleeventcancelall)
     * [`GetEvent(eventName)`](#scheduleeventgeteventeventname)
     * [`IsValid(eventName)`](#scheduleeventisvalideventname)
@@ -29,7 +28,7 @@ The `ActionScheduler` module provides an enhanced system for creating and managi
 
 This file defines the `ScheduleAction` class, which represents a single action scheduled for execution at a specific time.
 
-### `ScheduleAction(scope, action, timeDelay, args)`
+### `ScheduleAction(scope, action, delay, args)`
 
 **Constructor** 
 
@@ -51,7 +50,15 @@ local myAction = ScheduleAction(myEntity, function() {
 ```
 
 ### `run()`
-Executes the scheduled action. If the action is a string, it is compiled into a function before execution. If arguments are provided, they are passed to the action function.
+Executes the scheduled action. If the action is a string, it is compiled into a function before execution. If arguments are provided, they are passed to the action function. This method is called by the `ScheduledEventLoop` and should not be called manually.
+
+### `processGenerator(generator, eventName)`
+Processes a generator function that has been returned from a scheduled action. This function is responsible for pausing the generator and rescheduling it to continue execution after the specified delay. This is used internally by the `ScheduledEventLoop` to handle asynchronous actions.
+
+**Parameters:**
+
+* `generator` (generator): The generator to process.
+* `eventName` (string): The name of the event the generator belongs to.
 
 **Example:**
 
@@ -98,7 +105,7 @@ ScheduleEvent.Add("my_event", function(name) {
 
 #### Using the `scope` parameter
 
-The `scope` parameter is essential for correctly handling delayed events within classes.  It allows you to specify the context in which the scheduled action will be executed.  When you schedule an action within a class method, passing `this` as the `scope` ensures that the action has access to the class instance's properties and methods.
+The `scope` parameter is essential for correctly handling delayed events within classes. When you schedule an action from a class method, the context of `this` can be lost when the action is executed later. By passing `this` as the `scope`, you ensure that the action executes within the correct class instance, allowing it to access the instance's properties and methods.
 
 **Example:**
 
@@ -108,12 +115,13 @@ class MyClass {
 
     function myMethod() { 
         // Schedule an event to call another method of this class after 1 second.
+        // We pass 'this' as the scope to ensure that 'anotherMethod' is called on the correct instance.
         ScheduleEvent.Add("my_event", function() {
             this.anotherMethod()  // Access another method of the class instance.
             printl(this.something)
-        }, 1, null, this)  // Pass "this" as the scope. 
+        }, 1, null, this)
 
-        // Alternative:
+        // An alternative way is to pass the scope as an argument.
         // ScheduleEvent.Add("my_event", function(scope) {
         //     scope.anotherMethod() 
         //     printl(scope.something)
@@ -154,7 +162,7 @@ Adds multiple actions to a scheduled event.
 
 * `eventName` (string): The name of the event to add the actions to.
 * `actions` (array or List): An array or List of `ScheduleAction` objects to add to the event.
-* `noSort` (boolean, optional): If true, the actions will not be sorted by execution time (default is false).
+* `noSort` (boolean, optional): If `true`, the actions will not be sorted by execution time if the event is being created for the first time. **Warning:** If the event already exists, the actions will always be sorted, regardless of this parameter.
 
 **Example:**
 
@@ -168,7 +176,7 @@ ScheduleEvent.AddActions("my_event", actions) // Actions will be sorted by execu
 ```
 
 ### `ScheduleEvent.Cancel(eventName, delay)`
-Cancels all scheduled actions within an event with the given name.
+Cancels all scheduled actions within an event and removes the event itself.
 
 **Parameters:**
 
@@ -199,27 +207,6 @@ The same as `ScheduleEvent.Cancel`, but does not cause an error if the event is 
 ScheduleEvent.TryCancel("my_event") 
 ```
 
-
-### `ScheduleEvent.CancelByAction(action, delay)`
-Cancels all scheduled actions that match the given action.
-
-**Parameters:**
-
-* `action` (string or function): The action to cancel.
-* `delay` (number, optional): An optional delay in seconds before canceling the actions.
-
-**Example:**
-
-```js
-function test() {
-    // do something
-}
-
-ScheduleEvent.Add("my_test_event", test, 1)
-
-ScheduleEvent.CancelByAction(test)
-```
-
 ### `ScheduleEvent.CancelAll()`
 Cancels all scheduled events and actions.
 
@@ -227,6 +214,16 @@ Cancels all scheduled events and actions.
 
 ```js
 ScheduleEvent.CancelAll() // Cancel all scheduled events and actions
+```
+
+### `ScheduleEvent.UNSAFE_ClearWithGlobal()`
+Cancels all scheduled events and actions, **including the global event queue**. 
+
+**WARNING:** This is an unsafe function and should be used with extreme caution. Clearing the global event queue can have unintended consequences and break other parts of the library or game scripts that rely on it.
+
+**Example:**
+```js
+ScheduleEvent.UNSAFE_ClearWithGlobal() // Use with caution!
 ```
 
 ### `ScheduleEvent.GetEvent(eventName)`
@@ -250,7 +247,7 @@ if (eventActions) {
 ```
 
 ### `ScheduleEvent.IsValid(eventName)`
-Checks if a scheduled event with the given name exists and has scheduled actions.
+Checks if a scheduled event with the given name exists.
 
 **Parameters:**
 
@@ -258,13 +255,13 @@ Checks if a scheduled event with the given name exists and has scheduled actions
 
 **Returns:**
 
-* (boolean): True if the event exists and has scheduled actions, false otherwise.
+* (boolean): True if the event exists, false otherwise.
 
 **Example:**
 
 ```js
 if (ScheduleEvent.IsValid("my_event")) {
-    // The event exists and has scheduled actions
+    // The event exists
 }
 ```
 
@@ -320,9 +317,9 @@ The `"async_loop"` event showcases how you can leverage `yield` to create asynch
 
 The `ScheduledEventLoop` now includes robust error handling for scheduled events. If an error occurs during the execution of a scheduled action, the following information will be printed to the console:
 
-* **Error Message:**  The specific error message that occurred.
-* **Callstack:**  A trace of the function calls that led to the error, allowing you to pinpoint the source of the problem.
-* **Scheduled Event Info:** Details about the scheduled event that triggered the error, including the event name and any associated data.
-* **Function Info:**  Information about the specific action function that caused the error.
+*   **Error Message:** The specific error message that occurred.
+*   **Callstack:** A trace of the function calls that led to the error, allowing you to pinpoint the source of the problem.
+*   **Scheduled Event Info:** Details about the scheduled event that triggered the error, including the event name and any associated data.
+*   **Function Info:** Information about the specific action function that caused the error.
 
-This comprehensive error handling ensures that errors within scheduled events are caught and reported without crashing the entire system.  Other scheduled events will continue to execute as expected. To see this information, set the logger level to `Trace`.
+This comprehensive error handling ensures that errors within scheduled events are caught and reported without crashing the entire system. Other scheduled events will continue to execute as expected. Additional debug information, such as event creation and cancellation traces, can be seen by setting the logger level to `Trace`.
