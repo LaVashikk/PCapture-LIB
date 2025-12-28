@@ -129,16 +129,16 @@ tracePlusTests <- {
 
     function traceSettingsApplyCollisionFilterTest() {
         local settings = TracePlus.Settings.new()
-        local filterFunction = function(_ent, _note) { return 1708 }
+        local filterFunction = function(_ent) { return 1708 }
         settings.SetCollisionFilter(filterFunction)
-        return assert(settings.ApplyCollisionFilter(GetPlayerEx(), null) == 1708)
+        return assert(settings.ApplyCollisionFilter(GetPlayerEx()) == 1708)
     },
 
     function traceSettingsApplyIgnoreFilterTest() {
         local settings = TracePlus.Settings.new()
-        local filterFunction = function(_ent, _note) { return false }
+        local filterFunction = function(_ent) { return false }
         settings.SetIgnoreFilter(filterFunction)
-        return assert(settings.ApplyIgnoreFilter(GetPlayerEx(), null) == false)
+        return assert(settings.ApplyIgnoreFilter(GetPlayerEx()) == false)
     },
 
     function traceSettingsUpdateIgnoreEntitiesTest() {
