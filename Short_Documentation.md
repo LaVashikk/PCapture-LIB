@@ -218,7 +218,7 @@ Provides enhanced data structures.
 | [`reduce(func: function, initial: any) -> any`](SRC/IDT/readme.md#reducefunc-initial) | Reduces the list. |
 | [`totable() -> table`](SRC/IDT/readme.md#totable) | Converts to table. |
 | [`toarray() -> array`](SRC/IDT/readme.md#toarray) | Converts to array. |
-| [`swapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#swapNodenode1-node2) | Swaps nodes. |
+| [`SwapNode(node1: ListNode, node2: ListNode)`](SRC/IDT/readme.md#SwapNodenode1-node2) | Swaps nodes. |
 
 
 ### [`IDT/tree_sort.nut`](SRC/IDT/readme.md#idttree_sortnut)

@@ -200,6 +200,8 @@
                 getroottable()[funcName] <- script
             }
             script = funcName + "()"
+        } else {
+            return this.ConnectOutput(outputName, script)
         }
 
         this.AddOutput(outputName, "!self", "RunScriptCode", script, delay, fires)
@@ -371,7 +373,7 @@
      *
      * @returns {List} A List containing all descendant pcaptEntity objects.
     */    
-    function GetAllChildrenRecursivly() {
+    function GetAllChildrenRecursively() {
         local descendantsList = List();
         _findDescendantsRecursive(this.CBaseEntity, descendantsList);
 

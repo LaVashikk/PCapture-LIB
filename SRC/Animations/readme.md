@@ -6,7 +6,7 @@ The `Animations` module provides functions for creating various animations in VS
 
 1.  [init.nut](#initnut)
     *   [`AnimEvent`](#animeventname-settings-entities-time0)
-    *   [Animation Settings Table (propertySetter)](#animation-settings-table-propertysetter)
+    *   [Animation Settings Table (propertySetter)](#animation-settings-table)
     *   [`applyAnimation`](#animateapplyanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes)
     *   [`applyRTAnimation`](#animateapplyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes)
 2.  [alpha.nut](#animationsalphanut)

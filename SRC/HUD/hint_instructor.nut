@@ -58,7 +58,7 @@ HUD["HintInstructor"] <- class {
     // Sets the icon to display when the hint is on-screen.  
     function SetIconOnScreen(icon) null
     // Sets the icon to display when the hint is off-screen.  
-    function SetIconOffScreen(bind) null
+    function SetIconOffScreen(icon) null
     // Sets the hold time (duration) of the hint.  
     function SetHoldTime(time) null
     // Sets the distance at which the hint is visible.  

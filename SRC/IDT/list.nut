@@ -33,6 +33,7 @@
      * @returns {List} - The new list containing the elements from the array.
     */
     function FromArray(array) {
+        if(typeof array != "array") throw("Expected array, got " + typeof array)
         local list = List()
         foreach(val in array) 
             list.append(val)
@@ -595,6 +596,7 @@
                              "Example: foreach (item in yourList.iter()) { ... }" +
                              callstack
 
+        printl(errorMessage)
         throw(errorMessage)
     }
 }

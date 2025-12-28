@@ -62,7 +62,7 @@ The `IDT` module provides enhanced versions of standard VScripts data structures
     * [`reduce(func, initial)`](#reducefunc-initial)
     * [`totable()`](#totable)
     * [`toarray()`](#toarray)
-    * [`swapNode(node1, node2)`](#swapNodenode1-node2)
+    * [`SwapNode(node1, node2)`](#SwapNodenode1-node2)
 3. [IDT/tree_sort.nut](#idttree_sortnut)
     * [`AVLTree(...)`](#avltree)
     * [`FromArray(array)`](#fromarrayarray)
@@ -1132,7 +1132,7 @@ Converts the list to an array.
 local myArray = myList.toarray()
 ```
 
-### `swapNode(node1, node2)`
+### `SwapNode(node1, node2)`
 **This is a global function, not the method of List class**. Swaps two nodes in the list. This method updates the references of the previous and next nodes accordingly.
 
 **Parameters:**
@@ -1145,7 +1145,7 @@ local myArray = myList.toarray()
 ```js
 local nodeA = myList.getNode(0)
 local nodeB = myList.getNode(1)
-List.swapNode(nodeA, nodeB)
+List.SwapNode(nodeA, nodeB)
 ```
 
 ## [IDT/tree_sort.nut](tree_sort.nut)
