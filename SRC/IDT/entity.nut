@@ -667,8 +667,7 @@
 
         // If there is no parent, local coordinates are equivalent to absolute coordinates.
         if (!pParent) {
-            this.CBaseEntity.SetOrigin(desiredAbsVec)
-            return
+            return this.CBaseEntity.SetOrigin(desiredAbsVec)
         }
 
         // We have parent, so we need to convert the desired ABSOLUTE coordinates into LOCAL coordinates.
@@ -682,6 +681,17 @@
         local localPos = math.vector.unrotate(worldOffsetVector, parentWorldAng)
 
         this.SetOrigin(localPos)
+    }
+
+    /*
+     * Sets the entity's absolute origin using the native engine method.
+     * Unlike the custom SetAbsOrigin, this method handles attachment parents correctly.
+     * However, it causes client-side interpolation (visual sliding) when moving the entity.
+     *
+     * @param {Vector} desiredAbsVec - The desired absolute position in world coordinates.
+    */
+    function SetAbsOriginNative(desiredAbsVec) {
+        this.CBaseEntity.SetAbsOrigin(desiredAbsVec)
     }
 
     /*
@@ -1009,3 +1019,27 @@ function pcapEntity::SetAngles(x, y, z) this.CBaseEntity.SetAngles(x, y, z)
 function pcapEntity::SetVelocity(vector) this.CBaseEntity.SetVelocity(vector)
 function pcapEntity::SetBBox(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)
 function pcapEntity::SetSize(mins, maxs) this.CBaseEntity.SetSize(mins, maxs)
+
+// KeyValues manipulation
+function pcapEntity::__KeyValueFromInt(key, value) return this.CBaseEntity.__KeyValueFromInt(key, value)
+function pcapEntity::__KeyValueFromFloat(key, value) return this.CBaseEntity.__KeyValueFromFloat(key, value)
+function pcapEntity::__KeyValueFromString(key, value) return this.CBaseEntity.__KeyValueFromString(key, value)
+function pcapEntity::__KeyValueFromVector(key, value) return this.CBaseEntity.__KeyValueFromVector(key, value)
+
+// Hierarchy & Movement relations
+function pcapEntity::FirstMoveChild() return this.CBaseEntity.FirstMoveChild()
+function pcapEntity::GetMoveParent() return this.CBaseEntity.GetMoveParent()
+function pcapEntity::GetRootMoveParent() return this.CBaseEntity.GetRootMoveParent()
+function pcapEntity::NextMovePeer() return this.CBaseEntity.NextMovePeer()
+function pcapEntity::GetOwner() return this.CBaseEntity.GetOwner()
+function pcapEntity::SetOwner(ent) this.CBaseEntity.SetOwner(ent)
+
+// State & Game
+function pcapEntity::GetPreTemplateName() return this.CBaseEntity.GetPreTemplateName()
+function pcapEntity::GetTeam() return this.CBaseEntity.GetTeam()
+function pcapEntity::SetTeam(team) this.CBaseEntity.SetTeam(team)
+function pcapEntity::GetSoundDuration(soundName, actorModel = "") return this.CBaseEntity.GetSoundDuration(soundName, actorModel)
+
+// Transform & Velocity
+function pcapEntity::GetVelocity() return this.CBaseEntity.GetVelocity()
+function pcapEntity::SetAngularVelocity(pitch, yaw, roll) this.CBaseEntity.SetAngularVelocity(pitch, yaw, roll)
