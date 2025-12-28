@@ -212,7 +212,6 @@ idt_tests <- {
         local list1 = List(1, 2)
         local list2 = List(3, 4)
         list1.extend(list2)
-        printl(list1)
         return assert(list1.len() == 4 && list1[2] == 3 && list1[3] == 4)
     },
 
@@ -226,8 +225,6 @@ idt_tests <- {
         list1.extend(list2)
         list1.extend(list3)
         list1.extend(list4)
-
-        printl(list1)
         
         for(local i = 1; i < list1.len(); i++) {
             if(list1[i - 1] > list1[i]) {
@@ -334,24 +331,17 @@ idt_tests <- {
         return assert(ent.GetName() == "test_entity")
     },
 
-    function entity_parent_test() {
-        local parentEnt = entLib.CreateByClassname("prop_dynamic")
-        local childEnt = entLib.CreateByClassname("prop_dynamic")
-        childEnt.SetParent(parentEnt)
-        return assert(childEnt.GetParent() == parentEnt)
+    function entity_collision_test() {
+        local ent = entLib.CreateByClassname("prop_dynamic")
+        ent.SetCollision(2) 
+        return assert(ent.GetKeyValue("Solidtype") == 2)
     },
 
-    // function entity_collision_test() {
-    //     local ent = entLib.CreateByClassname("prop_dynamic")
-    //     ent.SetCollision(2) 
-    //     return assert(ent.GetKeyValue("Solidtype") == 2)
-    // },
-
-    // function entity_collision_group_test() {
-    //     local ent = entLib.CreateByClassname("prop_dynamic")
-    //     ent.SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-    //     return assert(ent.GetCollisionGroup() == COLLISION_GROUP_DEBRIS)
-    // },
+    function entity_collision_group_test() {
+        local ent = entLib.CreateByClassname("prop_dynamic")
+        ent.SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+        return assert(ent.GetKeyValue("CollisionGroup") == COLLISION_GROUP_DEBRIS)
+    },
 
     function entity_alpha_test() {
         local ent = entLib.CreateByClassname("prop_dynamic")
@@ -386,8 +376,9 @@ idt_tests <- {
     function entity_bbox_test() {
         local ent = entLib.CreateByClassname("prop_dynamic") 
         ent.SetBBox(Vector(-5, -5, -5), Vector(5, 5, 5))
-        local bbox = ent.GetBBox()
-        return assert(math.vector.isEqually(bbox.min, Vector(-5, -5, -5)) && math.vector.isEqually(bbox.max, Vector(5, 5, 5)))
+        local min = ent.GetBoundingMins()
+        local max = ent.GetBoundingMaxs()
+        return assert(math.vector.IsEqual(min, Vector(-5, -5, -5)) && math.vector.IsEqual(max, Vector(5, 5, 5)))
     },
 
     function entity_context_test() {

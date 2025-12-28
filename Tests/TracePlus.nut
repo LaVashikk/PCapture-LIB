@@ -12,21 +12,21 @@ tracePlusTests <- {
         local player = GetPlayerEx()
         local distance = 100
         local traceResult = TracePlus.FromEyes.Cheap(distance, player)
-        return assert(macros.isEqually(traceResult.GetStartPos(), player.EyePosition()))
+        return assert(macros.IsEqual(traceResult.GetStartPos(), player.EyePosition()))
     },
 
     function bboxTraceTest() {
         local startPos = Vector(0, 0, 0)
         local endPos = Vector(100, 0, 0)
         local traceResult = TracePlus.Bbox(startPos, endPos)
-        return assert(macros.isEqually(traceResult.GetStartPos(), startPos) && macros.isEqually(traceResult.GetEndPos(), endPos))
+        return assert(macros.IsEqual(traceResult.GetStartPos(), startPos) && macros.IsEqual(traceResult.GetEndPos(), endPos))
     },
 
     function bboxTraceFromEyesTest() {
         local player = GetPlayerEx()
         local distance = 100
         local traceResult = TracePlus.FromEyes.Bbox(distance, player)
-        return assert(macros.isEqually(traceResult.GetStartPos(), player.EyePosition()))
+        return assert(macros.IsEqual(traceResult.GetStartPos(), player.EyePosition()))
     },
 
     function portalCheapTraceTest() {
@@ -40,7 +40,7 @@ tracePlusTests <- {
         local player = GetPlayerEx()
         local distance = 100
         local traceResult = TracePlus.FromEyes.PortalCheap(distance, player)
-        return assert(macros.isEqually(traceResult.GetStartPos(), player.EyePosition()))
+        return assert(macros.IsEqual(traceResult.GetStartPos(), player.EyePosition()))
     },
 
     function portalBboxTraceTest() {
@@ -54,7 +54,7 @@ tracePlusTests <- {
         local player = GetPlayerEx()
         local distance = 100
         local traceResult = TracePlus.FromEyes.PortalBbox(distance, player)
-        return assert(macros.isEqually(traceResult.GetStartPos(), player.EyePosition()))
+        return assert(macros.IsEqual(traceResult.GetStartPos(), player.EyePosition()))
     },
 
     function traceSettingsNewTest() {
