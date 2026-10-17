@@ -3,7 +3,6 @@ local mVector = math["vector"]
 
 /*
  * Checks if two vectors are approximately equal, within a certain precision.
- * Rounds the components of both vectors in place (see math.vector.round), then compares them.
  *
  * @param {Vector} vector - The first vector.
  * @param {Vector} other - The second vector.
@@ -11,11 +10,11 @@ local mVector = math["vector"]
  * @returns {boolean} - True if the vectors are approximately equal, false otherwise.
 */
 mVector["IsEqual"] <- function(vector, other, precision = 1000) {
-    vector = math.vector.round(vector, precision)
-    other = math.vector.round(other, precision)
-    return vector.x == other.x && 
-            vector.y == other.y && 
-            vector.z == other.z
+    local v1 = math.vector.round(vector, precision)
+    local v2 = math.vector.round(other, precision)
+    return v1.x == v2.x && 
+            v1.y == v2.y && 
+            v1.z == v2.z
 }
 
 
@@ -119,17 +118,18 @@ mVector["resize"] <- function(vector, newLength) {
 }
 
 /*
- * Rounds the components of a vector to the specified precision, in place.
+ * Rounds the components of a vector to the specified precision.
  *
  * @param {Vector} vec - The vector to round.
  * @param {int} precision - The precision (e.g., 1000 for rounding to three decimal places). (optional, default 1000)
- * @returns {Vector} - The same vector, rounded.
+ * @returns {Vector} - A new vector with rounded components.
 */
 mVector["round"] <- function(vec, precision = 1000) {
-    vec.x = floor(vec.x * precision + 0.5) / precision
-    vec.y = floor(vec.y * precision + 0.5) / precision
-    vec.z = floor(vec.z * precision + 0.5) / precision
-    return vec
+    return Vector(
+        floor(vec.x * precision + 0.5) / precision,
+        floor(vec.y * precision + 0.5) / precision,
+        floor(vec.z * precision + 0.5) / precision
+    )
 }
 
 /* 

@@ -78,6 +78,7 @@ animate["PositionTransitionBySpeed"] <- function(entities, startPos, endPos, spe
     if (typeof endPos != "Vector")                          throw("PositionTransitionBySpeed: 'endPos' argument must be a Vector, but got " + typeof endPos);
     if (typeof speed != "integer" && typeof speed != "float")  throw("PositionTransitionBySpeed: 'speed' argument must be a number, but got " + typeof speed);
     if (typeof animSetting != "table")                      throw("PositionTransitionBySpeed: 'animSetting' argument must be a table, but got " + typeof animSetting);
+    if (speed <= 0) throw("PositionTransitionBySpeed: 'speed' must be greater than 0, but got " + speed)
 
     local animSetting = AnimEvent("position", animSetting, entities)
     local vars = {
@@ -106,6 +107,7 @@ animate.RT["PositionTransitionBySpeed"] <- function(entities, startPos, endPos, 
     if (typeof endPos != "Vector")                          throw("PositionTransitionBySpeed: 'endPos' argument must be a Vector, but got " + typeof endPos);
     if (typeof speed != "integer" && typeof speed != "float")  throw("PositionTransitionBySpeed: 'speed' argument must be a number, but got " + typeof speed);
     if (typeof animSetting != "table")                      throw("PositionTransitionBySpeed: 'animSetting' argument must be a table, but got " + typeof animSetting);
+    if (speed <= 0) throw("PositionTransitionBySpeed: 'speed' must be greater than 0, but got " + speed)
 
     local animSetting = AnimEvent("position", animSetting, entities)
     local vars = {
