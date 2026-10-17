@@ -18,7 +18,7 @@ function AsyncSequence() {
     printl("Async Sequence: Started");
     
     // Step 1: Display a message and play a sound.
-    HUD.ScreenText(Vector(0.5, 0.4, 0), "Sequence Starting...", 2).Enable();
+    HUD.ScreenText("Sequence Starting...", 0.5, 0.4).SetHoldTime(2).Enable();
     player.EmitSound("buttons/button14.wav");
     
     // Pause execution for 2.0 seconds.
@@ -56,7 +56,7 @@ function AsyncSequence() {
     // Step 5: Cleanup.
     printl("Async Sequence: Finished (Deleting prop)");
     prop.Destroy();
-    HUD.ScreenText(Vector(0.5, 0.4, 0), "Sequence Complete", 2).Enable();
+    HUD.ScreenText("Sequence Complete", 0.5, 0.4).SetHoldTime(2).Enable();
 }
 
 // Start the asynchronous sequence.

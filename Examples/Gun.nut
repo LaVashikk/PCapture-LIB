@@ -18,7 +18,7 @@ class Weapon {
         this.player = owner
         // Create a ScreenText HUD element using the HUD module.
         // It's positioned at the bottom-center of the screen and will display for 1.1 seconds each time it's enabled.
-        this.game_text = HUD.ScreenText(Vector(-1, -0.95, 0), "", 1.1)
+        this.game_text = HUD.ScreenText("", -1, -0.95).SetHoldTime(1.1)
         // Set up the input handling for firing and reloading.
         this.InitGameUi()
     }

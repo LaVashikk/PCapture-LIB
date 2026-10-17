@@ -10,10 +10,11 @@ DoIncludeScript("PCapture-Lib/SRC/PCapture-Lib", getroottable())
  */
 
 // Define trace settings to configure what the trace hits and ignores.
-traceSettings <- TracePlus.Settings.new({
-    // Ignore generic trigger entities and the player entity itself.
-    ignoreClasses = ["trigger_", "player"],
-});
+// The defaults already ignore triggers, env_, info_ and the like: add players on top of them
+traceSettings <- TracePlus.Settings().IgnoreClasses("player")
+
+// One hint for the whole scanner, shown for 0.1 s at each scan
+scannerHint <- HUD.HintInstructor("").SetHoldTime(0.1)
 
 // A function that simulates a laser scanner.
 function PerformScannerTrace() {
@@ -59,11 +60,11 @@ function PerformScannerTrace() {
             local msg = "Hit: " + entity.GetClassname();
             if (entity.GetModelName() != "") msg += "      (" + entity.GetModelName() + ")";
             
-            // Show a hint at the hit location.
-            HUD.HintInstructor(msg, 0.1, "icon_tip", 1).Enable();
+            // Show a hint at the hit location. The same hint object every time: each Enable replaces its previous hint.
+            scannerHint.SetText(msg).Enable();
         } else {
              // If the world (brushes/walls) was hit.
-             HUD.HintInstructor("Hit World", 0.1, "icon_tip", 1).Enable();
+             scannerHint.SetText("Hit World").Enable();
         }
     }
 

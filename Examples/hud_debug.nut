@@ -16,10 +16,11 @@ class HudDebugDemo {
         // Create a persistent screen text element using the HUD module.
         // Positioned at x=0.05, y=0.1 (Top-Left area).
         // Holdtime is set high (9999) because we will manually update/refresh it.
-        this.textElement = HUD.ScreenText(Vector(0.05, 0.1, 0), "", 9999)
-        this.textElement.SetColor("100 255 100") // Light Green
-        this.textElement.SetChannel(1)
-        this.textElement.Enable()
+        this.textElement = HUD.ScreenText("", 0.05, 0.1)
+            .SetHoldTime(9999)
+            .SetColor(Vector(100, 255, 100)) // Light Green
+            .SetChannel(1)
+            .Enable()
 
         // Start the update loop.
         this.Update()
@@ -40,7 +41,7 @@ class HudDebugDemo {
         // Update the text content and refresh the display.
         // Debug-only pattern: every unique text stays in the engine string pool until the map changes,
         // so a shipped map should not push a new unique string ten times a second for hours.
-        this.textElement.SetText(info).Update()
+        this.textElement.SetText(info).Enable()
 
         // 2. Debug Visualization.
         // Find the nearest cube within 300 units of the player.
