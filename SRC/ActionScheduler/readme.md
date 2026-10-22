@@ -1,325 +1,287 @@
 # ActionScheduler Module
 
-The `ActionScheduler` module provides an enhanced system for creating and managing scheduled events in VScripts. It offers more flexibility and control compared to standard mechanisms like `EntFireByHandle`, allowing you to create complex sequences of actions, schedule them with precise timing, and cancel them as needed.
+Run code later, repeat it every few seconds, write step-by-step sequences with pauses, and cancel any of it at any moment. Everything goes through `ScheduleEvent`.
 
 ## Table of Contents
 
-1.  [action.nut](#actionnut)
-    * [`ScheduleAction(scope, action, timeDelay, args)`](#scheduleactionscope-action-timedelay-args)
-    * [`run()`](#run)
-2.  [action_scheduler.nut](#actionscheduleraction_schedulernut)
-    * [`Add(eventName, action, timeDelay, args, scope)`](#scheduleeventaddeventname-action-timedelay-args-scope)
-        *   [Using the `args` parameter](#using-the-args-parameter)
-        *   [Using the `scope` parameter](#using-the-scope-parameter)
-    * [`AddInterval(eventName, action, interval, initialDelay, args, scope)`](#scheduleeventaddintervaleventname-action-interval-initialdelay-args-scope)
-    * [`AddActions(eventName, actions, noSort)`](#scheduleeventaddactionseventname-actions-nosort)
-    * [`Cancel(eventName, delay)`](#scheduleeventcanceleventname-delay)
-    * [`TryCancel(eventName, delay)`](#scheduleeventtrycanceleventname-delay)
-    * [`CancelAll()`](#scheduleeventcancelall)
-    * [`GetEvent(eventName)`](#scheduleeventgeteventeventname)
-    * [`IsValid(eventName)`](#scheduleeventisvalideventname)
-3.  [event_handler.nut](#event_handlernut)
-    * [`ScheduledEventLoop()`](#scheduledeventloop)
-4.  [Enhanced Scheduling Features](#enhanced-scheduling-features)
-    * [Asynchronous Actions](#asynchronous-actions)
-    * [Error Handling](#error-handling)
+* [How it works](#how-it-works)
+* [What do I need?](#what-do-i-need)
+* [Recipes](#recipes)
+	* [Do something later](#do-something-later)
+	* [Repeat every N seconds, and stop it](#repeat-every-n-seconds-and-stop-it)
+	* [Pass values to the action](#pass-values-to-the-action)
+	* [Call a method of an object](#call-a-method-of-an-object)
+	* [A sequence with pauses (yield)](#a-sequence-with-pauses-yield)
+	* [Cancel a whole sequence](#cancel-a-whole-sequence)
+	* [Cancel later, or only if it exists](#cancel-later-or-only-if-it-exists)
+	* [Delayed entity changes and inputs](#delayed-entity-changes-and-inputs)
+* [When an action throws an error](#when-an-action-throws-an-error)
+* [Common mistakes](#common-mistakes)
+* [Reference](#reference)
+* [Advanced](#advanced)
 
-## [ActionScheduler/action.nut](action.nut)
+## How it works
 
-This file defines the `ScheduleAction` class, which represents a single action scheduled for execution at a specific time.
+You schedule an **action** (a function, or a string of code) to run after a delay. Every action belongs to an **event**: just a name you pick, like `"door_sequence"`. The name has one job: you can cancel all the actions under it at once with `ScheduleEvent.Cancel("door_sequence")`.
 
-### `ScheduleAction(scope, action, delay, args)`
+* An event appears when you add the first action to it and disappears when its last action has run. There is nothing to create or clean up.
+* The event `"global"` always exists and **can't be cancelled**. Use it only for things you never want to stop.
+* Delays are in seconds, counted from the moment you call `Add`. The scheduler checks the actions every tick, so an action runs on the first tick at or after its time.
 
-**Constructor** 
+![Cancel drops the actions that haven't run yet](img/cancel_timeline.png)
 
-Creates a new `ScheduleAction` object representing a scheduled action.
+## What do I need?
 
-**Parameters:**
+| You need | Use |
+|---|---|
+| Run something once, after a delay | `ScheduleEvent.Add(event, action, delay)` |
+| Run something every N seconds | `ScheduleEvent.AddInterval(event, action, interval)` |
+| A short sequence with pauses written top to bottom | A function with `yield <seconds>`, added with `Add` |
+| A long-running or endless sequence in single player | A function that re-adds itself with `Add`, its state in `args` (see the [warning](#a-sequence-with-pauses-yield)) |
+| Stop everything under an event name | `ScheduleEvent.Cancel(event)` |
+| Stop it, but no error if it's already gone | `ScheduleEvent.TryCancel(event)` |
+| Check whether an event still has pending actions | `ScheduleEvent.IsValid(event)` |
 
-* `scope` (pcapEntity): The entity that scheduled the action.
-* `action` (string or function): The action to execute when the scheduled time arrives. This can be a string containing VScripts code or a function object.
-* `timeDelay` (number): The delay in seconds before executing the action.
-* `args` (array, optional): An optional array of arguments to pass to the action function.
+## Recipes
 
-**Example:**
+### Do something later
 
 ```js
-local myAction = ScheduleAction(myEntity, function() {
-    printl("Action executed!")
+ScheduleEvent.Add("global", function() {
+    printl("3 seconds later")
+}, 3)
+
+// A named function works the same. Pass it without (), the scheduler calls it
+function OpenDoor() {
+    EntFire("door", "Open")
+}
+ScheduleEvent.Add("doors", OpenDoor, 1.5)
+
+// A string is run as code
+ScheduleEvent.Add("doors", "EntFire(\"door\", \"Close\")", 5)
+```
+
+A delay of 0 doesn't run the action right away: it runs on a scheduler tick, after your current code has finished.
+
+### Repeat every N seconds, and stop it
+
+Give the interval its own event name, then cancel that name:
+
+```js
+ScheduleEvent.AddInterval("beeper", function() {
+    GetPlayerEx().EmitSound("buttons/blip1.wav")
+}, 0.5)
+
+// Later, from anywhere, even from inside the action itself
+ScheduleEvent.Cancel("beeper")
+```
+
+The fourth argument is the delay before the first run (0 by default: the first run is on the next scheduler tick):
+
+```js
+// First run in 2 seconds, then every second
+ScheduleEvent.AddInterval("radar", ScanArea, 1, 2)
+```
+
+An interval keeps going until its event is cancelled, even if the action throws an error. An interval added to `"global"` can never be stopped.
+
+### Pass values to the action
+
+The fourth argument of `Add` (the fifth of `AddInterval`) is an **array** of arguments. The action gets them as its parameters:
+
+```js
+function Explode(ent, power) {
+    printl(ent.GetName() + " explodes with power " + power)
+}
+
+ScheduleEvent.Add("boom", Explode, 2, [cube, 100])
+
+// One argument is still an array
+ScheduleEvent.Add("boom", function(ent) { ent.Kill() }, 3, [cube])
+```
+
+An `ArrayEx` or a `List` works too. A native array is kept as it is, so the action sees what the array holds when it runs: don't change it after passing it.
+
+Another way is to bind values right into the function with `: (...)`. A function in VScript can't see the local variables around it unless you list them like this, and their values are copied at that moment:
+
+```js
+local cube = entLib.FindByName("cube_1")
+ScheduleEvent.Add("boom", function() : (cube) {
+    cube.Dissolve()
 }, 2)
 ```
 
-### `run()`
-Executes the scheduled action. If the action is a string, it is compiled into a function before execution. If arguments are provided, they are passed to the action function. This method is called by the `ScheduledEventLoop` and should not be called manually.
+### Call a method of an object
 
-### `processGenerator(generator, eventName)`
-Processes a generator function that has been returned from a scheduled action. This function is responsible for pausing the generator and rescheduling it to continue execution after the specified delay. This is used internally by the `ScheduledEventLoop` to handle asynchronous actions.
-
-**Parameters:**
-
-* `generator` (generator): The generator to process.
-* `eventName` (string): The name of the event the generator belongs to.
-
-**Example:**
+By default `this` inside an action is the root table. To call a method of a class instance, pass the instance as the last argument (`scope`):
 
 ```js
-myAction.run()
-```
-
-## [ActionScheduler/action_scheduler.nut](action_scheduler.nut)
-
-This file provides functions for creating and managing scheduled events, including adding actions, creating intervals, and canceling events.
-
-### `ScheduleEvent.Add(eventName, action, timeDelay, args, scope)`
-Adds a single action to a scheduled event with the specified name. If the event does not exist, it is created.
-
-**Parameters:**
-
-* `eventName` (string): The name of the event to add the action to.
-* `action` (string or function): The action to execute when the scheduled time arrives. This can be a string containing VScripts code or a function object.
-* `timeDelay` (number): The delay in seconds before executing the action.
-* `args` (array, optional): An optional array of arguments to pass to the action function.
-* `scope` (object, optional): The scope in which to execute the action (default is `this`).  
-
-**Example:**
-
-```js
-ScheduleEvent.Add("my_event", function() {
-    printl("This is my scheduled event.")
-}, 1)
-```
-
-
-#### Using the `args` parameter
-
-The `args` parameter allows you to pass additional arguments to the scheduled action when it is executed. This can be useful for providing context or data that the action needs to perform its task. 
-
-**Example:**
-
-```js
-// Schedule an event to print a message with a custom name after 2 seconds.
-ScheduleEvent.Add("my_event", function(name) {
-    printl("Hello, " + name + "!")
-}, 2, ["Theta"])  // Pass an array containing the name "Theta" as the args parameter.
-```
-
-#### Using the `scope` parameter
-
-The `scope` parameter is essential for correctly handling delayed events within classes. When you schedule an action from a class method, the context of `this` can be lost when the action is executed later. By passing `this` as the `scope`, you ensure that the action executes within the correct class instance, allowing it to access the instance's properties and methods.
-
-**Example:**
-
-```js
-class MyClass {
-    something = 11
-
-    function myMethod() { 
-        // Schedule an event to call another method of this class after 1 second.
-        // We pass 'this' as the scope to ensure that 'anotherMethod' is called on the correct instance.
-        ScheduleEvent.Add("my_event", function() {
-            this.anotherMethod()  // Access another method of the class instance.
-            printl(this.something)
-        }, 1, null, this)
-
-        // An alternative way is to pass the scope as an argument.
-        // ScheduleEvent.Add("my_event", function(scope) {
-        //     scope.anotherMethod() 
-        //     printl(scope.something)
-        // }, 1, [this]) 
-    } 
-
-    function anotherMethod() { 
-        this.something = 15
-        // ...
+class Turret {
+    shots = 0
+    function Fire() {
+        this.shots++
+        printl("Shot " + this.shots)
     }
 }
+
+local turret = Turret()
+ScheduleEvent.AddInterval("turret_fire", turret.Fire, 0.3, 0, null, turret)
 ```
 
-### `ScheduleEvent.AddInterval(eventName, action, interval, initialDelay, args, scope)`
-Adds an action to a scheduled event that will be executed repeatedly at a fixed interval.
+`Add` takes it in the same place: `ScheduleEvent.Add(event, action, delay, args, scope)`. Pass `null` for `args` if you have none.
 
-**Parameters:**
+### A sequence with pauses (yield)
 
-* `eventName` (string): The name of the event to add the interval to.
-* `action` (string or function): The action to execute at each interval.
-* `interval` (number): The time interval in seconds between executions of the action.
-* `initialDelay` (number, optional): The initial delay in seconds before the first execution of the action (default is 0).
-* `args` (array, optional): An optional array of arguments to pass to the action function.
-* `scope` (object, optional): The scope in which to execute the action (default is `this`).  
-
-**Example:**
+A function with `yield` in it becomes a step-by-step sequence. `yield 2` pauses it for 2 seconds, then it continues from the same line, with all its local variables still there:
 
 ```js
-ScheduleEvent.AddInterval("my_event", function() {
-    // ... do something periodically
-}, 1)
+function Intro() {
+    HUD.ScreenText("Welcome", -1, 0.4).SetHoldTime(2).Enable()
+    yield 2
+
+    EntFire("door_1", "Open")
+    yield 1.5
+
+    local cube = entLib.FindByName("intro_cube")
+    cube.SetColor("255 0 0")
+    yield 1
+
+    cube.Dissolve()
+}
+
+ScheduleEvent.Add("intro", Intro, 0)
 ```
 
-### `ScheduleEvent.AddActions(eventName, actions, noSort)`
-Adds multiple actions to a scheduled event.
+What `yield` means:
 
-**Parameters:**
+| You write | What happens |
+|---|---|
+| `yield 2`, `yield 0.5` | Pause for that many seconds |
+| `yield 0` (or less) | Pause for one frame |
+| `yield` or `yield null` | **The sequence ends**, the rest of the function never runs |
 
-* `eventName` (string): The name of the event to add the actions to.
-* `actions` (array or List): An array or List of `ScheduleAction` objects to add to the event.
-* `noSort` (boolean, optional): If `true`, the actions will not be sorted by execution time if the event is being created for the first time. **Warning:** If the event already exists, the actions will always be sorted, regardless of this parameter.
+`yield` only pauses: it is not a way to return a value.
 
-**Example:**
+![Each block between yields runs at its own moment](img/yield_sequence.png)
+
+> [!WARNING]
+> **`yield` sequences break save/load.** Saving or loading the game while a sequence is paused on a `yield` crashes the game: the engine can't save a paused generator.
+>
+> Use `yield` for short sequences that are over in a few seconds, or in coop maps, which have no saving. For anything long-running or endless in single player, use a plain function that schedules its own next step with `Add` and passes its state through `args`.
+
+The same idea without `yield`: each step is a separate action, and nothing stays paused between them:
 
 ```js
-local actions = [
-    ScheduleAction(myEntity, function() { ... }, 1),
-    ScheduleAction(myEntity, function() { ... }, 3),
-    ScheduleAction(myEntity, function() { ... }, 2)
-]
-ScheduleEvent.AddActions("my_event", actions) // Actions will be sorted by execution time
+function PatrolStep(index) {
+    local points = ["patrol_a", "patrol_b", "patrol_c"]
+    printl("Going to " + points[index])
+    ScheduleEvent.Add("patrol", PatrolStep, 2, [(index + 1) % points.len()])
+}
+ScheduleEvent.Add("patrol", PatrolStep, 0, [0])
+
+// Stops like any other event
+ScheduleEvent.Cancel("patrol")
 ```
 
-### `ScheduleEvent.Cancel(eventName, delay)`
-Cancels all scheduled actions within an event and removes the event itself.
+### Cancel a whole sequence
 
-**Parameters:**
-
-* `eventName` (string): The name of the event to cancel.
-* `delay` (number, optional): An optional delay in seconds before canceling the event.
-
-**Example:**
+Everything added under one name is cancelled together: plain actions, intervals and paused `yield` sequences. Pick a name per thing you may want to stop:
 
 ```js
-ScheduleEvent.Cancel("my_event") // Cancel the "my_event" event
-```
+function StartAlarm() {
+    ScheduleEvent.AddInterval("alarm", function() { EntFire("alarm_light", "Toggle") }, 0.5)
+    ScheduleEvent.Add("alarm", function() { EntFire("alarm_sound", "PlaySound") }, 0)
+    ScheduleEvent.Add("alarm", function() { EntFire("blast_door", "Close") }, 10)
+}
 
-### `ScheduleEvent.TryCancel(eventName, delay)`
-The same as `ScheduleEvent.Cancel`, but does not cause an error if the event is not found.
-
-**Parameters:**
-
-* `eventName` (string): The name of the event to cancel.
-* `delay` (number, optional): An optional delay in seconds before canceling the event.
-
-**Returns:**
-
-* (boolean): True if the event was found and canceled, false otherwise.
-
-**Example:**
-
-```js
-ScheduleEvent.TryCancel("my_event") 
-```
-
-### `ScheduleEvent.CancelAll()`
-Cancels all scheduled events and actions.
-
-**Example:**
-
-```js
-ScheduleEvent.CancelAll() // Cancel all scheduled events and actions
-```
-
-### `ScheduleEvent.UNSAFE_ClearWithGlobal()`
-Cancels all scheduled events and actions, **including the global event queue**. 
-
-**WARNING:** This is an unsafe function and should be used with extreme caution. Clearing the global event queue can have unintended consequences and break other parts of the library or game scripts that rely on it.
-
-**Example:**
-```js
-ScheduleEvent.UNSAFE_ClearWithGlobal() // Use with caution!
-```
-
-### `ScheduleEvent.GetEvent(eventName)`
-Retrieves a scheduled event by name as a `List` of `ScheduleAction` objects.
-
-**Parameters:**
-
-* `eventName` (string): The name of the event to retrieve.
-
-**Returns:**
-
-* (List or null): The `List` containing the scheduled actions for the event, or `null` if the event is not found.
-
-**Example:**
-
-```js
-local eventActions = ScheduleEvent.GetEvent("my_event")
-if (eventActions) {
-    // ... process the actions in the event
+function StopAlarm() {
+    ScheduleEvent.TryCancel("alarm")
 }
 ```
 
-### `ScheduleEvent.IsValid(eventName)`
-Checks if a scheduled event with the given name exists.
+The event name is usually a string, but any value that can be a table key works, e.g. an entity: `ScheduleEvent.Add(cube, ...)` gives every cube its own event.
 
-**Parameters:**
-
-* `eventName` (string): The name of the event to check.
-
-**Returns:**
-
-* (boolean): True if the event exists, false otherwise.
-
-**Example:**
+### Cancel later, or only if it exists
 
 ```js
-if (ScheduleEvent.IsValid("my_event")) {
-    // The event exists
-}
+ScheduleEvent.Cancel("alarm", 5)   // cancel in 5 seconds
+ScheduleEvent.TryCancel("alarm")   // no error if "alarm" doesn't exist
 ```
 
+| | `Cancel` | `TryCancel` |
+|---|---|---|
+| The event exists | Cancels it | Cancels it, returns `true` |
+| The event doesn't exist | **Throws an error** | Returns `false` |
+| `"global"` | Throws an error | Throws an error |
 
-## [ActionScheduler/event_handler.nut](event_handler.nut)
+With a delay, `Cancel` still throws right away if the event doesn't exist at the moment of the call. When the delay is over, the event is cancelled if it still exists.
 
-This file contains the `ScheduledEventLoop` function, which processes scheduled events and actions.
+### Delayed entity changes and inputs
 
+Most `pcapEntity` setters take a delay and an event name as their last two arguments, and the library's `EntFireByHandle` takes an event name as its last argument. With an event name, the delayed change can be cancelled like any other action:
 
-### `ScheduledEventLoop()`
+```js
+cube.SetColor("255 0 0", 3, "cube_fx")
+EntFireByHandle(door, "Open", "", 5, null, null, "cube_fx")
 
-This function iterates over all scheduled events and checks if the execution time for the first action in each event has arrived. If so, it executes the action and removes it from the event's list of actions. If an event has no more actions remaining, it is removed from the list of scheduled events. The function then schedules itself to run again after a short delay to continue processing events. **This function is called automatically by the ActionScheduler module**
-
-## Enhanced Scheduling Features
-
-### Asynchronous Actions
-
-You can now introduce delays within your scheduled actions using the `yield` keyword. This allows you to create more dynamic and responsive sequences of actions without relying on nested callbacks or complex timing logic.
-
-The `yield` keyword, when used within a scheduled action function, will pause the execution of that specific action for a specified number of seconds. Importantly, the state of the function is preserved, meaning that all variables and their values will remain intact when the function resumes execution after the delay.
-
-**Example:**
-
-```
-ScheduleEvent.Add("global", function() {
-    local player = GetPlayerEx(1)
-    local first = player.GetOrigin()
-    printl("Hello, world!")
-    yield 2 // Wait for 2 seconds
-    
-    local second = player.GetOrigin()
-    printl("How are you?")
-    yield 1.1 // Wait for 1.1 seconds
-
-    local result = second - first // some result
-    printl("result: " + result)
-}, 1)
-
-ScheduleEvent.Add("async_loop", function() {
-    local player = GetPlayerEx(1)
-    while(true) { // asynchronous loop that can run forever!
-        printl(player.GetOrigin())
-        yield 0.2 // Wait for 0.2 seconds
-    }
-}, 0.2)
+ScheduleEvent.Cancel("cube_fx") // neither happens
 ```
 
-In this example, the `"global"` event demonstrates how `yield` can be used to create delays within a sequence of actions. The player's origin is recorded, a greeting is printed, and then the script pauses for 2 seconds. After the pause, the player's origin is recorded again, a question is printed, and the script pauses for 1.1 seconds. Finally, the difference between the two recorded origins is calculated and printed. 
+Without an event name, the setters schedule into `"global"` and `EntFireByHandle` uses the engine's own delay: neither can be cancelled. See the [IDT](../IDT/readme.md) and [Utils](../Utils/readme.md) readmes. Animations are scheduled the same way, under the `eventName` of their settings, see [Animations](../Animations/readme.md).
 
-The `"async_loop"` event showcases how you can leverage `yield` to create asynchronous loops. In this case, the loop continuously prints the player's origin every 0.2 seconds. The `yield 0.2` statement ensures that the loop doesn't block other scheduled events and allows for responsive execution.
+## When an action throws an error
 
-### Error Handling
+The error doesn't stop the scheduler. It prints a `SCHEDULED EVENT` block to the console with the event name, the action, the error and the function's source info, plays a warning sound, and goes on: the other actions of the event and of all other events still run. An interval keeps repeating.
 
-The `ScheduledEventLoop` now includes robust error handling for scheduled events. If an error occurs during the execution of a scheduled action, the following information will be printed to the console:
+Console commands for checking what's scheduled:
 
-*   **Error Message:** The specific error message that occurred.
-*   **Callstack:** A trace of the function calls that led to the error, allowing you to pinpoint the source of the problem.
-*   **Scheduled Event Info:** Details about the scheduled event that triggered the error, including the event name and any associated data.
-*   **Function Info:** Information about the specific action function that caused the error.
+* `PCore_schedule_list`: prints the names of all events that have pending actions.
+* `PCore_schedule_clear`: cancels all events except `"global"`.
 
-This comprehensive error handling ensures that errors within scheduled events are caught and reported without crashing the entire system. Other scheduled events will continue to execute as expected. Additional debug information, such as event creation and cancellation traces, can be seen by setting the logger level to `Trace`.
+## Common mistakes
+
+* **An interval in `"global"`.** It can never be stopped. Give it its own event name.
+* **A bare `yield`.** It ends the sequence instead of pausing. Write `yield 0` for one frame.
+* **A long `yield` loop in a single-player map.** A save or a load while it is paused crashes the game. Re-add a plain function with `Add` instead, see the [warning](#a-sequence-with-pauses-yield).
+* **One argument without an array.** `Add("boom", Explode, 1, cube)` throws: write `[cube]`.
+* **`MyFunc()` instead of `MyFunc`.** With `()` you pass what the function returned, not the function.
+* **`Cancel` on an event that may be over.** An event disappears after its last action. Use `TryCancel` if you're not sure it's still there.
+* **`this` in a method.** Without the `scope` argument, `this` inside the action is the root table, not your object.
+* **One event name for unrelated things.** `Cancel` stops all of them. One name per thing you want to stop.
+
+## Reference
+
+| Function | What it does |
+|---|---|
+| `ScheduleEvent.Add(eventName, action, delay, args = null, scope = null)` | Runs `action` once after `delay` seconds |
+| `ScheduleEvent.AddInterval(eventName, action, interval, initialDelay = 0, args = null, scope = null)` | Runs `action` every `interval` seconds (greater than 0), the first time after `initialDelay` |
+| `ScheduleEvent.Cancel(eventName, delay = 0)` | Drops all pending actions of the event. Throws for `"global"` and for an event that doesn't exist |
+| `ScheduleEvent.TryCancel(eventName, delay = 0)` | Like `Cancel`, but returns `false` instead of throwing if the event doesn't exist. Returns `null` with a delay |
+| `ScheduleEvent.CancelAll()` | Cancels every event except `"global"` |
+| `ScheduleEvent.IsValid(eventName)` | `true` if the event exists, i.e. it still has pending actions (`"global"` always exists) |
+
+* `action`: a function, a function with `yield`, or a string of code.
+* `args`: an `array`, `ArrayEx` or `List` of arguments for the action, or `null`.
+* `scope`: the object used as `this` in the action. The root table by default.
+
+Within one event, actions due at the same time run in the order they were added.
+
+## Advanced
+
+Most scripts never need these.
+
+* `ScheduleEvent.GetEvent(eventName)`: the event's pending actions as a `List` of `ScheduleAction`, or `null`. It is the live queue, not a copy: don't change it.
+* `ScheduleAction(scope, action, delay, args = null)`: one action, not scheduled yet. `delay` is counted from the moment it's created, `args` must be a native array or `null`.
+* `ScheduleEvent.AddActions(eventName, actions, noSort = false)`: adds many prepared `ScheduleAction`s at once (an `array`, `ArrayEx` or `List`), faster than calling `Add` for each. `noSort = true` skips sorting when the event is new and the actions are already in time order.
+
+  ```js
+  local actions = []
+  for(local i = 1; i <= 10; i++)
+      actions.append(ScheduleAction(getroottable(), function(n) { printl(n) }, i * 0.1, [i]))
+  ScheduleEvent.AddActions("countdown", actions, true)
+  ```
+
+* `ScheduleEvent.UNSAFE_ClearWithGlobal()`: cancels everything, `"global"` included. Read the caution below first.
+
+> [!CAUTION]
+> `UNSAFE_ClearWithGlobal()` also removes the library's own repeating jobs, which live in `"global"`: player death and respawn tracking (the player hooks), the entity cache cleanup and the `linked_portal_door` setup. They don't come back after it. The `"global"` actions of every other script are gone too.

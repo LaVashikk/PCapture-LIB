@@ -1,360 +1,197 @@
 # Animations Module
 
-The `Animations` module provides functions for creating various animations in VScripts, such as fading objects in or out, changing their colors, and moving them along paths. It simplifies the process of creating smooth and visually appealing animations.  It also supports real-time animations for more complex scenarios.
+Smooth changes of an entity's opacity, color, position or angles over time, with easing, delays, an action at the end and cancelling. You can also build animations for any other property.
 
 ## Table of Contents
 
-1.  [init.nut](#initnut)
-    *   [`AnimEvent`](#animeventname-settings-entities-time0)
-    *   [Animation Settings Table (propertySetter)](#animation-settings-table)
-    *   [`applyAnimation`](#animateapplyanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes)
-    *   [`applyRTAnimation`](#animateapplyrtanimationaniminfo-valuecalculator-propertysetter-vars-transitionframes)
-2.  [alpha.nut](#animationsalphanut)
-    *   [`AlphaTransition`](#animatealphatransitionentities-startopacity-endopacity-time-animsetting)
-3.  [color.nut](#animationscolornut)
-    *   [`ColorTransition`](#animatecolortransitionentities-startcolor-endcolor-time-animsetting)
-4.  [position.nut](#animationspositionnut)
-    *   [`PositionTransitionByTime`](#animatepositiontransitionbytimeentities-startpos-endpos-time-animsetting)
-    *   [`PositionTransitionBySpeed`](#animatepositiontransitionbyspeedentities-startpos-endpos-speed-animsetting)
-5.  [angles.nut](#animationsanglesnut)
-    *   [`AnglesTransitionByTime`](#animateanglestransitionbytimeentities-startangles-endangles-time-animsetting)
-6. [Custom Animation Functions](#custom-animation-functions)
+* [Quick start](#quick-start)
+* [What do I need?](#what-do-i-need)
+* [Which entities](#which-entities)
+* [Settings](#settings)
+* [Recipes](#recipes)
+* [Real-time animations](#real-time-animations)
+* [Your own animations](#your-own-animations)
+* [Common mistakes](#common-mistakes)
+* [Reference](#reference)
 
-## [Animations/init.nut](init.nut)
-
-This file initializes the `Animations` module, defines the `AnimEvent` class for managing animation events, and includes the necessary script files for the module's functionality.
-
-### `AnimEvent(name, settings, entities, time)`
-
-The `AnimEvent` class is used internally by the animation functions to store and manage information about an animation event. It is not intended for direct use in your scripts.
-
-**Constructor**
-
-Creates a new `AnimEvent` object with the specified name, settings, entities, and animation duration. 
-
-**Parameters:**
-
-*   `name` (string): The name of the animation type.
-*   `settings` (table): A table containing optional settings for the animation event. See the **Animation Settings Table** section below for details.
-*   `entities` (array, CBaseEntity, or pcapEntity): An array of entities, a single entity, or a pcapEntity to animate.
-*   `time` (number, optional): The duration of the animation in seconds (default is 0).
-
-### Animation Settings Table
-
-The `settings` table in the `AnimEvent` constructor can contain the following optional properties:
-
-*   `eventName` (string, optional): The name of the event (default is a unique string based on the animation name).
-*   `globalDelay` (number, optional): A global delay in seconds before the animation starts (default is 0).
-*   `output` (string or function, optional): A script or function to execute when the animation finishes.
-*   `scope` (object, optional): The scope in which to execute the action (default is the `AnimEvent` object itself).
-*   `ease` (function, optional): A custom ease function to use for interpolation. If not provided, a linear interpolation function is used.
-*   `frameInterval` (number, optional): The time interval between frames in seconds (default is the engine's frame time).
-*   `fps` (number, optional): The desired frames per second for the animation, used to calculate `frameInterval` if it's not explicitly set (default is 60, maximum 60).
-*   `optimization` (bool, optional): Enables or disables automatic optimization. When enabled, the animation will automatically adjust the frame interval to ensure a maximum of `maxFrames` frames are used, improving performance for longer animations. (default is true).
-*   `filterCallback` (function, optional): A callback function that is called before each frame of a real-time animation.  It receives `animInfo`, `newValue`, `transitionFrames`, `currentStep`, and `vars` as arguments. If it returns `true`, the animation is interrupted. (Used only with real-time animations).
-
-
-### `animate.applyAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
-
-This function applies an animation over a specified duration, calculating and setting new values for a property at each frame. It is used internally by the various animation functions to handle the animation process, and can also be used to create custom animation functions.
-
-**Parameters:**
-
-*   `animInfo` (AnimEvent): The `AnimEvent` object containing the animation settings and entities.
-*   `valueCalculator` (function): A function that calculates the new value for the property at each frame. The function should take three arguments: current step, total steps, and optional variables (`vars`).
-*   `propertySetter` (function): A function that sets the new value for the property on each entity. The function should take two arguments: the entity and the calculated value.
-*   `vars` (any, optional): Optional variables to pass to the `valueCalculator` function. Can be used for your custom animations.
-*   `transitionFrames` (number, optional): The total number of frames in the animation. If 0, it's calculated based on `animInfo.delay` and `animInfo.frameInterval`. Otherwise, the provided value is used.
-
-**Example:**
+## Quick start
 
 ```js
-// ... (assuming you have animInfo, valueCalculator, and propertySetter defined)
-animate.applyAnimation(animInfo, valueCalculator, propertySetter) // Apply the animation
+// Fade a door out over 2 seconds
+animate.AlphaTransition("exit_door", 255, 0, 2)
+
+// Move a platform up by 128 units in 3 seconds, slow at both ends, then print
+local platform = entLib.FindByName("platform")
+local from = platform.GetOrigin()
+animate.PositionTransitionByTime(platform, from, from + Vector(0, 0, 128), 3, {
+    ease = math.ease.InOutSine,
+    output = function() { printl("Arrived") }
+})
 ```
 
+Every animation function returns its duration in seconds.
 
-### `animate.applyRTAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
+## What do I need?
 
-Facade function for applying real-time animations in an asynchronous environment. This function schedules the real-time animation to be processed using `_applyRTAnimation`. The actual animation is executed without pre-calculating all the frames, which allows for more flexibility, especially when handling long animations or situations where the animation might need to be interrupted using a `filterCallback`.  The arguments are the same as those for `applyAnimation`.
+| Animate | Use |
+|---|---|
+| Opacity | `animate.AlphaTransition(entities, startAlpha, endAlpha, time, settings)` |
+| Color | `animate.ColorTransition(entities, startColor, endColor, time, settings)` |
+| Position, in a given time | `animate.PositionTransitionByTime(entities, startPos, endPos, time, settings)` |
+| Position, at a given speed | `animate.PositionTransitionBySpeed(entities, startPos, endPos, speed, settings)` |
+| Angles | `animate.AnglesTransitionByTime(entities, startAngles, endAngles, time, settings)` |
+| Anything else: scale, skin, a light's brightness | [your own animation](#your-own-animations) |
+| Stop it halfway on a condition | the [real-time](#real-time-animations) versions, `animate.RT.*` |
 
+* Alpha goes from 0 (invisible) to 255. It's only visible if the entity's `rendermode` isn't 0: `ent.SetKeyValue("rendermode", 1)`.
+* Colors are strings (`"255 0 0"`) or Vectors (`Vector(255, 0, 0)`).
+* Angles turn the shorter way on each axis: from 350 to 10 degrees is +20, not -340.
+* Position is set with the engine's `SetAbsOrigin`, so the move is interpolated on the client.
 
-**Example:**
+## Which entities
+
+The first argument can be:
+
+* A targetname: `"door"`. With a `*` at the end, every matching entity: `"light_*"`.
+* An entity: `CBaseEntity` or `pcapEntity`.
+* An `array`, `ArrayEx` or `List` of entities.
+
+All of them move together, with the same values.
+
+## Settings
+
+The last argument is an optional table. All keys are optional.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `ease` | linear | The easing function, usually one of [`math.ease.*`](../Math/readme.md#easing): `ease = math.ease.OutBounce` |
+| `globalDelay` | 0 | Seconds to wait before the animation starts |
+| `output` | none | A function or a code string that runs when the animation ends |
+| `scope` | root table | `this` inside `output` |
+| `eventName` | a unique name | The [scheduler event](../ActionScheduler/readme.md) the frames go to. Name it to cancel the animation |
+| `optimization` | true | Limits long animations to `fps` frames in total, see below. With `false`, every animation updates every tick |
+| `fps` | 60 | The frame limit used by `optimization`: frames for the **whole** animation, not per second |
+| `frameInterval` | `FrameTime()` | Seconds between frames, before the `fps` limit |
+| `filterCallback` | none | Real-time only: stops the animation, see [Real-time animations](#real-time-animations) |
+
+**About `fps` and `optimization`.** Frames are applied at most once per tick, and every frame is a scheduled action. With `optimization` on (the default) an animation gets at most `fps` frames in total, 60 by default: a 1 second animation still updates every tick, a 10 second one every 10th tick instead of scheduling 600 frames. If you need an update every tick over a long animation, set `optimization = false`.
+
+![The default fps caps the whole animation at 60 frames](img/fps_cap.png)
+
+## Recipes
+
+**Wait, then animate**
 
 ```js
-// ... (assuming you have animInfo, valueCalculator, and propertySetter defined)
-animate.applyRTAnimation(animInfo, valueCalculator, propertySetter) // Apply the animation in real-time
+animate.AlphaTransition(cube, 255, 0, 1, {globalDelay = 2})
 ```
 
-
-### `animate._applyRTAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
-
-
-
-
-
-Applies the animation in real-time, evaluating each frame as it occurs without pre-calculating. This function works similarly to `applyAnimation`, but rather than calculating all the steps in advance, it applies `propertySetter` in real-time for each frame. This is useful in cases where you might need to interrupt or alter the animation at runtime using `filterCallback`, or if the animation is too long for VSquirrel to process upfront. This function is intended for internal use and is called by `animate.applyRTAnimation`. Its arguments are managed internally.
-
-
-
-## [Animations/alpha.nut](alpha.nut)
-
-This file provides the `animate.AlphaTransition` function for creating animations that transition the alpha (opacity) of entities over time.  A real-time version is available as `animate.RT.AlphaTransition`.
-
-### `animate.AlphaTransition(entities, startOpacity, endOpacity, time, animSetting)`
-
-This function creates an animation that smoothly transitions the alpha (opacity) of entities from the starting value to the ending value over a specified time.
-
-**Parameters:**
-
-*   `entities` (array, CBaseEntity, or pcapEntity): The entities to animate.
-*   `startOpacity` (number): The starting opacity value (0-255).
-*   `endOpacity` (number): The ending opacity value (0-255).
-*   `time` (number): The duration of the animation in seconds.
-*   `animSetting` (table, optional): A table containing additional animation settings (see **Animation Settings Table** in the `AnimEvent` constructor section for details).
-
-**Returns:**
-
-*   (number): The duration of the animation in seconds. 
-
-**Example:**
+**One after another.** The functions return their duration, so the next one waits for it:
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-animate.AlphaTransition(myEntity, 255, 0, 2) // Fade out the entity over 2 seconds
+local t = animate.PositionTransitionByTime(lift, bottom, top, 3)
+animate.ColorTransition(lift, "255 255 255", "0 255 0", 0.5, {globalDelay = t})
 ```
 
-**Real-time Example:**
+**Do something at the end**
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-animate.RT.AlphaTransition(myEntity, 255, 0, 50) // Fade out the entity over 50 seconds in real-time
+animate.AlphaTransition(wall, 255, 0, 1, {
+    output = function() { wall.Kill() }
+})
+
+// A method of your object
+animate.AlphaTransition(wall, 255, 0, 1, {output = this.OnFaded, scope = this})
 ```
 
-
-## [Animations/color.nut](color.nut)
-
-This file provides the `animate.ColorTransition` function for creating animations that transition the color of entities over time. A real-time version is available as `animate.RT.ColorTransition`.
-
-### `animate.ColorTransition(entities, startColor, endColor, time, animSetting)`
-
-This function creates an animation that smoothly transitions the color of entities from the starting color to the ending color over a specified time.
-
-**Parameters:**
-
-*   `entities` (array, CBaseEntity, or pcapEntity): The entities to animate.
-*   `startColor` (string or Vector): The starting color as a string (e.g., "255 0 0" for red) or a Vector with components (r, g, b).
-*   `endColor` (string or Vector): The ending color as a string or a Vector.
-*   `time` (number): The duration of the animation in seconds.
-*   `animSetting` (table, optional): A table containing additional animation settings (see `AnimEvent` constructor for details).
-
-**Returns:**
-
-*   (number): The duration of the animation in seconds. 
-
-**Example:**
+**Cancel an animation.** Give it an event name, then cancel the event. The entity stays where the animation left it:
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-animate.ColorTransition(myEntity, "255 0 0", "0 255 0", 3) // Change the entity's color from red to green over 3 seconds
+animate.PositionTransitionByTime(lift, bottom, top, 5, {eventName = "lift_move"})
+
+// later
+ScheduleEvent.TryCancel("lift_move")
 ```
 
-**Real-time Example:**
+`TryCancel` doesn't throw if the animation has already ended. Several animations can share one event name, then one call stops all of them.
+
+**Move at a constant speed**
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-animate.RT.ColorTransition(myEntity, "255 0 0", "0 255 0", 17) // Change the entity's color from red to green over 17 seconds in real-time
+animate.PositionTransitionBySpeed(cart, start, end, 4)
 ```
 
+`speed` is in units **per frame** (per `frameInterval`, about 1/60 of a second by default), not per second. 4 units per frame is roughly 240 units per second.
 
-
-## [Animations/position.nut](position.nut)
-
-This file provides the `animate.PositionTransitionByTime` and `animate.PositionTransitionBySpeed` functions for creating animations that transition the position of entities over time. Real-time versions are available as `animate.RT.PositionTransitionByTime` and `animate.RT.PositionTransitionBySpeed`.
-
-
-### `animate.PositionTransitionByTime(entities, startPos, endPos, time, animSetting)`
-
-This function creates an animation that moves entities from the starting position to the ending position over a specified time based on increments of time.
-
-**Parameters:**
-
-*   `entities` (array, CBaseEntity, or pcapEntity): The entities to animate.
-*   `startPos` (Vector): The starting position of the entities.
-*   `endPos` (Vector): The ending position of the entities.
-*   `time` (number): The duration of the animation in seconds.
-*   `animSetting` (table, optional): A table containing additional animation settings (see `AnimEvent` constructor for details).
-
-**Returns:**
-
-*   (number): The duration of the animation in seconds. 
-
-**Example:**
+**Fade many entities at once**
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startPos = myEntity.GetOrigin()
-local endPos = startPos + Vector(0, 100, 0) // Move 100 units along the Y axis
-animate.PositionTransitionByTime(myEntity, startPos, endPos, 5) // Move the entity over 5 seconds
+animate.AlphaTransition("lamp_*", 0, 255, 1.5)
 ```
 
-**Real-time Example:**
+## Real-time animations
+
+`animate.RT.AlphaTransition`, `animate.RT.ColorTransition`, `animate.RT.PositionTransitionByTime`, `animate.RT.PositionTransitionBySpeed` and `animate.RT.AnglesTransitionByTime` take the same arguments. The difference: the normal versions compute and schedule all frames at once, the RT versions compute each frame when it plays. That lets `filterCallback` stop the animation:
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startPos = myEntity.GetOrigin()
-local endPos = startPos + Vector(0, 100, 0) // Move 100 units along the Y axis
-
-local animSettings = {
-    filterCallback = function(animInfo, _, _, _) {
-        local ent = animInfo.entities[0]
-        if (macros.GetDist(GetPlayer().GetOrigin(), ent.GetOrigin()) < 15) {
-            printl("Animation interrupted! Player is too close.")  // Example output
-            return true // Interrupt the animation
-        }
-        return false // Continue the animation
+animate.RT.PositionTransitionByTime(crusher, top, bottom, 2, {
+    // Stop as soon as the button is released
+    filterCallback = function(animInfo, newValue, lastFrame, step, vars) {
+        return !::buttonHeld
     }
-}
-
-animate.RT.PositionTransitionByTime(myEntity, startPos, endPos, 5, animSettings) // Move the entity over 5 seconds in real-time, with interrupt logic
+})
 ```
 
+* `filterCallback` runs before every frame. Returning `true` stops the animation, and `output` doesn't run.
+* It gets 5 arguments and must accept all of them: the animation, the value of the coming frame, the number of the last frame, the number of this frame, and the internal values of the animation.
+* In RT animations `fps` works differently: by default a frame is applied every `FrameTime()`. If you set `fps`, the whole animation gets about that many frames, evenly spread. `PositionTransitionBySpeed` ignores `fps` in both kinds.
 
-### `animate.PositionTransitionBySpeed(entities, startPos, endPos, speed, animSetting)`
+## Your own animations
 
-This function creates an animation that transitions the position of entities over time based on a specified speed. The animation calculates the time it takes to travel from the start position to the end position based on the provided speed and creates a smooth transition of the entities' positions over that duration.
-
-**Parameters:**
-
-*   `entities` (array, CBaseEntity, or pcapEntity): The entities to animate.
-*   `startPos` (Vector): The starting position of the entities.
-*   `endPos` (Vector): The ending position of the entities.
-*   `speed` (number): The speed of the animation in units per tick.
-*   `animSetting` (table, optional): A table containing additional animation settings (see the `AnimEvent` constructor for details).
-
-**Returns:**
-
-*   (number): The duration of the animation in seconds. 
-
-**Example:**
+`macros.BuildAnimateFunction(name, setter)` makes an animation function for any property. The `setter(entity, value)` applies one frame's value, the library computes the values between the start and the end:
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startPos = myEntity.GetOrigin()
-local endPos = startPos + Vector(100, 0, 0) // Move 100 units to the right
-animate.PositionTransitionBySpeed(myEntity, startPos, endPos, 50) // Animate the movement over time with a speed of 50 units per tick
+animate.ScaleTransition <- macros.BuildAnimateFunction("scale", function(ent, value) {
+    ent.SetModelScale(value)
+})
+
+// Used like the built-in ones, settings included
+animate.ScaleTransition(cube, 1.0, 2.0, 0.5, {ease = math.ease.OutBack})
 ```
 
-**Real-time Example:**
+* The values must support `end - start` and multiplying by a number: numbers and Vectors do.
+* For values that aren't simply between the start and the end (skins, strings), pass a third argument, `valueCalculator(step, lastStep, vars)`. It returns the value of a frame; `vars` holds `start`, `delta` (end minus start) and `easeFunc`:
 
 ```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startPos = myEntity.GetOrigin()
-local endPos = startPos + Vector(100, 0, 0) // Move 100 units to the right
-animate.RT.PositionTransitionBySpeed(myEntity, startPos, endPos, 50) // Animate the movement over time with a speed of 50 units per tick in real-time
-```
-
-
-
-
-## [Animations/angles.nut](angles.nut)
-
-This file provides the `animate.AnglesTransitionByTime` function for creating animations that transition the angles of entities over time.  A real-time version is available as `animate.RT.AnglesTransitionByTime`.
-
-### `animate.AnglesTransitionByTime(entities, startAngles, endAngles, time, animSetting)`
-
-This function creates an animation that smoothly changes the angles of entities from the starting angles to the ending angles over a specified time.
-
-**Parameters:**
-
-*   `entities` (array, CBaseEntity, or pcapEntity): The entities to animate.
-*   `startAngles` (Vector): The starting angles of the entities (pitch, yaw, roll).
-*   `endAngles` (Vector): The ending angles of the entities (pitch, yaw, roll).
-*   `time` (number): The duration of the animation in seconds.
-*   `animSetting` (table, optional): A table containing additional animation settings (see `AnimEvent` constructor for details).
-
-**Returns:**
-
-*   (number): The duration of the animation in seconds. 
-
-**Example:**
-
-```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startAngles = myEntity.GetAngles()
-local endAngles = startAngles + Vector(0, 90, 0) // Rotate 90 degrees around the Y axis
-animate.AnglesTransitionByTime(myEntity, startAngles, endAngles, 2) // Rotate the entity over 2 seconds
-```
-
-**Real-time Example:**
-
-```js
-local myEntity = entLib.FindByClassname("prop_physics")
-local startAngles = myEntity.GetAngles()
-local endAngles = startAngles + Vector(0, 90, 0) // Rotate 90 degrees around the Y axis
-animate.RT.AnglesTransitionByTime(myEntity, startAngles, endAngles, 2) // Rotate the entity over 2 seconds in real-time
-```
-
-
-## Custom Animation Functions
-
-You can create your own custom animation functions using `animate.applyAnimation`. Real-time versions of custom animations can be created by using `animate.applyRTAnimation`.
-
-### `animate.applyAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)` | `animate.applyRTAnimation(animInfo, valueCalculator, propertySetter, vars, transitionFrames)`
-
-
-These functions can be used directly to create more complex custom animation functions with unique logic.  Use `applyAnimation` for standard animations and `applyRTAnimation` for real-time animations.
-
-**Example (Standard Animation):**
-
-```js
-animate["SkinTransition"] <- function(entities, startSkin, endSkin, time, animSetting = {}) {
-    local vars = {
-        start = startSkin,
-        delta = endSkin - startSkin,
-        mut = (endSkin - startSkin) < 0 ? -1 : 1 
+animate.SkinTransition <- macros.BuildAnimateFunction("skin",
+    function(ent, skin) { ent.SetSkin(skin) },
+    function(step, lastStep, vars) {
+        return (vars.start + vars.delta * vars.easeFunc(step.tofloat() / lastStep)).tointeger()
     }
-    if(vars.delta == 0) return 0
-
-    animSetting["frameInterval"] <- time / abs(vars.delta)
-    local animInfo = AnimEvent("skin", animSetting, entities, time)
-
-    animate.applyAnimation( 
-        animInfo, 
-        function(step, steps, v) {return v.start + step * v.mut},
-        function(ent, newSkin) {ent.SetSkin(newSkin)},
-        vars,
-        abs(vars.delta)
-    )
-    
-    animInfo.CallOutput()
-    return animInfo.delay
-}
+)
 ```
 
-**Example (Real-time Animation):**
+`macros.BuildRTAnimateFunction` builds the [real-time](#real-time-animations) kind, with the same arguments.
 
-```js
-animate.RT["SkinTransition"] <- function(entities, startSkin, endSkin, time, animSetting = {}) {
-    local vars = {
-        start = startSkin,
-        delta = endSkin - startSkin,
-        mut = (endSkin - startSkin) < 0 ? -1 : 1 
-    }
-    if(vars.delta == 0) return 0
+## Common mistakes
 
-    animSetting["frameInterval"] <- time / abs(vars.delta)
-    local animInfo = AnimEvent("skin", animSetting, entities, time)
+* **Alpha changes but nothing is visible.** The entity's `rendermode` is 0. Set it to something else before animating.
+* **`time` of 0.** Every animation needs a duration above 0. A zero `time`, or a `PositionTransitionBySpeed` with the start equal to the end, gives the entity an invalid value.
+* **Killing an entity in the middle of its animation.** The remaining frames try to set a value on a dead entity, and each one prints an error. Cancel the animation first (`ScheduleEvent.TryCancel(eventName)`), or kill it in `output`.
+* **Two animations of the same property at once.** Both keep setting it until they end, each overwriting the other. Cancel the first one before starting the second.
+* **`filterCallback` with fewer than 5 parameters.** It throws on every frame. Declare all five, even if you don't use them.
 
-    animate.applyRTAnimation( 
-        animInfo, 
-        function(step, steps, v) {return v.start + step * v.mut},
-        function(ent, newSkin) {ent.SetSkin(newSkin)},
-        vars,
-        abs(vars.delta)
-    )
-    
-    animInfo.CallOutput()
-    return animInfo.delay   
-}
-```
+## Reference
+
+| Function | |
+|---|---|
+| `animate.AlphaTransition(entities, startAlpha, endAlpha, time, settings = {})` | Opacity, 0..255 |
+| `animate.ColorTransition(entities, startColor, endColor, time, settings = {})` | Color, a string or a Vector |
+| `animate.PositionTransitionByTime(entities, startPos, endPos, time, settings = {})` | World position |
+| `animate.PositionTransitionBySpeed(entities, startPos, endPos, speed, settings = {})` | World position, `speed` in units per frame, above 0 |
+| `animate.AnglesTransitionByTime(entities, startAngles, endAngles, time, settings = {})` | Angles (pitch, yaw, roll), the shorter way |
+| `animate.RT.*` | The same five, [real-time](#real-time-animations) |
+| `macros.BuildAnimateFunction(name, setter, valueCalculator = null)` | Builds an animation function, see [above](#your-own-animations) |
+| `macros.BuildRTAnimateFunction(name, setter, valueCalculator = null)` | The same, real-time |
+
+All of them return the duration of the animation in seconds. `time` is in seconds.

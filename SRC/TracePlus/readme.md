@@ -1,432 +1,315 @@
 # TracePlus Module
 
-The `TracePlus` module enhances the ray tracing capabilities in VScripts by providing more precise and feature-rich tracing functions, including support for portals and custom trace settings. It aims to improve the accuracy and flexibility of ray tracing operations in VScripts development.
+Traces that hit entities, not only world geometry, and go through portals. Every trace returns a result object you ask what was hit, where, and at what angle.
 
 ## Table of Contents
 
-1. [TracePlus/settings.nut](#traceplussettingsnut)
-   * [`TracePlus.Settings`](#traceplussettings)
-2. [TracePlus/results.nut](#traceplusresultsnut)
-   * [`CheapTraceResult`](#cheaptraceresult)
-   * [`BboxTraceResult`](#bboxtraceresult)
-3. [TracePlus/cheap\_trace.nut](#tracepluscheap_tracenut)
-   * [`TracePlus.Cheap(startPos, endPos)`](#tracepluscheapstartpos-endpos)
-   * [`TracePlus.FromEyes.Cheap(distance, player)`](#traceplusfromeyescheapdistance-player)
-4. [TracePlus/bboxcast.nut](#traceplusbboxcastnut)
-      *   [`TracePlus.Bbox(startPos, endPos, ignoreEntities, settings)`](#traceplusbboxstartpos-endpos-ignoreentities-settings)
-   * [`TracePlus.FromEyes.Bbox(distance, player, ignoreEntities, settings)`](#traceplusfromeyesbboxdistance-player-ignoreentities-settings)
-5. [Portal Castings - How to Use](#portal-castings---how-to-use)
-   * [`prop_portal`](#prop_portal)
-   * [`linked_portal_door`](#linked_portal_door)
-   * [Disabling Portals](#disabling-portals)
-6. [TracePlus/portal\_casting.nut](#traceplusportal_castingnut)
-   * [`TracePlus.PortalCheap(startPos, endPos)`](#traceplusportalcheapstartpos-endpos)
-   * [`TracePlus.FromEyes.PortalCheap(distance, player)`](#traceplusfromeyesportalcheapdistance-player)
-      *   [`TracePlus.PortalBbox(startPos, endPos, ignoreEntities, settings)`](#traceplusportalbboxstartpos-endpos-ignoreentities-settings)
-   * [`TracePlus.FromEyes.PortalBbox(distance, player, ignoreEntities, settings)`](#traceplusfromeyesportalbboxdistance-player-ignoreentities-settings)
-7. [TracePlus/bbox\_analyzer.nut](#traceplusbbox_analyzernut)
-   * [`BboxTraceAnalyzer`](#bboxtraceanalyzer)
-8. [TracePlus/calculate\_normal.nut](#tracepluscalculate_normalnut)
-   * [Global Functions:](#global-functions)
+* [Which trace do I need?](#which-trace-do-i-need)
+* [Quick start](#quick-start)
+* [Reading the result](#reading-the-result)
+* [What a bbox trace hits](#what-a-bbox-trace-hits)
+* [Choosing what to hit: recipes](#choosing-what-to-hit-recipes)
+	* [How the rules combine](#how-the-rules-combine)
+	* [Common mistakes](#common-mistakes)
+* [Tracing through portals](#tracing-through-portals)
+* [Reference](#reference)
+	* [Traces](#traces)
+	* [Result methods](#result-methods)
+	* [`TracePlus.Settings` methods](#traceplussettings-methods)
+	* [Other](#other)
+
+## Which trace do I need?
+
+| You need | Use |
+|---|---|
+| Where a line hits the world, as fast as possible | `TracePlus.Cheap(start, end)` |
+| What entity a line hits: cubes, doors, buttons, players | `TracePlus.Bbox(start, end)` |
+| The same, but continuing through portals | `TracePlus.PortalCheap` / `TracePlus.PortalBbox` |
+| A trace from where a player is looking | `TracePlus.FromEyes.Cheap` / `.Bbox` / `.PortalCheap` / `.PortalBbox` |
+
+`Cheap` is a plain `TraceLine`: it doesn't see entities at all. `Bbox` checks entity bounding boxes along the line and costs more. Use `Cheap` whenever you don't need the entity.
+
+![Cheap vs Bbox trace](img/cheap_vs_bbox.png)
 
 
-## TracePlus/settings.nut
-
-This file defines the `TracePlus.Settings` class, which encapsulates settings for ray traces, including options for entity filtering, model filtering, custom collision and ignore filters, and parameters for precise trace line analysis in the `BboxTraceAnalyzer` class. 
-
-### TracePlus.Settings
-
-This class stores various settings that control the behavior of traces, such as which entities and models to ignore, custom filter functions, and parameters for precise trace line analysis.
-
-**Properties:**
-
-    *   `ignoreClasses` (ArrayEx): An array of entity classnames to ignore during traces. Supports masks, e.g., `["trigger_"]` will ignore all entities with "trigger\_" in their classnames. **Supports Wildcard `"*"`: If present, ALL entities are ignored unless specified in `priorityClasses` (Whitelist mode).**
-    *   `priorityClasses` (ArrayEx): An array of entity classnames to prioritize. **Entities in this list will ALWAYS be hit, overriding `ignoreClasses`. Use this to whitelist specific entities when `ignoreClasses` contains `"*"` or broad masks.**
-    *   `ignoredModels` (ArrayEx): An array of entity model names to ignore during traces. Supports masks.
-    *   `shouldRayHitEntity` (function or null): A custom function to determine if a ray should hit an entity. This function is used as a collision filter.
-    *   `shouldIgnoreEntity` (function or null): A custom function to determine if an entity should be ignored during a trace. This function is used as an ignore filter.
-
-**Methods:**
-
-*   `new(settingsTable)`: Creates a new `TracePlus.Settings` object with default values or initializes it from a table of settings.
-*   `SetIgnoredClasses(ignoreClassesArray)`: Sets the list of entity classnames to ignore during traces. **(Builder)**
-*   `SetPriorityClasses(priorityClassesArray)`: Sets the list of entity classnames to prioritize during traces. **(Builder)**
-*   `SetIgnoredModels(ignoredModelsArray)`: Sets the list of entity model names to ignore during traces. **(Builder)**
-*   `AppendIgnoredClass(className)`: Appends an entity classname to the list of ignored classes. **(Builder)**
-*   `AppendPriorityClasses(className)`: Appends an entity classname to the list of priority classes. **(Builder)**
-*   `AppendIgnoredModel(modelName)`: Appends an entity model name to the list of ignored models. **(Builder)**
-*   `SetCollisionFilter(filterFunction)`: Sets a custom function to determine if a ray should hit an entity (collision filter). **(Builder)**
-*   `SetIgnoreFilter(filterFunction)`: Sets a custom function to determine if an entity should be ignored during a trace (ignore filter). **(Builder)**
-*   `GetIgnoreClasses()`: Returns a copy of the list of entity classnames to ignore during traces. Change the list with the `Set`/`Append` methods.
-*   `GetPriorityClasses()`: Returns a copy of the list of entity classnames to prioritize during traces. Change the list with the `Set`/`Append` methods.
-*   `GetIgnoredModels()`: Returns a copy of the list of entity model names to ignore during traces. Change the list with the `Set`/`Append` methods.
-*   `GetCollisionFilter()`: Returns the custom collision filter function.
-*   `GetIgnoreFilter()`: Returns the custom ignore filter function.
-*   `ApplyCollisionFilter(entity)`: Applies the custom collision filter function to an entity.
-*   `ApplyIgnoreFilter(entity)`: Applies the custom ignore filter function to an entity.
-*   `UpdateIgnoreEntities(ignoreEntities, newEnt)`: Updates the list of entities to ignore during a trace, including the player entity.
-
-**Examples:**
-
-**1. Creating `TracePlus.Settings` with specific settings using `new`:**
+## Quick start
 
 ```js
-local s = TracePlus.Settings.new({
-    ignoreClasses = ArrayEx("trigger_multiple", "func_brush"),
-}) 
-```
+// What is the player looking at?
+local trace = TracePlus.FromEyes.Bbox(3000, GetPlayerEx())
 
-**2. Creating `TracePlus.Settings` and setting properties with methods:**
-
-```js
-local s = TracePlus.Settings.new()
-s.SetIgnoredClasses(["trigger_"])
-s.AppendPriorityClasses("player")
-```
-
-**3. Using builder-style chained calls:**
-
-```js
-local s = TracePlus.Settings
-    .SetIgnoredClasses(ArrayEx("trigger_multiple", "func_brush"))
-    .AppendPriorityClasses("player")
-```
-
-// todo: copy and modify original
-
-## TracePlus/results.nut
-
-This file defines classes representing the results of different types of traces, providing methods for accessing information about the trace and its outcome.
-
-### CheapTraceResult
-
-This class represents the result of a cheap (fast but less accurate) trace. It stores information about the trace, such as the start and end positions, hit position, hit fraction, and portal entry information.
-
-**Properties:**
-
-* `traceHandler` (table): The trace handler object containing trace information.
-* `hitPos` (Vector): The hit position of the trace.
-* `surfaceNormal` (Vector, optional): The impact normal of the surface hit by the trace (calculated on demand).
-* `portalEntryInfo` (CheapTraceResult or null): Information about the portal the trace entered, if applicable.
-
-**Methods:**
-
-* `GetStartPos()`: Returns the start position of the trace as a Vector.
-* `GetEndPos()`: Returns the end position of the trace as a Vector.
-* `GetHitPos()`: Returns the hit position of the trace as a Vector.
-* `GetFraction()`: Returns the fraction of the trace distance where the hit occurred (between 0 and 1).
-* `DidHit()`: Returns `true` if the trace hit something, `false` otherwise.
-* `GetDir()`: Returns the normalized direction vector of the trace as a Vector.
-* `GetPortalEntryInfo()`: Returns the portal entry information as a `CheapTraceResult` object, or `null` if no portal was entered.
-* `GetAggregatedPortalEntryInfo()`: Returns a `List` containing all portal entry information for the trace, including nested portals, as `CheapTraceResult` objects.
-* `GetImpactNormal()`: Calculates and returns the impact normal of the surface hit by the trace as a Vector.
-
-**Example:**
-
-```js
-local startPos = Vector(0, 0, 0)
-local endPos = Vector(100, 0, 0)
-local traceResult = TracePlus.Cheap(startPos, endPos)
-
-if (traceResult.DidHit()) {
-    printl("Trace hit something at:" + traceResult.GetHitPos())
-    local normal = traceResult.GetImpactNormal()
-    // ... do something with the normal
+if(trace.DidHitWorld()) {
+    printl("A wall at " + trace.GetHitPos())
+}
+else if(trace.GetEntity()) {
+    printl("An entity: " + trace.GetEntity().GetClassname())
 }
 ```
 
-### BboxTraceResult
+The `FromEyes` traces take the distance first, then the player. The player itself is never hit by them.
 
-This class represents the result of a bbox cast (trace with a bounding box). It extends the `CheapTraceResult` class and adds information about the hit entity and trace settings.
+## Reading the result
 
-**Additional Properties:**
-
-* `hitEnt` (CBaseEntity): The entity hit by the trace, or `null` if no entity was hit.
-
-**Additional Methods:**
-
-* `GetEntity()`: Returns the hit entity as a `pcapEntity` object, or `null` if no entity was hit.
-* `GetEntityClassname()`: Returns the classname of the hit entity, or `null` if no entity was hit.
-* `GetIngoreEntities()`: Returns the list of entities that were ignored during the trace.
-* `GetTraceSettings()`: Returns the settings used for the trace as a `TraceSettings` object.
-* `DidHitWorld()`: Returns `true` if the trace hit the world geometry (not an entity), `false` otherwise.
-
-**Example:**
+Every trace returns a result object with the same methods, so you can switch between `Cheap` and `Bbox` without changing the code that reads it:
 
 ```js
-local traceResult = TracePlus.Bbox(startPos, endPos)
+local trace = TracePlus.Bbox(start, end)
 
-if (traceResult.DidHit()) {
-    local hitEntity = traceResult.GetEntity()
-if (hitEntity) {
-    printl("Trace hit entity:" + hitEntity.GetClassname())
-} else {
-    printl("Trace hit the world.")
-}
-}
+trace.DidHit()          // hit anything at all?
+trace.DidHitWorld()     // hit world geometry, not an entity?
+trace.GetEntity()       // the hit entity (pcapEntity), or null
+trace.GetHitPos()       // where it stopped: the hit point, or `end` if nothing was hit
+trace.GetImpactNormal() // the surface normal at the hit point
+trace.GetFraction()     // 0..1, how far along the line it got
 ```
 
-## TracePlus/cheap\_trace.nut
+`Cheap` traces always return `null` from `GetEntity()`. The full list is in the [reference](#result-methods).
 
-This file provides functions for performing cheap (fast but less accurate) traces.
-
-### TracePlus.Cheap(startPos, endPos)
-
-This function performs a cheap trace from the specified start and end positions. It uses the standard `TraceLine` function internally but returns a `CheapTraceResult` object with additional information.
-
-**Parameters:**
-
-* `startPos` (Vector): The start position of the trace.
-* `endPos` (Vector): The end position of the trace.
-
-**Returns:**
-
-* (CheapTraceResult): The trace result object.
-
-**Example:**
+**The surface normal.** `GetImpactNormal()` is a unit vector that sticks straight out of the hit surface, toward the side the trace came from. A trace hitting a floor gets `Vector(0, 0, 1)`, a wall facing +X gets `Vector(1, 0, 0)`. For an entity it is the normal of the hit face of its bounding box. Typical uses: bounce a direction off the surface with `math.vector.reflect(trace.GetDir(), normal)`, or place and rotate something flat on the hit point.
 
 ```js
-local traceResult = TracePlus.Cheap(startPos, endPos)
-if (traceResult.DidHit()) {
-    // ...
-}
+local trace = TracePlus.FromEyes.Bbox(3000, GetPlayerEx())
+local normal = trace.GetImpactNormal()
+
+// A prop on whatever the player looks at, facing out of the surface
+local prop = entLib.CreateProp("prop_dynamic", trace.GetHitPos() + normal, "models/props/metal_box.mdl")
+prop.SetForwardVector(normal)
 ```
 
-### TracePlus.FromEyes.Cheap(distance, player)
+It is computed on the first call and costs a bit more for world hits than for entities, so don't call it when you don't need it.
 
-This function performs a cheap trace from the player's eyes in the direction they are looking.
+![Impact normal and reflected direction](img/impact_normal.png)
 
-**Parameters:**
 
-* `distance` (number): The distance of the trace.
-* `player` (CBaseEntity or pcapEntity): The player entity.
+## What a bbox trace hits
 
-**Returns:**
+* **Bounding boxes, not model shapes.** A `Bbox` trace hits the box around an entity (rotated with it), not its actual mesh. A trace can hit the empty corner of a box around a round model.
+  ![A bbox trace hits the box, not the model](img/bbox_round_model.png)
 
-* (CheapTraceResult): The trace result object.
+* **Not everything.** By default it ignores triggers, `info_`/`logic_`/`env_`/`point_` entities, lights, portals and other entities you normally don't want to hit. Add or remove classes with [`TracePlus.Settings`](#choosing-what-to-hit-recipes).
+* **Entities marked with `SetTraceIgnore(true)` are skipped by every trace.** `ent.Disable()` does that too, `ent.Enable()` undoes it.
+* **A trace that starts inside a box goes through that entity.** Cubes, turrets and `prop_physics` are the exception: they are hit right at the start.
+* **Moving and turning entities are fine.** The library notices that by itself. If you change an entity's size or model through the native methods, call `TracePlus.InvalidateEntity(ent)`. `pcapEntity.SetBBox` and `SetSize` already do it.
 
-**Example:**
+<details>
+<summary>The default ignored classes</summary>
+
+`viewmodel`, `weapon_`, `beam`, `light`, `trigger_`, `phys_`, `env_`, `point_`, `info_`, `vgui_`, `logic_`, `clone`, `prop_portal`, `portal_base2D`, `func_clip`, `func_instance`, `func_portal_detector`, `func_noportal_volume`, `func_portal_bumper`, `func_areaportalwindow`, `path_track`, `npc_bullseye`, `move_rope`, `keyframe_rope`, `worldspawn`, `soundent`, `player_manager`, `bodyque`, `ai_network`, `generic_actor`
+
+Each one matches every classname that contains it: `trigger_` covers `trigger_once`, `trigger_multiple` and so on.
+
+</details>
+
+## Choosing what to hit: recipes
+
+There are two tools:
+
+* The `ignoreEntities` argument: specific entities to skip in **this** trace.
+* `TracePlus.Settings()`: rules by classname, model or your own function. Create it once, keep it in a variable and pass it to as many traces as you like.
+
+Settings go into the **fourth** argument. If you have nothing to ignore, pass `null` as the third:
 
 ```js
-local player = GetPlayerEx()
-local traceResult = TracePlus.FromEyes.Cheap(100, player) // Trace 100 units in front of the player
+TracePlus.Bbox(start, end, null, settings)
+TracePlus.FromEyes.Bbox(3000, player, null, settings)
 ```
 
-## TracePlus/bboxcast.nut
-
-This file provides functions for performing bbox casts (traces with bounding boxes).
-
-### TracePlus.Bbox(startPos, endPos, ignoreEntities, settings)
-
-This function performs a bbox cast from the specified start and end positions. It uses a more precise algorithm than `TraceLine` to check for collisions with entities' bounding boxes.
-
-**Parameters:**
-
-* `startPos` (Vector): The start position of the trace.
-* `endPos` (Vector): The end position of the trace.
-* `ignoreEntities` (array, CBaseEntity, or null, optional): A list of entities or a single entity to ignore during the trace.
-* `settings` (TraceSettings, optional): The settings to use for the trace (defaults to `TracePlus.defaultSettings`).
-* `insideTestPos` (Vector or null, optional): Entities whose bounding box contains this point are skipped for the whole trace (defaults to `startPos`). `TracePlus.PortalBbox` passes a point just behind the exit portal here, so objects resting on the exit portal are still hit.
-
-**Returns:**
-
-* (BboxTraceResult): The trace result object.
-
-**Example:**
+**Skip one entity, or a few**
 
 ```js
-local traceResult = TracePlus.Bbox(startPos, endPos, ignoreEntities, traceSettings)
-if (traceResult.DidHit()) {
-    // ...
-}
+TracePlus.Bbox(start, end, cube)
+TracePlus.Bbox(start, end, [cube, button, GetPlayerEx()])
 ```
 
-### TracePlus.FromEyes.Bbox(distance, player, ignoreEntities, settings)
+`ignoreEntities` also takes an `ArrayEx` or a `List`.
 
-This function performs a bbox cast from the player's eyes in the direction they are looking.
-
-**Parameters:**
-
-* `distance` (number): The distance of the trace.
-* `player` (CBaseEntity or pcapEntity): The player entity.
-* `ignoreEntities` (array, CBaseEntity, or null, optional): A list of entities or a single entity to ignore during the trace.
-* `settings` (TraceSettings, optional): The settings to use for the trace (defaults to `TracePlus.defaultSettings`).
-
-**Returns:**
-
-* (BboxTraceResult): The trace result object.
-
-**Example:**
+**Make an entity invisible to all traces**
 
 ```js
-local traceResult = TracePlus.FromEyes.Bbox(100, player, ignoreEntities)
-if (traceResult.DidHit()) {
-    // ...
-}
+glassWall.SetTraceIgnore(true)
 ```
 
-
-## [Portal Castings - How to Use](#portal-castings---how-to-use)
-
-To ensure the correct functionality of portal casting, it's crucial to follow these guidelines:
-
-### [`prop_portal`](#prop_portal)
-
-If `prop_portal` is created manually and has a non-zero `paidId`, you need to add the keyvalue `health` with a value matching the `paidId`. This is necessary for more accurate partner portal detection.
-
-todo: add photo
-
-### [`linked_portal_door`](#linked_portal_door)
-
-For correct operation, you need to create the keyvalue `model` with the portal's `width height` values. For example: `128 64`. The `model` keyvalue is used by the `TracePlus` module to calculate the bounding box of the portal.
-
-todo: add photo
-
-### [Disabling Portals](#disabling-portals)
-
-* To correctly disable portals for a `pcapEntity` portal, you need to call the `SetTraceIgnore` method. You can achieve this by adding the `OnUser1` output to the portal entity and connecting it to a script that calls `SetTraceIgnore`.
-
-todo: add photo
-
-**Alternatively, you can automate this process using the `func_portal_detector` entity on your map.** This entity can detect when a portal is opened or closed and automatically trigger the appropriate script to enable or disable the portal for tracing.
-
-**Note:**
-* For advanced scenarios, you can create custom filter functions for `TracePlus.Settings` to define specific rules for ray tracing collisions and entity ignoring.
-
-
-## TracePlus/portal\_casting.nut
-
-This file contains functions for handling portal interactions during traces.
-
-### TracePlus.PortalCheap(startPos, endPos)
-
-This function performs a cheap trace with portal support. It takes into account portal entities and adjusts the trace path accordingly.
-
-**Parameters:**
-
-* `startPos` (Vector): The start position of the trace.
-* `endPos` (Vector): The end position of the trace.
-
-**Returns:**
-
-* (CheapTraceResult): The trace result object, including information about portal entries.
-
-**Example:**
+**Don't hit players**
 
 ```js
-local traceResult = TracePlus.PortalCheap(startPos, endPos)
-if (traceResult.DidHit()) {
-    // ...
-}
+noPlayers <- TracePlus.Settings().IgnoreClasses("player")
 ```
 
-### TracePlus.FromEyes.PortalCheap(distance, player)
-
-This function performs a cheap trace with portal support from the player's eyes. It takes into account portal entities and adjusts the trace path accordingly.
-
-**Parameters:**
-
-* `distance` (number): The distance of the trace.
-* `player` (CBaseEntity or pcapEntity): The player entity.
-
-**Returns:**
-
-* (CheapTraceResult): The trace result object, including information about portal entries.
-
-**Example:**
+**Hit something the defaults ignore**, e.g. triggers. `ExceptClasses` punches a hole in the ignored classes, the other defaults stay:
 
 ```js
-local traceResult = TracePlus.FromEyes.PortalCheap(1000, player)
-if (traceResult.DidHit()) {
-    local portalEntries = traceResult.GetAggregatedPortalEntryInfo()
-    // ... process portal entry information
-}
+withTriggers <- TracePlus.Settings().ExceptClasses("trigger_multiple", "trigger_once")
 ```
 
-
-### TracePlus.PortalBbox(startPos, endPos, ignoreEntities, settings)
-
-This function performs a bbox cast with portal support. It takes into account portal entities and adjusts the trace path accordingly.
-
-**Parameters:**
-
-* `startPos` (Vector): The start position of the trace.
-* `endPos` (Vector): The end position of the trace.
-* `ignoreEntities` (array, CBaseEntity, or null, optional): A list of entities or a single entity to ignore during the trace.
-* `settings` (TraceSettings, optional): The settings to use for the trace (defaults to `TracePlus.defaultSettings`).
-
-**Returns:**
-
-* (BboxTraceResult): The trace result object, including information about portal entries.
-
-**Example:**
+**Hit only cubes**, nothing but the world and the listed classes:
 
 ```js
-local traceResult = TracePlus.PortalBbox(startPos, endPos, ignoreEntities, traceSettings)
-if (traceResult.DidHit()) {
-    // ...
-}
+onlyCubes <- TracePlus.Settings()
+    .IgnoreAllClasses()
+    .ExceptClasses("prop_weighted_cube", "prop_monster_box")
 ```
 
-### TracePlus.FromEyes.PortalBbox(distance, player, ignoreEntities, settings)
-
-This function performs a bbox cast with portal support from the player's eyes.
-
-**Parameters:**
-
-* `distance` (number): The distance of the trace.
-* `player` (CBaseEntity or pcapEntity): The player entity.
-* `ignoreEntities` (array, CBaseEntity, or null, optional): A list of entities or a single entity to ignore during the trace.
-* `settings` (TraceSettings, optional): The settings to use for the trace (defaults to `TracePlus.defaultSettings`).
-
-**Returns:**
-
-* (BboxTraceResult): The trace result object, including information about portal entries.
-
-**Example:**
+**Ignore by model**
 
 ```js
-local traceResult = TracePlus.FromEyes.PortalBbox(1000, player, ignoreEntities)
-if (traceResult.DidHit()) {
-    // ...
-}
+noPipes <- TracePlus.Settings().IgnoreModels("models/props_pipes/")
 ```
 
-## TracePlus/bbox\_analyzer.nut
+**Ignore by name, or by any other condition.** The function gets a `pcapEntity` and returns `true` to ignore it:
 
-This file defines the `BboxTraceAnalyzer` class for precise trace line analysis, which is a core component of the BBox Casting algorithm.
+```js
+noGhosts <- TracePlus.Settings().SetIgnoreFilter(function(ent) {
+    return ent.GetName().find("ghost_") == 0
+})
+```
 
-### BboxTraceAnalyzer
+**Hit by a condition, even if the classes or models say ignore.** Return `true` to hit the entity, `false` to leave it to the other rules:
 
-This class provides methods for tracing lines with more precision and considering entity priorities and ignore settings. It subdivides the trace into smaller segments and checks for entity collisions along the way, taking into account the trace settings. **It's required for the Bboxcast**
+```js
+hitMarked <- TracePlus.Settings().SetHitFilter(function(ent) {
+    return ent.GetUserData("hittable") == true
+})
+```
 
-**Properties:**
+A hit filter makes traces slower: ignored classes can no longer be skipped early.
 
-* `settings` (TraceSettings): The settings to use for the trace.
-* `hitPos` (Vector): The hit position of the trace.
-* `hitEnt` (CBaseEntity): The entity hit by the trace, or `null` if no entity was hit.
+**Combine them.** Every method returns the settings, so calls chain:
 
-**Methods:**
+```js
+gunSettings <- TracePlus.Settings()
+    .IgnoreClasses("player", "npc_portal_turret_floor")
+    .ExceptClasses("trigger_multiple")
+    .IgnoreModels("models/props/glass")
+```
 
-* `Trace(startPos, endPos, ignoreEntities)`: Performs a precise trace line analysis.
-* `shouldHitEntityCached(BEnt)`: Checks if the trace should consider a hit with the given buffered entity, utilizing caching and trace settings.
+**Change the rules for every trace that gets no settings**
 
-**BBox Casting Algorithm:**
+```js
+TracePlus.defaultSettings.IgnoreClasses("player")
+```
 
-The `BboxTraceAnalyzer` class implements a sophisticated BBox Casting algorithm for accurate and efficient collision detection. TODO: readme is shit!
+This affects every `Bbox` trace in the map that is called without settings, including other scripts.
 
-## TracePlus/calculate\_normal.nut
+**A variant of the defaults**, without changing them:
 
-This file provides functions for calculating the impact normal of a surface hit by a trace. It offers distinct algorithms to address different scenarios, ensuring both accuracy and efficiency in determining the surface orientation at the hit point.
+```js
+local mine = TracePlus.defaultSettings.Clone().IgnoreModels("models/props/")
+```
 
-### Global Functions:
+### How the rules combine
 
-*   **`CalculateImpactNormal(startPos, hitPos)`:**
-    Calculates the impact normal of a surface hit by a trace, primarily for world geometry. It utilizes the "three-ray method" to determine the surface orientation. This method involves performing three cheap traces - one from the original hit position and two from slightly offset positions - to create a triangle. The normal of this triangle represents the surface normal. This approach is efficient but might not be suitable for dynamic entities.
-    
-*   **`CalculateImpactNormalFromBbox(startPos, hitPos, hitEntity)`:**
-    Calculates the impact normal of a surface for dynamic entities, utilizing the hit entity's bounding box. It employs an optimized algorithm that assumes one of the hit point's coordinates is shared by at least four vertices of the bounding box. This assumption allows for efficient identification of the hit face and calculation of its normal.
-    
-**Impact Normal Calculation Algorithms:**
+![The order in which a bbox trace decides to hit or ignore an entity](img/settings_rules.png)
 
-A detailed description of the algorithms used in `calculate_normal.nut`, including their steps, limitations, and considerations, can be found in the [calculate\_normal.md](calculate_normal.md) file.
+So `SetIgnoreFilter` beats everything else in the settings, `SetHitFilter` beats the classes and models, and `ExceptClasses` only works against `IgnoreClasses`.
+
+A mask matches every name that **contains** it: `"cube"` matches `prop_weighted_cube`. A `*` at the ends of a mask is dropped (`"prop_*"` is the same as `"prop_"`), a `*` in the middle is an error. `"*"` alone ignores every class, like `IgnoreAllClasses()`.
+
+### Common mistakes
+
+* **`TracePlus.Settings.IgnoreClasses(...)` without `()`.** `Settings` is a class, create it first: `TracePlus.Settings().IgnoreClasses(...)`.
+* **Settings as the third argument.** The third one is `ignoreEntities`, settings go fourth: `TracePlus.Bbox(start, end, null, settings)`.
+* **`ClearIgnoredClasses()` to hit one ignored class.** It removes all defaults, and the trace starts hitting triggers, portals, `info_` entities and the rest. Use `ExceptClasses` for that.
+* **New settings for every trace.** It works, but each `Settings` remembers its verdicts per classname. Create it once, outside the function that traces.
+
+## Tracing through portals
+
+`PortalCheap` and `PortalBbox` work like `Cheap` and `Bbox`. When the trace hits a portal that has a partner, it continues from the partner, up to `MAX_PORTAL_CAST_DEPTH` traces in total (4 by default, a global you can change).
+
+The result is the **last** part of the path. The parts before it are kept too:
+
+![A trace through portals in two parts](img/portal_trace.png)
+
+
+```js
+local trace = TracePlus.FromEyes.PortalBbox(5000, GetPlayerEx())
+
+// The whole path, first part first. It's a List, so iterate it with iter()
+foreach(part in trace.GetAggregatedPortalEntryInfo().iter())
+    DebugDrawLine(part.GetStartPos(), part.GetHitPos(), 255, 120, 0, false, 1)
+
+// The part right before the last portal, or null if no portal was passed
+local beforePortal = trace.GetPortalEntryInfo()
+```
+
+**What works by itself:**
+
+* Players' portals (`prop_portal`). The library tracks which portals the engine has linked, including portals that were fizzled or switched with `SetActivatedState`: only a linked portal is traced through.
+* `linked_portal_door`. The size comes from the door's `width` and `height`. A closed door (the `Close` input) and its partner are not traced through. Doors spawned later are picked up within 5 seconds.
+
+**`prop_portal` placed in Hammer with its own `LinkageGroupID`.** The library sets up the pair ids `0` to `N-1` for the `N` players that joined. For a pair with another id, call this once after the map has loaded:
+
+```js
+InitPortalPair(5) // the LinkageGroupID of the pair
+```
+
+**Another size for a `linked_portal_door`.** Set its `model` keyvalue to the half width and half height, e.g. `64 32` for a 128x64 door. It takes priority over `width` and `height`.
+
+Don't call `SetTraceIgnore` on a `prop_portal` yourself: the library sets it every time the pair changes, so your value gets overwritten.
+
+## Reference
+
+### Traces
+
+| Function | Returns |
+|---|---|
+| `TracePlus.Cheap(start, end)` | `TraceResult` |
+| `TracePlus.Bbox(start, end, ignoreEntities = null, settings = null)` | `BboxTraceResult` |
+| `TracePlus.PortalCheap(start, end)` | `TraceResult` |
+| `TracePlus.PortalBbox(start, end, ignoreEntities = null, settings = null)` | `BboxTraceResult` |
+| `TracePlus.FromEyes.Cheap(distance, player)` | `TraceResult` |
+| `TracePlus.FromEyes.Bbox(distance, player, ignoreEntities = null, settings = null)` | `BboxTraceResult` |
+| `TracePlus.FromEyes.PortalCheap(distance, player)` | `TraceResult` |
+| `TracePlus.FromEyes.PortalBbox(distance, player, ignoreEntities = null, settings = null)` | `BboxTraceResult` |
+
+* `start`, `end` (Vector): world positions.
+* `ignoreEntities`: one entity (`CBaseEntity` or `pcapEntity`), or an `array`, `ArrayEx` or `List` of them. Invalid entities in it are skipped.
+* `settings` (`TracePlus.Settings`): `TracePlus.defaultSettings` if not given.
+* `distance` (number): how far from the eyes, in units.
+* `player` (`CBaseEntity` or `pcapEntity`): the player to trace from, always ignored by the trace.
+
+A `Bbox` trace that starts outside the map stops right at its start: `GetHitPos()` is the start position, `GetFraction()` is 0.
+
+### Result methods
+
+| Method | Returns |
+|---|---|
+| `DidHit()` | `true` if the trace hit anything |
+| `DidHitWorld()` | `true` if it hit world geometry and not an entity |
+| `GetEntity()` | The hit entity (`pcapEntity`), or `null` for world hits, misses, `Cheap` traces and entities that no longer exist |
+| `GetEntityClassname()` | The classname of the hit entity, or `null` |
+| `GetHitPos()` | The hit point, or the end position if nothing was hit |
+| `GetStartPos()`, `GetEndPos()` | The positions this trace was made with. For a portal trace: the ones of its last part |
+| `GetFraction()` | 0 to 1, the part of the line before the hit |
+| `GetDir()` | The unit direction of the trace |
+| `GetImpactNormal()` | The unit normal of the hit surface. Computed on the first call |
+| `GetPortalEntryInfo()` | The previous part of a portal trace, or `null` |
+| `GetAggregatedPortalEntryInfo()` | All parts of a portal trace as a `List`, the first one first, this one last |
+| `GetTraceSettings()` | The settings the trace used (`null` for `Cheap`) |
+| `GetIngoreEntities()` | `Bbox` only: the `ignoreEntities` value the trace got |
+
+### `TracePlus.Settings` methods
+
+All of them, except the getters, return the settings themselves, so calls chain. The mask methods take any number of strings, arrays and `ArrayEx` of strings.
+
+| Method | What it does |
+|---|---|
+| `TracePlus.Settings()` | New settings with the default ignored classes |
+| `IgnoreClasses(...)` | Adds classname masks to ignore |
+| `ExceptClasses(...)` | Adds classname masks that are hit even if `IgnoreClasses` matches them |
+| `IgnoreAllClasses()` | Ignores every class, only `ExceptClasses` get through |
+| `IgnoreModels(...)` | Adds model name masks to ignore |
+| `SetIgnoreFilter(func)` | `func(ent)` returning `true` ignores the entity. `null` removes the filter |
+| `SetHitFilter(func)` | `func(ent)` returning `true` hits the entity despite the classes and models. `null` removes the filter |
+| `ClearIgnoredClasses()` | Removes all ignored classes, **the defaults too** |
+| `ClearExceptedClasses()` | Removes all excepted classes |
+| `ClearIgnoredModels()` | Removes all ignored models |
+| `GetIgnoredClasses()`, `GetExceptedClasses()`, `GetIgnoredModels()` | A copy of the list (`ArrayEx`). Changing it doesn't change the settings |
+| `GetIgnoreFilter()`, `GetHitFilter()` | The filter function, or `null` |
+| `Clone()` | A copy of the settings. The lists are copied, the filter functions are shared |
+
+### Other
+
+* `TracePlus.defaultSettings`: the settings of every bbox trace called without settings. Changing it changes them for all such traces.
+* `TracePlus.InvalidateEntity(ent)`: makes bbox traces re-read the entity's size and model. Needed after a native `SetSize` or `SetModel`.
+* `MAX_PORTAL_CAST_DEPTH`: the maximum number of parts of a portal trace, 4 by default.
+* `InitPortalPair(id)`: makes the `prop_portal` pair with this `LinkageGroupID` traceable through. See [Tracing through portals](#tracing-through-portals).
